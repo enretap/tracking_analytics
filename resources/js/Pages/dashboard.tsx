@@ -476,7 +476,7 @@ export default function Dashboard() {
                     <Card className="border-red-200 bg-gradient-to-br from-red-50 to-white dark:border-red-800 dark:from-red-900/20 dark:to-gray-900">
                         <CardHeader className="flex flex-row items-center justify-between pb-2">
                             <CardTitle className="text-sm font-medium text-red-600 dark:text-red-400">
-                                Véhicules étant à l'arrêt
+                                Véhicules à l'arrêt
                             </CardTitle>
                             <AlertTriangle className="h-10 w-10 text-red-500" />
                         </CardHeader>
