@@ -831,15 +831,19 @@ export default function Dashboard() {
                         </div>
                         
                         {/* Carte avec lazy loading */}
+                        
                         <Suspense fallback={
-                            <div className="flex h-[400px] items-center justify-center rounded-lg border border-gray-200 bg-gray-50 dark:border-gray-800 dark:bg-gray-900">
-                                <div className="flex flex-col items-center gap-3">
-                                    <RefreshCw className="h-8 w-8 animate-spin text-blue-500" />
-                                    <p className="text-sm text-gray-600 dark:text-gray-400">Chargement de la carte...</p>
-                                </div>
+                            <div className="flex flex-col items-center gap-3">
+                                <RefreshCw className="h-8 w-8 animate-spin text-blue-500" />
+                                <p className="text-sm text-gray-600 dark:text-gray-400">Chargement de la carte...</p>
                             </div>
                         }>
-                            <VehicleMap vehicles={displayedVehicles} />
+                            <VehicleMap 
+                                vehicles={displayedVehicles.map(v => ({
+                                    ...v,
+                                    status: v.status === 'unknown' ? 'inactive' : v.status
+                                }))} 
+                            />
                         </Suspense>
                     </CardContent>
                 </Card>
