@@ -1,0 +1,24 @@
+<?php
+
+namespace App\Http\Requests\Settings;
+
+use Illuminate\Foundation\Http\FormRequest;
+
+class UpdateAccountRequest extends FormRequest
+{
+    public function authorize(): bool
+    {
+        return $this->user() !== null;
+    }
+
+    public function rules(): array
+    {
+        return [
+            'name' => ['required', 'string', 'max:255'],
+            'settings' => ['nullable', 'json'],
+            'platform_ids' => ['nullable', 'array'],
+            'platform_ids.*' => ['integer', 'exists:platforms,id'],
+            'is_active' => ['sometimes', 'boolean'],
+        ];
+    }
+}
