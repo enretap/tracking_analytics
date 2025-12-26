@@ -426,97 +426,14 @@ export default function Dashboard() {
                     </div>
                 </div> */}
 
-                {/* Mes Rapports */}
-                <Card>
-                    <CardHeader>
-                        <div className="flex items-center justify-between">
-                            <div>
-                                <CardTitle className="flex items-center gap-2">
-                                    <FileText className="h-5 w-5" />
-                                    Mes Rapports
-                                </CardTitle>
-                                <CardDescription>
-                                    {totalReports > 0 ? `${totalReports} rapport${totalReports > 1 ? 's' : ''} disponible${totalReports > 1 ? 's' : ''}` : 'Rapports récents générés pour votre compte'}
-                                </CardDescription>
-                            </div>
-                            {totalReports > 5 && (
-                                <Button size="sm" variant="outline" onClick={() => window.location.href = '/reports'}>
-                                    <FileText className="h-4 w-4 mr-2" />
-                                    Voir plus
-                                </Button>
-                            )}
-                        </div>
-                    </CardHeader>
-                    <CardContent>
-                        {loadingReports ? (
-                            <div className="flex h-32 items-center justify-center">
-                                <RefreshCw className="h-6 w-6 animate-spin text-blue-500" />
-                                <span className="ml-2 text-gray-600 dark:text-gray-400">Chargement des rapports...</span>
-                            </div>
-                        ) : reports.length > 0 ? (
-                            <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
-                                {reports.map((report) => (
-                                    <a
-                                        key={report.id}
-                                        href={`/reports/${report.id}`}
-                                        className="group relative overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm transition-all hover:shadow-md dark:border-gray-800 dark:bg-gray-900 cursor-pointer"
-                                    >
-                                        <div className="aspect-square bg-gradient-to-br from-blue-50 to-indigo-50 p-4 dark:from-blue-900/20 dark:to-indigo-900/20">
-                                            {report.preview_image ? (
-                                                <img
-                                                    src={report.preview_image}
-                                                    alt={report.name}
-                                                    className="h-full w-full object-cover"
-                                                />
-                                            ) : (
-                                                <div className="flex h-full w-full items-center justify-center">
-                                                    <FileText className="h-16 w-16 text-blue-500" />
-                                                </div>
-                                            )}
-                                        </div>
-                                        <div className="p-3">
-                                            <h3 className="truncate text-sm font-medium text-gray-900 dark:text-white">
-                                                {report.name}
-                                            </h3>
-                                            {report.type && (
-                                                <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                                                    {report.type}
-                                                </p>
-                                            )}
-                                            <p className="mt-1 text-xs text-gray-400 dark:text-gray-500">
-                                                {new Date(report.created_at).toLocaleDateString('fr-FR')}
-                                            </p>
-                                        </div>
-                                        <div className="absolute inset-0 bg-black/0 transition-all group-hover:bg-black/10" />
-                                    </a>
-                                ))}
-                            </div>
-                        ) : (
-                            <div className="flex flex-col items-center justify-center py-12 text-center">
-                                <FileText className="h-12 w-12 text-gray-300 dark:text-gray-700" />
-                                <p className="mt-4 text-sm text-gray-600 dark:text-gray-400">
-                                    Aucun rapport disponible
-                                </p>
-                                <Button
-                                    size="sm"
-                                    className="mt-4"
-                                    onClick={() => window.location.href = '/reports'}
-                                >
-                                    Créer votre premier rapport
-                                </Button>
-                            </div>
-                        )}
-                    </CardContent>
-                </Card>
-
                 {/* KPI Cards */}
                 <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
                     <Card className="border-blue-200 bg-gradient-to-br from-blue-50 to-white dark:border-blue-800 dark:from-blue-900/20 dark:to-gray-900">
                         <CardHeader className="flex flex-row items-center justify-between pb-2">
                             <CardTitle className="text-sm font-medium text-blue-600 dark:text-blue-400">
-                                Total Véhicules
+                                Total des véhicules de la flotte
                             </CardTitle>
-                            <Car className="h-5 w-5 text-blue-500" />
+                            <Car className="h-10 w-10 text-blue-500" />
                         </CardHeader>
                         <CardContent>
                             <div className="text-2xl font-bold text-gray-900 dark:text-white">{stats.totalVehicles}</div>
@@ -529,9 +446,9 @@ export default function Dashboard() {
                     <Card className="border-green-200 bg-gradient-to-br from-green-50 to-white dark:border-green-800 dark:from-green-900/20 dark:to-gray-900">
                         <CardHeader className="flex flex-row items-center justify-between pb-2">
                             <CardTitle className="text-sm font-medium text-green-600 dark:text-green-400">
-                                Véhicules Actifs
+                                Véhicules en mouvement
                             </CardTitle>
-                            <Activity className="h-5 w-5 text-green-500" />
+                            <Activity className="h-10 w-10 text-green-500" />
                         </CardHeader>
                         <CardContent>
                             <div className="text-2xl font-bold text-gray-900 dark:text-white">{stats.activeVehicles}</div>
@@ -544,9 +461,9 @@ export default function Dashboard() {
                     <Card className="border-amber-200 bg-gradient-to-br from-amber-50 to-white dark:border-amber-800 dark:from-amber-900/20 dark:to-gray-900">
                         <CardHeader className="flex flex-row items-center justify-between pb-2">
                             <CardTitle className="text-sm font-medium text-amber-600 dark:text-amber-400">
-                                En Maintenance
+                                Véhicules en maintenance
                             </CardTitle>
-                            <AlertTriangle className="h-5 w-5 text-amber-500" />
+                            <AlertTriangle className="h-10 w-10 text-amber-500" />
                         </CardHeader>
                         <CardContent>
                             <div className="text-2xl font-bold text-gray-900 dark:text-white">{stats.maintenanceVehicles}</div>
@@ -559,9 +476,9 @@ export default function Dashboard() {
                     <Card className="border-red-200 bg-gradient-to-br from-red-50 to-white dark:border-red-800 dark:from-red-900/20 dark:to-gray-900">
                         <CardHeader className="flex flex-row items-center justify-between pb-2">
                             <CardTitle className="text-sm font-medium text-red-600 dark:text-red-400">
-                                Immobilisés
+                                Véhicules étant à l'arrêt
                             </CardTitle>
-                            <AlertTriangle className="h-5 w-5 text-red-500" />
+                            <AlertTriangle className="h-10 w-10 text-red-500" />
                         </CardHeader>
                         <CardContent>
                             <div className="text-2xl font-bold text-gray-900 dark:text-white">{stats.inactiveVehicles}</div>
@@ -596,7 +513,7 @@ export default function Dashboard() {
                                 <CardHeader>
                                     <CardTitle className="flex items-center gap-2">
                                         <MapPin className="h-5 w-5" />
-                                        Top 5 - Plus grandes distances
+                                        Top 5 des distances parcourues
                                     </CardTitle>
                                     <CardDescription>
                                         Classement des véhicules par distance parcourue

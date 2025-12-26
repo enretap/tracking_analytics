@@ -80,11 +80,10 @@ export function NavMain({ items = [] }: { items: NavItem[] }) {
     
     return (
         <SidebarGroup className="px-2 py-0">
-            <SidebarGroupLabel>Platform</SidebarGroupLabel>
             <SidebarMenu>
                 {items.map((item) => {
-                    // Menu spécial pour "Mes Rapports" avec sous-menu
-                    if (item.title === 'Mes Rapports') {
+                    // Menu spécial pour "Rapports d'usage" avec sous-menu
+                    if (item.title === 'Rapports d\'usage') {
                         return (
                             <Collapsible
                                 key={item.title}

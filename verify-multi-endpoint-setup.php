@@ -15,6 +15,7 @@ use App\Models\Report;
 use App\Models\Platform;
 use App\Models\Account;
 use App\Models\ReportPlatformEndpoint;
+use Illuminate\Support\Facades\DB;
 
 $errors = [];
 $warnings = [];

@@ -19,12 +19,12 @@ import AppLogo from './app-logo';
 const getMainNavItems = (isSuperAdmin: boolean, hasAdminAccess: boolean): NavItem[] => {
     const items: NavItem[] = [
         {
-            title: 'Tableau de bord',
+            title: 'Tableau de bord de la flotte',
             href: dashboard(),
             icon: LayoutGrid,
         },
         {
-            title: 'Mes Rapports',
+            title: 'Rapports d\'usage',
             href: '/reports',
             icon: BookOpen,
         },
