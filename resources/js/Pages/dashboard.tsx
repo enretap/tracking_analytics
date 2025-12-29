@@ -429,15 +429,15 @@ export default function Dashboard() {
 
                 {/* KPI Cards */}
                 <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-                    <Card className="border-blue-200 bg-gradient-to-br from-blue-50 to-white dark:border-blue-800 dark:from-blue-900/20 dark:to-gray-900">
+                    <Card className="border-yellow-200 bg-gradient-to-br from-yellow-50 to-white dark:border-yellow-700 dark:from-yellow-900/20 dark:to-gray-900">
                         <CardHeader className="flex flex-row items-center justify-between pb-2">
-                            <CardTitle className="text-sm font-medium text-blue-600 dark:text-blue-400">
+                            <CardTitle className="text-xs font-medium text-yellow-600 dark:text-yellow-400">
                                 Total des véhicules de la flotte
                             </CardTitle>
-                            <Car className="h-10 w-10 text-blue-500" />
+                            <Car className="h-8 w-8 text-yellow-500" />
                         </CardHeader>
                         <CardContent>
-                            <div className="text-2xl font-bold text-gray-900 dark:text-white">{stats.totalVehicles}</div>
+                            <div className="text-xl font-bold text-gray-900 dark:text-white">{stats.totalVehicles}</div>
                             <p className="text-xs text-gray-600 dark:text-gray-400">
                                 Tous les véhicules de la flotte
                             </p>
@@ -446,13 +446,13 @@ export default function Dashboard() {
 
                     <Card className="border-green-200 bg-gradient-to-br from-green-50 to-white dark:border-green-800 dark:from-green-900/20 dark:to-gray-900">
                         <CardHeader className="flex flex-row items-center justify-between pb-2">
-                            <CardTitle className="text-sm font-medium text-green-600 dark:text-green-400">
+                            <CardTitle className="text-xs font-medium text-green-600 dark:text-green-400">
                                 Véhicules en mouvement
                             </CardTitle>
-                            <Activity className="h-10 w-10 text-green-500" />
+                            <Activity className="h-8 w-8 text-green-500" />
                         </CardHeader>
                         <CardContent>
-                            <div className="text-2xl font-bold text-gray-900 dark:text-white">{stats.activeVehicles}</div>
+                            <div className="text-xl font-bold text-gray-900 dark:text-white">{stats.activeVehicles}</div>
                             <p className="text-xs text-gray-600 dark:text-gray-400">
                                 En déplacement actuellement
                             </p>
@@ -461,28 +461,28 @@ export default function Dashboard() {
 
                     <Card className="border-slate-200 bg-gradient-to-br from-slate-50 to-white dark:border-slate-700 dark:from-slate-800/30 dark:to-gray-900">
                         <CardHeader className="flex flex-row items-center justify-between pb-2">
-                            <CardTitle className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                            <CardTitle className="text-xs font-medium text-slate-700 dark:text-slate-300">
                                 Véhicules à l'arrêt
                             </CardTitle>
-                            <PauseCircle className="h-10 w-10 text-slate-600 dark:text-slate-400" />
+                            <PauseCircle className="h-8 w-8 text-slate-600 dark:text-slate-400" />
                         </CardHeader>
                         <CardContent>
-                            <div className="text-2xl font-bold text-gray-900 dark:text-white">{stats.totalVehicles - stats.activeVehicles}</div>
+                            <div className="text-xl font-bold text-gray-900 dark:text-white">{stats.totalVehicles - stats.activeVehicles}</div>
                             <p className="text-xs text-slate-600 dark:text-slate-400">
-                                Tous les véhicules inactifs
+                                Tous les véhicules à l'arrêt
                             </p>
                         </CardContent>
                     </Card>
 
-                    <Card className="border-amber-200 bg-gradient-to-br from-amber-50 to-white dark:border-amber-800 dark:from-amber-900/20 dark:to-gray-900">
+                    <Card className="border-orange-200 bg-gradient-to-br from-orange-50 to-white dark:border-orange-800 dark:from-orange-900/20 dark:to-gray-900">
                         <CardHeader className="flex flex-row items-center justify-between pb-2">
-                            <CardTitle className="text-sm font-medium text-amber-600 dark:text-amber-400">
+                            <CardTitle className="text-xs font-medium text-orange-600 dark:text-orange-400">
                                 Véhicules en maintenance
                             </CardTitle>
-                            <AlertTriangle className="h-10 w-10 text-amber-500" />
+                            <AlertTriangle className="h-8 w-8 text-orange-500" />
                         </CardHeader>
                         <CardContent>
-                            <div className="text-2xl font-bold text-gray-900 dark:text-white">{stats.maintenanceVehicles}</div>
+                            <div className="text-xl font-bold text-gray-900 dark:text-white">{stats.maintenanceVehicles}</div>
                             <p className="text-xs text-gray-600 dark:text-gray-400">
                                 Véhicules en réparation
                             </p>
@@ -546,7 +546,7 @@ export default function Dashboard() {
                                                     </div>
                                                     <Badge variant={vehicle.status === 'active' ? 'default' : 'secondary'} className="mt-1">
                                                         {vehicle.status === 'active' ? 'Actif' : 
-                                                         vehicle.status === 'maintenance' ? 'Maintenance' : 'Inactif'}
+                                                         vehicle.status === 'maintenance' ? 'Maintenance' : 'À l\'arrêt'}
                                                     </Badge>
                                                 </div>
                                             </div>
@@ -656,7 +656,7 @@ export default function Dashboard() {
                                                                      'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-400'}
                                                         >
                                                             {vehicle.status === 'active' ? 'Actif' : 
-                                                             vehicle.status === 'maintenance' ? 'Maintenance' : 'Inactif'}
+                                                             vehicle.status === 'maintenance' ? 'Maintenance' : 'À l\'arrêt'}
                                                         </Badge>
                                                     </td>
                                                 </tr>
@@ -809,7 +809,7 @@ export default function Dashboard() {
                                                         }`}
                                                     >
                                                         {vehicle.status === 'active' ? 'Actif' :
-                                                         vehicle.status === 'maintenance' ? 'Maint.' : 'Inactif'}
+                                                         vehicle.status === 'maintenance' ? 'Maint.' : 'À l\'arrêt'}
                                                     </Badge>
                                                     {vehicle.speed !== undefined && vehicle.speed > 0 && (
                                                         <div className="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400 shrink-0 ml-auto">

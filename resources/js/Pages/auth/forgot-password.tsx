@@ -50,7 +50,7 @@ export default function ForgotPassword({ status }: Props) {
                     )}
                 </div>
 
-                <Button type="submit" className="w-full" disabled={processing}>
+                <Button type="submit" className="w-full bg-gradient-to-r from-amber-500 via-yellow-500 to-orange-500 hover:from-amber-600 hover:via-yellow-600 hover:to-orange-600 text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-300" disabled={processing}>
                     Envoyer le lien de réinitialisation
                 </Button>
             </form>

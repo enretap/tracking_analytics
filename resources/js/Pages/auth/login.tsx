@@ -87,14 +87,14 @@ export default function Login({ canResetPassword, canRegister, status }: Props) 
                     {canResetPassword && (
                         <Link
                             href="/forgot-password"
-                            className="text-sm text-blue-600 hover:text-blue-500 dark:text-blue-400"
+                            className="text-sm text-amber-600 hover:text-amber-500 dark:text-amber-400"
                         >
                             Mot de passe oublié ?
                         </Link>
                     )}
                 </div>
 
-                <Button type="submit" className="w-full" disabled={processing}>
+                <Button type="submit" className="w-full bg-gradient-to-r from-amber-500 via-yellow-500 to-orange-500 hover:from-amber-600 hover:via-yellow-600 hover:to-orange-600 text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-300" disabled={processing}>
                     Se connecter
                 </Button>
 

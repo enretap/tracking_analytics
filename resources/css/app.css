@@ -152,14 +152,14 @@
         height: 100%;
         z-index: -1;
         opacity: 0.08;
-        background-image: url("data:image/svg+xml,%3Csvg width='80' height='80' viewBox='0 0 80 80' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M40 20c-5.523 0-10 4.477-10 10 0 7.5 10 16.667 10 16.667s10-9.167 10-16.667c0-5.523-4.477-10-10-10zm0 14c-2.21 0-4-1.79-4-4s1.79-4 4-4 4 1.79 4 4-1.79 4-4 4z' fill='%234F46E5' fill-opacity='0.4'/%3E%3C/svg%3E");
+        background-image: url("data:image/svg+xml,%3Csvg width='80' height='80' viewBox='0 0 80 80' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M40 20c-5.523 0-10 4.477-10 10 0 7.5 10 16.667 10 16.667s10-9.167 10-16.667c0-5.523-4.477-10-10-10zm0 14c-2.21 0-4-1.79-4-4s1.79-4 4-4 4 1.79 4 4-1.79 4-4 4z' fill='%23F59E0B' fill-opacity='0.4'/%3E%3C/svg%3E");
         background-repeat: repeat;
         background-size: 80px 80px;
     }
 
     .dark body::before {
         opacity: 0.12;
-        background-image: url("data:image/svg+xml,%3Csvg width='80' height='80' viewBox='0 0 80 80' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M40 20c-5.523 0-10 4.477-10 10 0 7.5 10 16.667 10 16.667s10-9.167 10-16.667c0-5.523-4.477-10-10-10zm0 14c-2.21 0-4-1.79-4-4s1.79-4 4-4 4 1.79 4 4-1.79 4-4 4z' fill='%2360A5FA' fill-opacity='0.4'/%3E%3C/svg%3E");
+        background-image: url("data:image/svg+xml,%3Csvg width='80' height='80' viewBox='0 0 80 80' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M40 20c-5.523 0-10 4.477-10 10 0 7.5 10 16.667 10 16.667s10-9.167 10-16.667c0-5.523-4.477-10-10-10zm0 14c-2.21 0-4-1.79-4-4s1.79-4 4-4 4 1.79 4 4-1.79 4-4 4z' fill='%23FBBF24' fill-opacity='0.4'/%3E%3C/svg%3E");
     }
 
     /* Overlay gradient subtil pour plus d'élégance */
@@ -171,14 +171,14 @@
         width: 100%;
         height: 100%;
         z-index: -1;
-        background: radial-gradient(circle at 20% 50%, rgba(79, 70, 229, 0.03) 0%, transparent 50%),
-                    radial-gradient(circle at 80% 50%, rgba(59, 130, 246, 0.03) 0%, transparent 50%);
+        background: radial-gradient(circle at 20% 50%, rgba(245, 158, 11, 0.03) 0%, transparent 50%),
+                    radial-gradient(circle at 80% 50%, rgba(251, 191, 36, 0.03) 0%, transparent 50%);
         pointer-events: none;
     }
 
     .dark body::after {
-        background: radial-gradient(circle at 20% 50%, rgba(96, 165, 250, 0.05) 0%, transparent 50%),
-                    radial-gradient(circle at 80% 50%, rgba(79, 70, 229, 0.05) 0%, transparent 50%);
+        background: radial-gradient(circle at 20% 50%, rgba(251, 191, 36, 0.05) 0%, transparent 50%),
+                    radial-gradient(circle at 80% 50%, rgba(245, 158, 11, 0.05) 0%, transparent 50%);
     }
 
     /* Animation pour le fond de la page de login */
