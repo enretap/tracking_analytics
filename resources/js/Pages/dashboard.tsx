@@ -20,7 +20,8 @@ import {
   Download,
   RefreshCw,
   FileText,
-  Image as ImageIcon
+  Image as ImageIcon,
+  PauseCircle
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -321,7 +322,7 @@ export default function Dashboard() {
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Dashboard - Tracking Analytics" />
             
-            <div className="flex h-full flex-1 flex-col gap-6 p-6">
+            <div className="flex h-full flex-1 flex-col gap-4 p-4 pt-2">
                 {/* En-tête du Dashboard */}
                 <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
                     <div>
@@ -458,6 +459,21 @@ export default function Dashboard() {
                         </CardContent>
                     </Card>
 
+                    <Card className="border-slate-200 bg-gradient-to-br from-slate-50 to-white dark:border-slate-700 dark:from-slate-800/30 dark:to-gray-900">
+                        <CardHeader className="flex flex-row items-center justify-between pb-2">
+                            <CardTitle className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                                Véhicules à l'arrêt
+                            </CardTitle>
+                            <PauseCircle className="h-10 w-10 text-slate-600 dark:text-slate-400" />
+                        </CardHeader>
+                        <CardContent>
+                            <div className="text-2xl font-bold text-gray-900 dark:text-white">{stats.totalVehicles - stats.activeVehicles}</div>
+                            <p className="text-xs text-slate-600 dark:text-slate-400">
+                                Tous les véhicules inactifs
+                            </p>
+                        </CardContent>
+                    </Card>
+
                     <Card className="border-amber-200 bg-gradient-to-br from-amber-50 to-white dark:border-amber-800 dark:from-amber-900/20 dark:to-gray-900">
                         <CardHeader className="flex flex-row items-center justify-between pb-2">
                             <CardTitle className="text-sm font-medium text-amber-600 dark:text-amber-400">
@@ -472,21 +488,7 @@ export default function Dashboard() {
                             </p>
                         </CardContent>
                     </Card>
-
-                    <Card className="border-red-200 bg-gradient-to-br from-red-50 to-white dark:border-red-800 dark:from-red-900/20 dark:to-gray-900">
-                        <CardHeader className="flex flex-row items-center justify-between pb-2">
-                            <CardTitle className="text-sm font-medium text-red-600 dark:text-red-400">
-                                Véhicules à l'arrêt
-                            </CardTitle>
-                            <AlertTriangle className="h-10 w-10 text-red-500" />
-                        </CardHeader>
-                        <CardContent>
-                            <div className="text-2xl font-bold text-gray-900 dark:text-white">{stats.inactiveVehicles}</div>
-                            <p className="text-xs text-gray-600 dark:text-gray-400">
-                                Véhicules inactifs
-                            </p>
-                        </CardContent>
-                    </Card>
+                    
                 </div>
 
                 {/* Graphiques et tableaux */}

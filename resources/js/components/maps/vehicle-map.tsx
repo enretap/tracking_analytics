@@ -170,7 +170,7 @@ export function VehicleMap({ vehicles, className = '', height = '400px' }: Vehic
         {/* Contrôle des couches de carte */}
         <LayersControl position="topright">
           {/* Couche OpenStreetMap */}
-          <LayersControl.BaseLayer checked name="OpenStreetMap">
+          <LayersControl.BaseLayer name="OpenStreetMap">
             <TileLayer
               attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
               url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
@@ -194,7 +194,7 @@ export function VehicleMap({ vehicles, className = '', height = '400px' }: Vehic
           </LayersControl.BaseLayer>
 
           {/* Couche Satellite */}
-          <LayersControl.BaseLayer name="Satellite">
+          <LayersControl.BaseLayer checked name="Satellite">
             <TileLayer
               attribution='Tiles &copy; Esri'
               url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
