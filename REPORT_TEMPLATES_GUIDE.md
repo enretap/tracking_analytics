@@ -12,7 +12,11 @@ resources/js/
 │   ├── FleetActivityTemplate.tsx       # Template pour activité de la flotte
 │   ├── DriverBehaviorTemplate.tsx      # Template pour comportement conducteurs
 │   ├── MaintenanceTemplate.tsx         # Template pour maintenance
-│   └── FuelConsumptionTemplate.tsx     # Template pour consommation carburant
+│   ├── FuelConsumptionTemplate.tsx     # Template pour consommation carburant
+│   ├── SummaryTemplate.tsx             # Template pour résumé général
+│   ├── EcoDrivingTemplate.tsx          # Template pour éco-conduite
+│   ├── DriverEcoDrivingTemplate.tsx    # Template pour éco-conduite par conducteur
+│   └── GeoEcoDrivingTemplate.tsx       # Template pour éco-conduite géographique
 ├── config/
 │   └── reportTemplates.ts              # Configuration des types de rapports
 └── pages/reports/
@@ -70,6 +74,40 @@ Affiche l'analyse de consommation :
 - Émissions CO₂
 - Top véhicules économes
 - Évolution mensuelle
+
+### 6. **Eco Driving** (`eco_driving`)
+Affiche l'analyse de l'éco-conduite globale :
+- Score éco-conduite global
+- Efficacité carburant
+- Émissions CO₂
+- Économies réalisées
+- Comportements de conduite (accélérations/freinages doux, vitesse optimale, ralenti)
+- Violations et événements (freinages/accélérations brusques, ralenti excessif, excès de vitesse)
+- Top conducteurs éco
+- Comparaison avec la flotte
+
+### 7. **Driver Eco Driving** (`driver_eco_driving`)
+Affiche la performance éco-conduite détaillée par conducteur :
+- Score éco-conduite flotte
+- Carburant total économisé
+- CO₂ total réduit
+- Économies totales réalisées
+- Statistiques conducteurs (excellents, bons, à améliorer)
+- Tableau détaillé par conducteur avec colonnes personnalisables
+- Score éco, efficacité carburant, événements de conduite
+- Meilleur conducteur éco de la période
+- Recommandations éco-conduite
+
+### 8. **Geo Eco Driving** (`geo_eco_driving`)
+Affiche l'analyse de l'éco-conduite par zone géographique :
+- Zones analysées
+- Score éco moyen par zone
+- Distance totale
+- Zones à risque
+- Performance par type de zone (urbain, autoroute, rural)
+- Tableau détaillé par zone géographique
+- Top routes éco et routes à améliorer
+- Impact environnemental et économies par zone
 
 ## Comment ajouter un nouveau template
 
@@ -341,6 +379,166 @@ Chaque template attend des données dans un format spécifique. Voici les interf
     fuel_savings?: number;
     total_distance?: number;
     co2_emissions?: number;
+}
+```
+
+### EcoDrivingTemplate
+```typescript
+{
+    // Métriques éco-conduite
+    eco_score?: number;
+    fuel_efficiency?: number;
+    co2_emissions?: number;
+    eco_driving_percentage?: number;
+    
+    // Comportements de conduite
+    smooth_acceleration_rate?: number;
+    smooth_braking_rate?: number;
+    optimal_speed_rate?: number;
+    idle_time_reduction?: number;
+    
+    // Économies réalisées
+    fuel_saved?: number;
+    cost_saved?: number;
+    co2_reduced?: number;
+    
+    // Comparaisons
+    previous_eco_score?: number;
+    fleet_average_eco_score?: number;
+    best_eco_score?: number;
+    worst_eco_score?: number;
+    
+    // Violations éco-conduite
+    harsh_braking_events?: number;
+    harsh_acceleration_events?: number;
+    excessive_idling_events?: number;
+    speeding_events?: number;
+    
+    // Classement conducteurs
+    top_eco_drivers?: Array<{
+        name: string;
+        score: number;
+        fuel_saved: number;
+    }>;
+    
+    // Période
+    period_start?: string;
+    period_end?: string;
+}
+```
+
+### DriverEcoDrivingTemplate
+```typescript
+{
+    // Métriques globales éco-conduite
+    fleet_eco_score?: number;
+    total_fuel_saved?: number;
+    total_co2_reduced?: number;
+    total_cost_saved?: number;
+    
+    // Comportements de conduite
+    average_smooth_acceleration?: number;
+    average_smooth_braking?: number;
+    average_optimal_speed?: number;
+    average_idle_reduction?: number;
+    
+    // Statistiques conducteurs
+    total_drivers?: number;
+    excellent_eco_drivers?: number;
+    good_eco_drivers?: number;
+    poor_eco_drivers?: number;
+    
+    // Violations
+    total_harsh_braking?: number;
+    total_harsh_acceleration?: number;
+    total_excessive_idling?: number;
+    total_speeding_events?: number;
+    
+    // Classement
+    best_eco_driver?: {
+        name: string;
+        score: number;
+        fuel_saved: number;
+    };
+    
+    // Période
+    period_start?: string;
+    period_end?: string;
+    
+    // Détails conducteurs
+    driver_details?: Array<{
+        immatriculation: string;
+        driver: string;
+        project?: string;
+        eco_score?: number;
+        fuel_efficiency?: number;
+        distance?: number;
+        driving_time?: string;
+        smooth_acceleration_rate?: number;
+        smooth_braking_rate?: number;
+        harsh_braking?: number;
+        harsh_acceleration?: number;
+        excessive_idling?: number;
+        speed_violations?: number;
+        fuel_saved?: number;
+        co2_emissions?: number;
+    }>;
+}
+```
+
+### GeoEcoDrivingTemplate
+```typescript
+{
+    // Métriques globales
+    total_zones?: number;
+    best_zone_eco_score?: number;
+    worst_zone_eco_score?: number;
+    average_zone_eco_score?: number;
+    
+    // Métriques par type de zone
+    urban_eco_score?: number;
+    highway_eco_score?: number;
+    rural_eco_score?: number;
+    
+    // Performance globale
+    total_distance?: number;
+    total_fuel_saved?: number;
+    total_co2_reduced?: number;
+    
+    // Zones à risque
+    high_risk_zones?: number;
+    accident_prone_areas?: number;
+    
+    // Période
+    period_start?: string;
+    period_end?: string;
+    
+    // Détails par zone
+    zone_details?: Array<{
+        zone_name: string;
+        zone_type?: string; // 'urban', 'highway', 'rural'
+        eco_score?: number;
+        fuel_efficiency?: number;
+        distance?: number;
+        average_speed?: number;
+        harsh_events?: number;
+        fuel_saved?: number;
+        co2_emissions?: number;
+        vehicle_count?: number;
+    }>;
+    
+    // Routes principales
+    top_routes?: Array<{
+        route_name: string;
+        start_location?: string;
+        end_location?: string;
+        eco_score?: number;
+        distance?: number;
+        fuel_consumption?: number;
+        average_speed?: number;
+        optimal_speed_rate?: number;
+        trip_count?: number;
+    }>;
 }
 ```
 

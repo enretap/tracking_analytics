@@ -491,6 +491,230 @@ export default function Dashboard() {
                     
                 </div>
 
+                {/* Analyse des comportements à risques */}
+                <Card className="shadow-lg hover:shadow-xl transition-shadow duration-300 border-0 overflow-hidden">
+                    <CardHeader className="bg-gradient-to-r from-amber-500 via-yellow-500 to-orange-500 text-white">
+                        <CardTitle className="flex items-center gap-3 text-lg font-bold">
+                            <AlertTriangle className="h-6 w-6" />
+                            Analyse des comportements à risques
+                        </CardTitle>
+                        <CardDescription className="text-white/90">
+                            Vue d'ensemble des infractions et comportements à risques de la flotte
+                        </CardDescription>
+                    </CardHeader>
+                    <CardContent className="p-6 bg-gray-50">
+                        {/* Graphiques */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            {/* Distribution des distances parcourues */}
+                            <Card className="border-0 shadow-md hover:shadow-lg transition-shadow duration-300 bg-white">
+                                <CardHeader className="pb-3 bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-gray-200">
+                                    <CardTitle className="text-base">Distribution des distances parcourues (km)</CardTitle>
+                                </CardHeader>
+                                <CardContent className="bg-white p-4">
+                                    {(() => {
+                                        const sortedByDistance = [...vehicles]
+                                            .sort((a, b) => b.distance - a.distance)
+                                            .slice(0, 8);
+                                        const maxDistance = Math.max(...sortedByDistance.map(v => v.distance));
+                                        
+                                        return (
+                                            <div className="space-y-2">
+                                                <div className="flex items-end justify-around h-64 gap-2 pb-6">
+                                                    {sortedByDistance.map((vehicle, idx) => {
+                                                        const heightPercent = vehicle.distance / maxDistance * 100;
+                                                        return (
+                                                            <div key={idx} className="flex flex-col items-center justify-end flex-1 h-full">
+                                                                <div className="text-xs font-semibold mb-1 text-[#1e3a5f]">
+                                                                    {vehicle.distance.toFixed(0)}
+                                                                </div>
+                                                                <div 
+                                                                    className="w-full bg-gradient-to-t from-[#1e3a5f] to-[#3b5998] rounded-t transition-all duration-300 hover:opacity-80 min-h-[4px]"
+                                                                    style={{ height: `${heightPercent}%` }}
+                                                                ></div>
+                                                            </div>
+                                                        );
+                                                    })}
+                                                </div>
+                                                <div className="flex justify-around gap-2">
+                                                    {sortedByDistance.map((vehicle, idx) => (
+                                                        <div key={idx} className="flex-1 text-center text-xs">
+                                                            {vehicle.plate}
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        );
+                                    })()}
+                                </CardContent>
+                            </Card>
+
+                            {/* Statut des véhicules */}
+                            <Card className="border-0 shadow-md hover:shadow-lg transition-shadow duration-300 bg-white">
+                                <CardHeader className="pb-3 bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-gray-200">
+                                    <CardTitle className="text-base">Répartition par statut</CardTitle>
+                                </CardHeader>
+                                <CardContent className="bg-white p-4">
+                                    {(() => {
+                                        const statusCounts = {
+                                            active: vehicles.filter(v => v.status === 'active').length,
+                                            inactive: vehicles.filter(v => v.status === 'inactive').length,
+                                            maintenance: vehicles.filter(v => v.status === 'maintenance').length,
+                                        };
+                                        const total = vehicles.length;
+                                        const colors = {
+                                            active: '#10b981',
+                                            inactive: '#64748b', 
+                                            maintenance: '#f59e0b'
+                                        };
+                                        const labels = {
+                                            active: 'En mouvement',
+                                            inactive: 'À l\'arrêt',
+                                            maintenance: 'Maintenance'
+                                        };
+                                        
+                                        return (
+                                            <div className="flex flex-col items-center gap-4">
+                                                {/* Pie Chart */}
+                                                <div className="relative w-56 h-56">
+                                                    <svg viewBox="0 0 200 200" className="transform -rotate-90">
+                                                        {(() => {
+                                                            let currentAngle = 0;
+                                                            return Object.entries(statusCounts).map(([status, count], idx) => {
+                                                                if (count === 0) return null;
+                                                                const percentage = count / total;
+                                                                const angle = percentage * 360;
+                                                                const startAngle = currentAngle;
+                                                                const endAngle = currentAngle + angle;
+                                                                currentAngle = endAngle;
+                                                                
+                                                                const startRad = (startAngle * Math.PI) / 180;
+                                                                const endRad = (endAngle * Math.PI) / 180;
+                                                                
+                                                                const x1 = 100 + 80 * Math.cos(startRad);
+                                                                const y1 = 100 + 80 * Math.sin(startRad);
+                                                                const x2 = 100 + 80 * Math.cos(endRad);
+                                                                const y2 = 100 + 80 * Math.sin(endRad);
+                                                                
+                                                                const largeArc = angle > 180 ? 1 : 0;
+                                                                
+                                                                return (
+                                                                    <path
+                                                                        key={status}
+                                                                        d={`M 100 100 L ${x1} ${y1} A 80 80 0 ${largeArc} 1 ${x2} ${y2} Z`}
+                                                                        fill={colors[status as keyof typeof colors]}
+                                                                        stroke="white"
+                                                                        strokeWidth="2"
+                                                                    />
+                                                                );
+                                                            });
+                                                        })()}
+                                                    </svg>
+                                                    <div className="absolute inset-0 flex flex-col items-center justify-center">
+                                                        <div className="text-2xl font-bold text-gray-800">{total}</div>
+                                                        <div className="text-xs text-gray-500">Véhicules</div>
+                                                    </div>
+                                                </div>
+                                                
+                                                {/* Légende */}
+                                                <div className="grid grid-cols-1 gap-2 w-full text-xs">
+                                                    {Object.entries(statusCounts).map(([status, count]) => {
+                                                        const percentage = ((count / total) * 100).toFixed(1);
+                                                        return (
+                                                            <div key={status} className="flex items-center justify-between gap-2">
+                                                                <div className="flex items-center gap-2">
+                                                                    <div className="w-3 h-3 rounded-sm" style={{ backgroundColor: colors[status as keyof typeof colors] }}></div>
+                                                                    <span className="font-medium">{labels[status as keyof typeof labels]}</span>
+                                                                </div>
+                                                                <span className="text-gray-600">{percentage}% ({count})</span>
+                                                            </div>
+                                                        );
+                                                    })}
+                                                </div>
+                                            </div>
+                                        );
+                                    })()}
+                                </CardContent>
+                            </Card>
+
+                            {/* Vitesses actuelles */}
+                            <Card className="border-0 shadow-md hover:shadow-lg transition-shadow duration-300 bg-white">
+                                <CardHeader className="pb-3 bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-gray-200">
+                                    <CardTitle className="text-base">Véhicules par vitesse (Km/h)</CardTitle>
+                                </CardHeader>
+                                <CardContent className="bg-white">
+                                    {(() => {
+                                        const activeVehicles = vehicles.filter(v => v.status === 'active' && v.speed);
+                                        const sortedBySpeed = activeVehicles
+                                            .sort((a, b) => (b.speed || 0) - (a.speed || 0))
+                                            .slice(0, 5);
+                                        const maxSpeed = Math.max(...sortedBySpeed.map(v => v.speed || 0), 1);
+                                        
+                                        if (sortedBySpeed.length === 0) {
+                                            return <div className="text-center text-gray-500 py-8">Aucun véhicule en mouvement</div>;
+                                        }
+                                        
+                                        return (
+                                            <div className="space-y-2">
+                                                {sortedBySpeed.map((vehicle, idx) => (
+                                                    <div key={idx}>
+                                                        <div className="flex justify-between mb-1 text-sm">
+                                                            <span>{vehicle.plate}</span>
+                                                            <span className="font-bold text-[#8B4513]">{vehicle.speed}</span>
+                                                        </div>
+                                                        <div className="w-full bg-gray-200 rounded h-5">
+                                                            <div 
+                                                                className="bg-[#1e3a5f] h-5 rounded"
+                                                                style={{ width: `${((vehicle.speed || 0) / maxSpeed * 100)}%` }}
+                                                            ></div>
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        );
+                                    })()}
+                                </CardContent>
+                            </Card>
+
+                            {/* Performance de la flotte */}
+                            <Card className="border-0 shadow-md hover:shadow-lg transition-shadow duration-300 bg-white">
+                                <CardHeader className="pb-3 bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-gray-200">
+                                    <CardTitle className="text-base">Performance globale</CardTitle>
+                                </CardHeader>
+                                <CardContent className="bg-white p-4">
+                                    <div className="space-y-4">
+                                        <div className="flex items-center justify-between">
+                                            <span className="text-sm font-medium text-gray-700">Taux d'activité</span>
+                                            <span className="text-lg font-bold text-green-600">
+                                                {((stats.activeVehicles / stats.totalVehicles) * 100).toFixed(0)}%
+                                            </span>
+                                        </div>
+                                        <div className="h-2 w-full overflow-hidden rounded-full bg-gray-200">
+                                            <div 
+                                                className="h-full rounded-full bg-gradient-to-r from-green-500 to-emerald-500"
+                                                style={{ width: `${(stats.activeVehicles / stats.totalVehicles) * 100}%` }}
+                                            />
+                                        </div>
+                                        
+                                        <div className="flex items-center justify-between mt-4">
+                                            <span className="text-sm font-medium text-gray-700">Distance moyenne</span>
+                                            <span className="text-lg font-bold text-blue-600">
+                                                {(vehicles.reduce((sum, v) => sum + v.distance, 0) / vehicles.length).toFixed(0)} km
+                                            </span>
+                                        </div>
+                                        
+                                        <div className="flex items-center justify-between mt-4">
+                                            <span className="text-sm font-medium text-gray-700">Véhicules en maintenance</span>
+                                            <span className="text-lg font-bold text-orange-600">
+                                                {stats.maintenanceVehicles}
+                                            </span>
+                                        </div>
+                                    </div>
+                                </CardContent>
+                            </Card>
+                        </div>
+                    </CardContent>
+                </Card>
+
                 {/* Graphiques et tableaux */}
                 <Tabs defaultValue="overview" className="space-y-4">
                     <TabsList>

@@ -5,6 +5,9 @@ import { FleetActivityTemplate } from '@/components/reports/templates/FleetActiv
 import { DriverBehaviorTemplate } from '@/components/reports/templates/DriverBehaviorTemplate';
 import { MaintenanceTemplate } from '@/components/reports/templates/MaintenanceTemplate';
 import { FuelConsumptionTemplate } from '@/components/reports/templates/FuelConsumptionTemplate';
+import { EcoDrivingTemplate } from '@/components/reports/templates/EcoDrivingTemplate';
+import { DriverEcoDrivingTemplate } from '@/components/reports/templates/DriverEcoDrivingTemplate';
+import { GeoEcoDrivingTemplate } from '@/components/reports/templates/GeoEcoDrivingTemplate';
 import { Button } from '@/components/ui/button';
 import { Download, Mail, Loader2 } from 'lucide-react';
 import { useState } from 'react';
@@ -105,6 +108,15 @@ export default function ReportDetail({ report }: Props) {
             case 'fuel_consumption':
                 return <FuelConsumptionTemplate data={data} />;
             
+            case 'eco_driving':
+                return <EcoDrivingTemplate data={data} />;
+            
+            case 'driver_eco_driving':
+                return <DriverEcoDrivingTemplate data={data} />;
+            
+            case 'geo_eco_driving':
+                return <GeoEcoDrivingTemplate data={data} />;
+            
             default:
                 // Fallback: afficher le template FleetActivity par défaut
                 return <FleetActivityTemplate data={data} />;
@@ -121,7 +133,7 @@ export default function ReportDetail({ report }: Props) {
             <div className="space-y-6">
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                     <div>
-                        <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">
+                        <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">
                             {report.name}
                         </h1>
                         {report.period_start && report.period_end && (

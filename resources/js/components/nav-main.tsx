@@ -118,7 +118,7 @@ export function NavMain({ items = [] }: { items: NavItem[] }) {
                                                             <SidebarMenuSubButton asChild>
                                                                 <Link href={`/reports/${report.id}`}>
                                                                     <FileText className="h-4 w-4" />
-                                                                    <span className="truncate">{report.name}</span>
+                                                                    <span>{report.name}</span>
                                                                 </Link>
                                                             </SidebarMenuSubButton>
                                                         </SidebarMenuSubItem>

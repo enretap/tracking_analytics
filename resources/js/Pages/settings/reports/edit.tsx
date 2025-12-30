@@ -54,6 +54,9 @@ export default function EditReport({ report, accounts }: Props) {
         { value: 'driver_behavior', label: 'Comportement conducteur' },
         { value: 'maintenance', label: 'Maintenance' },
         { value: 'fuel_consumption', label: 'Consommation carburant' },
+        { value: 'eco_driving', label: 'Éco-Conduite' },
+        { value: 'driver_eco_driving', label: 'Éco-Conduite par Conducteur' },
+        { value: 'geo_eco_driving', label: 'Éco-Conduite Géographique' },
     ];
 
     return (

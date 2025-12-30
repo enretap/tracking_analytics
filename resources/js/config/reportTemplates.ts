@@ -7,6 +7,9 @@ export const REPORT_TYPES = {
     MAINTENANCE: 'maintenance',
     FUEL_CONSUMPTION: 'fuel_consumption',
     SUMMARY: 'summary',
+    ECO_DRIVING: 'eco_driving',
+    DRIVER_ECO_DRIVING: 'driver_eco_driving',
+    GEO_ECO_DRIVING: 'geo_eco_driving',
 } as const;
 
 export type ReportType = typeof REPORT_TYPES[keyof typeof REPORT_TYPES];
@@ -48,6 +51,23 @@ export const REPORT_TYPE_CONFIG: Record<string, ReportTypeConfig> = {
         description: 'Vue d\'ensemble complète de toutes les métriques de votre flotte',
         icon: 'BarChart3',
         color: 'indigo',
+    },
+    [REPORT_TYPES.ECO_DRIVING]: {
+        name: 'Éco-Conduite',
+        description: 'Analyse de l\'éco-conduite et des économies de carburant',
+        icon: 'Leaf',
+        color: 'green',
+    },    [REPORT_TYPES.DRIVER_ECO_DRIVING]: {
+        name: 'Éco-Conduite par Conducteur',
+        description: 'Performance éco-conduite détaillée de chaque conducteur',
+        icon: 'Users',
+        color: 'emerald',
+    },
+    [REPORT_TYPES.GEO_ECO_DRIVING]: {
+        name: 'Éco-Conduite Géographique',
+        description: 'Analyse de l'éco-conduite par zone géographique et routes',
+        icon: 'MapPin',
+        color: 'cyan',
     },
 };
 

@@ -141,6 +141,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
                 ];
                 break;
 
+            case 'eco_driving':
+            case 'driver_eco_driving':
+            case 'geo_eco_driving':
             case 'summary':
                 $reportData['data'] = [
                     // Métriques de la flotte
