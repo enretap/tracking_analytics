@@ -16,12 +16,62 @@ Route::post('/invitation/accept/{token}', [\App\Http\Controllers\Auth\Invitation
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('dashboard', function () {
-        return Inertia::render('dashboard');
+        $user = auth()->user();
+        $account = $user->account;
+        
+        // Récupérer les données d'éco-conduite depuis TARGA TELEMATICS
+        $ecoData = [];
+        if ($account) {
+            $ecoDrivingService = app(\App\Services\EcoDrivingService::class);
+            
+            // Récupérer les paramètres de date depuis la requête (optionnel)
+            $startDate = request('start_date');
+            $endDate = request('end_date');
+            
+            $ecoData = $ecoDrivingService->fetchEcoDrivingData($account, $startDate, $endDate);
+        }
+        
+        return Inertia::render('dashboard', [
+            'eco_data' => $ecoData,
+        ]);
     })->name('dashboard');
 
     // Vehicles routes
     Route::get('/api/vehicles', [\App\Http\Controllers\VehicleController::class, 'index'])->name('api.vehicles.index');
     Route::get('/vehicles', [\App\Http\Controllers\VehicleController::class, 'page'])->name('vehicles.page');
+
+    // Eco-driving data API endpoint
+    Route::get('/api/eco-driving', function () {
+        $user = auth()->user();
+        $account = $user->account;
+        
+        if (!$account) {
+            return response()->json([
+                'success' => false,
+                'error' => 'Compte non trouvé',
+                'data' => []
+            ], 404);
+        }
+        
+        $ecoDrivingService = app(\App\Services\EcoDrivingService::class);
+        
+        // Récupérer les paramètres de date depuis la requête
+        $startDate = request('start_date');
+        $endDate = request('end_date');
+        $forceRefresh = request('force_refresh', false);
+        
+        // Clear cache if force refresh
+        if ($forceRefresh) {
+            $ecoDrivingService->clearCache($account);
+        }
+        
+        $data = $ecoDrivingService->fetchEcoDrivingData($account, $startDate, $endDate);
+        
+        return response()->json([
+            'success' => true,
+            'data' => $data
+        ]);
+    })->name('api.eco-driving');
 
     // Reports routes
     Route::get('/api/reports', function () {
