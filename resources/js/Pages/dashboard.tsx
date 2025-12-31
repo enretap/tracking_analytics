@@ -21,7 +21,8 @@ import {
   RefreshCw,
   FileText,
   Image as ImageIcon,
-  PauseCircle
+  PauseCircle,
+  Globe
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -53,6 +54,22 @@ interface Report {
     type?: string;
     created_at: string;
     preview_image?: string;
+}
+
+interface VehicleDriverDetail {
+    immatriculation: string;
+    driver: string;
+    project?: string;
+    max_speed?: number;
+    distance?: number;
+    driving_time?: string;
+    idle_time?: string;
+    harsh_braking?: number;
+    harsh_acceleration?: number;
+    dangerous_turns?: number;
+    speed_violations?: number;
+    driving_time_violations?: number;
+    total_violations?: number;
 }
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -181,7 +198,6 @@ const mockVehicles : Vehicle[]  = [
   }, */
 ];
 
-
 const timePeriods = [
     { value: 'today', label: 'Aujourd\'hui' },
     { value: 'yesterday', label: 'Hier' },
@@ -192,12 +208,56 @@ const timePeriods = [
     { value: 'custom', label: 'Période personnalisée' },
 ];
 
-/* interface DateRange {
-  from?: Date;
-  to?: Date;
-} */
+interface EcoDrivingData {
+    // Métriques de la flotte
+    total_vehicles?: number;
+    active_vehicles?: number;
+    inactive_vehicles?: number;
+    total_distance?: number;
+    
+    // Métriques des conducteurs
+    total_drivers?: number;
+    active_drivers?: number;
+    average_driver_score?: number;
+    
+    // Métriques opérationnelles
+    total_trips?: number;
+    average_trip_distance?: number;
+    operating_hours?: number;
+    
+    // Métriques de carburant
+    total_fuel_consumption?: number;
+    average_fuel_efficiency?: number;
+    fuel_cost?: number;
+    
+    // Métriques de maintenance
+    scheduled_maintenances?: number;
+    completed_maintenances?: number;
+    pending_maintenances?: number;
+    maintenance_cost?: number;
+    
+    // Alertes et incidents
+    total_alerts?: number;
+    critical_alerts?: number;
+    resolved_alerts?: number;
+    
+    // Performance
+    compliance_rate?: number;
+    on_time_delivery?: number;
+    
+    // Période
+    period_start?: string;
+    period_end?: string;
+    
+    // Détails véhicules/conducteurs
+    vehicle_details?: VehicleDriverDetail[];
+}
 
-export default function Dashboard() {
+interface Props {
+    eco_data: EcoDrivingData;
+}
+
+export default function Dashboard({ eco_data }: Props) {
     const [selectedPeriod, setSelectedPeriod] = useState('week');
     const [dateRange, setDateRange] = useState({ from: new Date(), to: new Date() });
     const [isRefreshing, setIsRefreshing] = useState(false);
@@ -275,17 +335,6 @@ export default function Dashboard() {
         { hour: '16:00', maxSpeed: 105 },
         { hour: '20:00', maxSpeed: 90 },
     ];
-
-    const handleRefresh = async () => {
-        setIsRefreshing(true);
-        await refetchVehicles();
-        setTimeout(() => setIsRefreshing(false), 500);
-    };
-
-    const handleExport = () => {
-        // Logique d'export des données
-        console.log('Exporting data...');
-    };
 
     const handleToggleVehicle = (vehicleId: string) => {
         setSelectedVehicleIds(prev => 
@@ -492,85 +541,65 @@ export default function Dashboard() {
                 </div>
 
                 {/* Analyse des comportements à risques */}
-                <Card className="shadow-lg hover:shadow-xl transition-shadow duration-300 border-0 overflow-hidden">
-                    <CardHeader className="bg-gradient-to-r from-amber-500 via-yellow-500 to-orange-500 text-white">
-                        <CardTitle className="flex items-center gap-3 text-lg font-bold">
-                            <AlertTriangle className="h-6 w-6" />
-                            Analyse des comportements à risques
-                        </CardTitle>
-                        <CardDescription className="text-white/90">
-                            Vue d'ensemble des infractions et comportements à risques de la flotte
-                        </CardDescription>
+                <Card>
+                    <CardHeader>
+                        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                            <div>
+                                <CardTitle className="flex items-center gap-2">
+                                    <AlertTriangle className="h-5 w-5" />
+                                    Analyse des comportements à risques
+                                </CardTitle>
+                                <CardDescription>
+                                    Vue d'ensemble des infractions et comportements à risques de la flotte
+                                </CardDescription>
+                            </div>
+                            
+                            <div className="flex flex-wrap items-center gap-2">
+                                {(() => {
+                                    const ecoReport = reports.find(r => r.type === 'eco_driving');
+                                    if (ecoReport) {
+                                        return (
+                                            <Button
+                                                variant="outline"
+                                                size="sm"
+                                                onClick={() => window.location.href = `/reports/${ecoReport.id}`}
+                                                className="flex items-center gap-2"
+                                            >
+                                                <FileText className="h-4 w-4" />
+                                                Voir le rapport complet
+                                            </Button>
+                                        );
+                                    }
+                                    return null;
+                                })()}
+                            </div>
+                        </div>
                     </CardHeader>
                     <CardContent className="p-6 bg-gray-50">
                         {/* Graphiques */}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            {/* Distribution des distances parcourues */}
+                            {/* Répartition des violations de vitesse par véhicule (%) */}
                             <Card className="border-0 shadow-md hover:shadow-lg transition-shadow duration-300 bg-white">
                                 <CardHeader className="pb-3 bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-gray-200">
-                                    <CardTitle className="text-base">Distribution des distances parcourues (km)</CardTitle>
+                                    <CardTitle className="text-base">Répartition des violations de vitesse (%)</CardTitle>
                                 </CardHeader>
                                 <CardContent className="bg-white p-4">
                                     {(() => {
-                                        const sortedByDistance = [...vehicles]
-                                            .sort((a, b) => b.distance - a.distance)
-                                            .slice(0, 8);
-                                        const maxDistance = Math.max(...sortedByDistance.map(v => v.distance));
+                                        // Safety check for vehicle_details
+                                        if (!eco_data?.vehicle_details || eco_data.vehicle_details.length === 0) {
+                                            return <div className="text-center text-gray-500 py-8">Aucune violation</div>;
+                                        }
+                                        const totalViolations = eco_data.vehicle_details.reduce((sum, v) => sum + (v.speed_violations || 0), 0);
+                                        const topVehicles = eco_data.vehicle_details
+                                            .filter(v => (v.speed_violations || 0) > 0)
+                                            .sort((a, b) => (b.speed_violations || 0) - (a.speed_violations || 0))
+                                            .slice(0, 5);
                                         
-                                        return (
-                                            <div className="space-y-2">
-                                                <div className="flex items-end justify-around h-64 gap-2 pb-6">
-                                                    {sortedByDistance.map((vehicle, idx) => {
-                                                        const heightPercent = vehicle.distance / maxDistance * 100;
-                                                        return (
-                                                            <div key={idx} className="flex flex-col items-center justify-end flex-1 h-full">
-                                                                <div className="text-xs font-semibold mb-1 text-[#1e3a5f]">
-                                                                    {vehicle.distance.toFixed(0)}
-                                                                </div>
-                                                                <div 
-                                                                    className="w-full bg-gradient-to-t from-[#1e3a5f] to-[#3b5998] rounded-t transition-all duration-300 hover:opacity-80 min-h-[4px]"
-                                                                    style={{ height: `${heightPercent}%` }}
-                                                                ></div>
-                                                            </div>
-                                                        );
-                                                    })}
-                                                </div>
-                                                <div className="flex justify-around gap-2">
-                                                    {sortedByDistance.map((vehicle, idx) => (
-                                                        <div key={idx} className="flex-1 text-center text-xs">
-                                                            {vehicle.plate}
-                                                        </div>
-                                                    ))}
-                                                </div>
-                                            </div>
-                                        );
-                                    })()}
-                                </CardContent>
-                            </Card>
+                                        if (totalViolations === 0) {
+                                            return <div className="text-center text-gray-500 py-8">Aucune violation de vitesse</div>;
+                                        }
 
-                            {/* Statut des véhicules */}
-                            <Card className="border-0 shadow-md hover:shadow-lg transition-shadow duration-300 bg-white">
-                                <CardHeader className="pb-3 bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-gray-200">
-                                    <CardTitle className="text-base">Répartition par statut</CardTitle>
-                                </CardHeader>
-                                <CardContent className="bg-white p-4">
-                                    {(() => {
-                                        const statusCounts = {
-                                            active: vehicles.filter(v => v.status === 'active').length,
-                                            inactive: vehicles.filter(v => v.status === 'inactive').length,
-                                            maintenance: vehicles.filter(v => v.status === 'maintenance').length,
-                                        };
-                                        const total = vehicles.length;
-                                        const colors = {
-                                            active: '#10b981',
-                                            inactive: '#64748b', 
-                                            maintenance: '#f59e0b'
-                                        };
-                                        const labels = {
-                                            active: 'En mouvement',
-                                            inactive: 'À l\'arrêt',
-                                            maintenance: 'Maintenance'
-                                        };
+                                        const colors = ['#1e3a5f', '#8B4513', '#d946ef', '#f59e0b', '#10b981'];
                                         
                                         return (
                                             <div className="flex flex-col items-center gap-4">
@@ -579,17 +608,18 @@ export default function Dashboard() {
                                                     <svg viewBox="0 0 200 200" className="transform -rotate-90">
                                                         {(() => {
                                                             let currentAngle = 0;
-                                                            return Object.entries(statusCounts).map(([status, count], idx) => {
-                                                                if (count === 0) return null;
-                                                                const percentage = count / total;
+                                                            return topVehicles.map((vehicle, idx) => {
+                                                                const percentage = (vehicle.speed_violations || 0) / totalViolations;
                                                                 const angle = percentage * 360;
                                                                 const startAngle = currentAngle;
                                                                 const endAngle = currentAngle + angle;
                                                                 currentAngle = endAngle;
                                                                 
+                                                                // Convertir les angles en radians
                                                                 const startRad = (startAngle * Math.PI) / 180;
                                                                 const endRad = (endAngle * Math.PI) / 180;
                                                                 
+                                                                // Calculer les points du segment
                                                                 const x1 = 100 + 80 * Math.cos(startRad);
                                                                 const y1 = 100 + 80 * Math.sin(startRad);
                                                                 const x2 = 100 + 80 * Math.cos(endRad);
@@ -599,9 +629,9 @@ export default function Dashboard() {
                                                                 
                                                                 return (
                                                                     <path
-                                                                        key={status}
+                                                                        key={idx}
                                                                         d={`M 100 100 L ${x1} ${y1} A 80 80 0 ${largeArc} 1 ${x2} ${y2} Z`}
-                                                                        fill={colors[status as keyof typeof colors]}
+                                                                        fill={colors[idx]}
                                                                         stroke="white"
                                                                         strokeWidth="2"
                                                                     />
@@ -609,23 +639,24 @@ export default function Dashboard() {
                                                             });
                                                         })()}
                                                     </svg>
+                                                    {/* Centre avec total */}
                                                     <div className="absolute inset-0 flex flex-col items-center justify-center">
-                                                        <div className="text-2xl font-bold text-gray-800">{total}</div>
-                                                        <div className="text-xs text-gray-500">Véhicules</div>
+                                                        <div className="text-2xl font-bold text-gray-800">{totalViolations}</div>
+                                                        <div className="text-xs text-gray-500">Total</div>
                                                     </div>
                                                 </div>
                                                 
                                                 {/* Légende */}
                                                 <div className="grid grid-cols-1 gap-2 w-full text-xs">
-                                                    {Object.entries(statusCounts).map(([status, count]) => {
-                                                        const percentage = ((count / total) * 100).toFixed(1);
+                                                    {topVehicles.map((vehicle, idx) => {
+                                                        const percentage = ((vehicle.speed_violations || 0) / totalViolations * 100).toFixed(1);
                                                         return (
-                                                            <div key={status} className="flex items-center justify-between gap-2">
+                                                            <div key={idx} className="flex items-center justify-between gap-2">
                                                                 <div className="flex items-center gap-2">
-                                                                    <div className="w-3 h-3 rounded-sm" style={{ backgroundColor: colors[status as keyof typeof colors] }}></div>
-                                                                    <span className="font-medium">{labels[status as keyof typeof labels]}</span>
+                                                                    <div className="w-3 h-3 rounded-sm" style={{ backgroundColor: colors[idx] }}></div>
+                                                                    <span className="font-medium">{vehicle.immatriculation}</span>
                                                                 </div>
-                                                                <span className="text-gray-600">{percentage}% ({count})</span>
+                                                                <span className="text-gray-600">{percentage}% ({vehicle.speed_violations})</span>
                                                             </div>
                                                         );
                                                     })}
@@ -636,35 +667,35 @@ export default function Dashboard() {
                                 </CardContent>
                             </Card>
 
-                            {/* Vitesses actuelles */}
+                            {/* Véhicules en infractions de vitesse */}
                             <Card className="border-0 shadow-md hover:shadow-lg transition-shadow duration-300 bg-white">
                                 <CardHeader className="pb-3 bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-gray-200">
-                                    <CardTitle className="text-base">Véhicules par vitesse (Km/h)</CardTitle>
+                                    <CardTitle className="text-base">Véhicules en infractions de vitesse (Km/h)</CardTitle>
                                 </CardHeader>
                                 <CardContent className="bg-white">
                                     {(() => {
-                                        const activeVehicles = vehicles.filter(v => v.status === 'active' && v.speed);
-                                        const sortedBySpeed = activeVehicles
-                                            .sort((a, b) => (b.speed || 0) - (a.speed || 0))
-                                            .slice(0, 5);
-                                        const maxSpeed = Math.max(...sortedBySpeed.map(v => v.speed || 0), 1);
-                                        
-                                        if (sortedBySpeed.length === 0) {
-                                            return <div className="text-center text-gray-500 py-8">Aucun véhicule en mouvement</div>;
+                                        // Safety check for vehicle_details
+                                        if (!eco_data?.vehicle_details || eco_data.vehicle_details.length === 0) {
+                                            return <div className="text-center text-gray-500 py-8">Aucun véhicule</div>;
                                         }
+                                        const speedViolators = eco_data.vehicle_details
+                                            .filter(v => (v.max_speed || 0) > 90)
+                                            .sort((a, b) => (b.max_speed || 0) - (a.max_speed || 0))
+                                            .slice(0, 5);
+                                        const maxSpeed = Math.max(...speedViolators.map(v => v.max_speed || 0));
                                         
                                         return (
                                             <div className="space-y-2">
-                                                {sortedBySpeed.map((vehicle, idx) => (
+                                                {speedViolators.map((vehicle, idx) => (
                                                     <div key={idx}>
                                                         <div className="flex justify-between mb-1 text-sm">
-                                                            <span>{vehicle.plate}</span>
-                                                            <span className="font-bold text-[#8B4513]">{vehicle.speed}</span>
+                                                            <span>{vehicle.immatriculation}</span>
+                                                            <span className="font-bold text-[#8B4513]">{vehicle.max_speed}</span>
                                                         </div>
                                                         <div className="w-full bg-gray-200 rounded h-5">
                                                             <div 
                                                                 className="bg-[#1e3a5f] h-5 rounded"
-                                                                style={{ width: `${((vehicle.speed || 0) / maxSpeed * 100)}%` }}
+                                                                style={{ width: `${((vehicle.max_speed || 0) / maxSpeed * 100)}%` }}
                                                             ></div>
                                                         </div>
                                                     </div>
@@ -674,43 +705,406 @@ export default function Dashboard() {
                                     })()}
                                 </CardContent>
                             </Card>
+                        </div>
+                    </CardContent>
+                </Card>
 
-                            {/* Performance de la flotte */}
+                {/* Analyse des comportements à risques par conducteur */}
+                <Card>
+                    <CardHeader>
+                        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                            <div>
+                                <CardTitle className="flex items-center gap-2">
+                                    <Activity className="h-5 w-5" />
+                                    Analyse des comportements à risques par conducteur
+                                </CardTitle>
+                                <CardDescription>
+                                    Performance et comportements de conduite par conducteur
+                                </CardDescription>
+                            </div>
+                            
+                            <div className="flex flex-wrap items-center gap-2">
+                                {(() => {
+                                    const driverReport = reports.find(r => r.type === 'driver_eco_driving');
+                                    if (driverReport) {
+                                        return (
+                                            <Button
+                                                variant="outline"
+                                                size="sm"
+                                                onClick={() => window.location.href = `/reports/${driverReport.id}`}
+                                                className="flex items-center gap-2"
+                                            >
+                                                <FileText className="h-4 w-4" />
+                                                Voir le rapport complet
+                                            </Button>
+                                        );
+                                    }
+                                    return null;
+                                })()}
+                            </div>
+                        </div>
+                    </CardHeader>
+                    <CardContent className="p-6 bg-gray-50">
+                        {/* Graphiques */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            {/* Répartition des infractions par véhicule (%) */}
                             <Card className="border-0 shadow-md hover:shadow-lg transition-shadow duration-300 bg-white">
-                                <CardHeader className="pb-3 bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-gray-200">
-                                    <CardTitle className="text-base">Performance globale</CardTitle>
+                                <CardHeader className="pb-3 bg-gradient-to-r from-red-50 to-yellow-50 border-b border-gray-200">
+                                    <CardTitle className="text-base">Répartition des infractions par véhicule (%)</CardTitle>
                                 </CardHeader>
                                 <CardContent className="bg-white p-4">
-                                    <div className="space-y-4">
-                                        <div className="flex items-center justify-between">
-                                            <span className="text-sm font-medium text-gray-700">Taux d'activité</span>
-                                            <span className="text-lg font-bold text-green-600">
-                                                {((stats.activeVehicles / stats.totalVehicles) * 100).toFixed(0)}%
-                                            </span>
-                                        </div>
-                                        <div className="h-2 w-full overflow-hidden rounded-full bg-gray-200">
-                                            <div 
-                                                className="h-full rounded-full bg-gradient-to-r from-green-500 to-emerald-500"
-                                                style={{ width: `${(stats.activeVehicles / stats.totalVehicles) * 100}%` }}
-                                            />
-                                        </div>
+                                    {(() => {
+                                        // Safety check for vehicle_details
+                                        if (!eco_data?.vehicle_details || eco_data.vehicle_details.length === 0) {
+                                            return <div className="text-center text-gray-500 py-8">Aucune infraction</div>;
+                                        }
+
+                                        const totalViolations = eco_data.vehicle_details.reduce((sum, v) => sum + (v.total_violations || 0), 0);
+                                        const topViolators = eco_data.vehicle_details
+                                            .filter(v => (v.total_violations || 0) > 0)
+                                            .sort((a, b) => (b.total_violations || 0) - (a.total_violations || 0))
+                                            .slice(0, 6);
                                         
-                                        <div className="flex items-center justify-between mt-4">
-                                            <span className="text-sm font-medium text-gray-700">Distance moyenne</span>
-                                            <span className="text-lg font-bold text-blue-600">
-                                                {(vehicles.reduce((sum, v) => sum + v.distance, 0) / vehicles.length).toFixed(0)} km
-                                            </span>
-                                        </div>
+                                        if (totalViolations === 0) {
+                                            return <div className="text-center text-gray-500 py-8">Aucune infraction</div>;
+                                        }
+
+                                        const colors = ['#1e3a5f', '#8B4513', '#d946ef', '#f59e0b', '#10b981', '#ef4444'];
+        
+                                        return (
+                                            <div className="flex flex-col items-center gap-1">
+                                                {/* Donut chart */}
+                                                <div className="relative w-64 h-64">
+                                                    <svg viewBox="0 0 200 200" className="transform -rotate-90">
+                                                        {(() => {
+                                                            let currentAngle = 0;
+                                                            return topViolators.map((vehicle, idx) => {
+                                                                const percentage = (vehicle.total_violations || 0) / totalViolations;
+                                                                const angle = percentage * 360;
+                                                                const startAngle = currentAngle;
+                                                                currentAngle += angle;
+                                                                
+                                                                const startRad = (startAngle * Math.PI) / 180;
+                                                                const endRad = (currentAngle * Math.PI) / 180;
+                                                                
+                                                                const x1 = 100 + 75 * Math.cos(startRad);
+                                                                const y1 = 100 + 75 * Math.sin(startRad);
+                                                                const x2 = 100 + 75 * Math.cos(endRad);
+                                                                const y2 = 100 + 75 * Math.sin(endRad);
+                                                                
+                                                                const largeArc = angle > 180 ? 1 : 0;
+                                                                
+                                                                return (
+                                                                    <path
+                                                                        key={idx}
+                                                                        d={`M 100 100 L ${x1} ${y1} A 75 75 0 ${largeArc} 1 ${x2} ${y2} Z`}
+                                                                        fill={colors[idx]}
+                                                                        stroke="white"
+                                                                        strokeWidth="2"
+                                                                        className="hover:opacity-80 transition-opacity cursor-pointer"
+                                                                    />
+                                                                );
+                                                            });
+                                                        })()}
+                                                        <circle cx="100" cy="100" r="50" fill="white" />
+                                                    </svg>
+                                                    {/* Total au centre */}
+                                                    <div className="absolute inset-0 flex flex-col items-center justify-center">
+                                                        <div className="text-3xl font-bold text-gray-800">{totalViolations}</div>
+                                                        <div className="text-xs text-gray-500">Total</div>
+                                                    </div>
+                                                </div>
+                                                
+                                                {/* Légende améliorée */}
+                                                <div className="w-full grid grid-cols-2 gap-1.5 text-xs">
+                                                    {topViolators.map((vehicle, idx) => {
+                                                        const percentage = ((vehicle.total_violations || 0) / totalViolations * 100).toFixed(1);
+                                                        return (
+                                                            <div key={idx} className="flex items-center justify-between gap-2 p-1.5 rounded hover:bg-gray-50">
+                                                                <div className="flex items-center gap-2 min-w-0">
+                                                                    <div className="w-3 h-3 rounded-sm flex-shrink-0" style={{ backgroundColor: colors[idx] }}></div>
+                                                                    <span className="font-medium truncate">{vehicle.immatriculation}</span>
+                                                                </div>
+                                                                <div className="flex flex-col items-end text-right flex-shrink-0">
+                                                                    <span className="font-bold text-gray-800">{percentage}%</span>
+                                                                    <span className="text-gray-500 text-[10px]">({vehicle.total_violations})</span>
+                                                                </div>
+                                                            </div>
+                                                        );
+                                                    })}
+                                                </div>
+                                            </div>
+                                        );
+                                    })()}
+                                </CardContent>
+                            </Card>
+
+                            {/* Nombre d'infractions par véhicules */}
+                            <Card className="border-0 shadow-md hover:shadow-lg transition-shadow duration-300 bg-white">
+                                <CardHeader className="pb-3 bg-gradient-to-r from-red-50 to-yellow-50 border-b border-gray-200">
+                                    <CardTitle className="text-base">Nombre d'infractions par véhicules</CardTitle>
+                                </CardHeader>
+                                <CardContent className="bg-white p-4">
+                                    {(() => {
+                                        // Early return if vehicle_details doesn't exist
+                                        if (!eco_data?.vehicle_details) {
+                                            return <div className="text-center text-gray-500 py-8">Aucune infraction</div>;
+                                        }
+
+                                        const topViolators = eco_data.vehicle_details
+                                            .filter((v: VehicleDriverDetail) => 
+                                                (v.harsh_braking || 0) + (v.harsh_acceleration || 0) + (v.dangerous_turns || 0) > 0
+                                            )
+                                            .sort((a: VehicleDriverDetail, b: VehicleDriverDetail) => 
+                                                ((b.harsh_braking || 0) + (b.harsh_acceleration || 0) + (b.dangerous_turns || 0)) -
+                                                ((a.harsh_braking || 0) + (a.harsh_acceleration || 0) + (a.dangerous_turns || 0))
+                                            )
+                                            .slice(0, 4);
                                         
-                                        <div className="flex items-center justify-between mt-4">
-                                            <span className="text-sm font-medium text-gray-700">Véhicules en maintenance</span>
-                                            <span className="text-lg font-bold text-orange-600">
-                                                {stats.maintenanceVehicles}
-                                            </span>
+                                        const maxValue = Math.max(
+                                            ...topViolators.map((v: VehicleDriverDetail) => 
+                                                Math.max(v.harsh_braking || 0, v.harsh_acceleration || 0, v.dangerous_turns || 0)
+                                            ),
+                                            0 // Fallback if topViolators is empty
+                                        );
+                                        
+                                        // ...existing code...
+                                    })()}
+                                </CardContent>
+                            </Card>
+                        </div>
+                    </CardContent>
+                </Card>
+
+                {/* Analyse géospatiale des comportements à risques */}
+                <Card>
+                    <CardHeader>
+                        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                            <div>
+                                <CardTitle className="flex items-center gap-2">
+                                    <Globe className="h-5 w-5" />
+                                    Analyse géospatiale des comportements à risques
+                                </CardTitle>
+                                <CardDescription>
+                                    Analyse des comportements par zones géographiques et itinéraires
+                                </CardDescription>
+                            </div>
+                            
+                            <div className="flex flex-wrap items-center gap-2">
+                                {(() => {
+                                    const geoReport = reports.find(r => r.type === 'geo_eco_driving');
+                                    if (geoReport) {
+                                        return (
+                                            <Button
+                                                variant="outline"
+                                                size="sm"
+                                                onClick={() => window.location.href = `/reports/${geoReport.id}`}
+                                                className="flex items-center gap-2"
+                                            >
+                                                <FileText className="h-4 w-4" />
+                                                Voir le rapport complet
+                                            </Button>
+                                        );
+                                    }
+                                    return null;
+                                })()}
+                            </div>
+                        </div>
+                    </CardHeader>
+                    <CardContent className="p-6 bg-gray-50">
+                        {/* Graphiques */}
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+
+                            {/* Cartographie des infractions */}
+                            <Card className="border-0 shadow-md hover:shadow-lg transition-shadow duration-300 bg-white">
+                                <CardHeader className="pb-3 bg-gradient-to-r from-cyan-50 to-teal-50 border-b border-gray-200">
+                                    <CardTitle className="text-base font-semibold text-gray-800">Cartographie génarale des infractions</CardTitle>
+                                </CardHeader>
+                                <CardContent className="bg-white">
+                                    <div className="aspect-square bg-gray-100 rounded flex items-center justify-center relative overflow-hidden">
+                                        <div className="absolute inset-0 bg-gradient-to-br from-green-50 to-blue-50">
+                                            {/* Simuler une carte avec des points */}
+                                            {!eco_data?.vehicle_details ? (
+                                                    <div className="absolute inset-0 flex items-center justify-center text-gray-400">
+                                                        Aucune infraction disponible
+                                                    </div>
+                                                ) :(eco_data.vehicle_details.map((vehicle, idx) => {
+                                                    const totalViolations = vehicle.total_violations || 0;
+                                                    if (totalViolations === 0) return null;
+                                                    
+                                                    // Position pseudo-aléatoire basée sur l'index
+                                                    const left = 20 + (idx * 17) % 60;
+                                                    const top = 15 + (idx * 23) % 70;
+                                                    const size = Math.min(10 + totalViolations / 10, 40);
+                                                    
+                                                    return (
+                                                        <div
+                                                            key={idx}
+                                                            className="absolute rounded-full bg-red-500 opacity-60 border-2 border-red-600"
+                                                            style={{
+                                                                left: `${left}%`,
+                                                                top: `${top}%`,
+                                                                width: `${size}px`,
+                                                                height: `${size}px`
+                                                            }}
+                                                            title={`${vehicle.immatriculation}: ${totalViolations} infractions`}
+                                                        ></div>
+                                                    );
+                                            }))}
+                                        </div>
+                                        <div className="relative z-10 text-center">
+                                            <MapPin className="h-12 w-12 mx-auto text-gray-400 mb-2" />
+                                            <p className="text-sm text-gray-500">Carte des infractions</p>
                                         </div>
                                     </div>
                                 </CardContent>
                             </Card>
+
+                            {/* Cartographie des infractions sur Abidjan */}
+                            <Card className="border-0 shadow-md hover:shadow-lg transition-shadow duration-300 bg-white">
+                                <CardHeader className="pb-3 bg-gradient-to-r from-cyan-50 to-teal-50 border-b border-gray-200">
+                                    <CardTitle className="text-base">Cartographie des infractions sur Abidjan</CardTitle>
+                                </CardHeader>
+                                <CardContent className="bg-white">
+                                    <div className="aspect-square bg-gray-100 rounded flex items-center justify-center relative overflow-hidden">
+                                        <div className="absolute inset-0 bg-gradient-to-br from-blue-50 to-green-50">
+                                            {/* Points concentrés pour simulation zone urbaine */}
+                                            {!eco_data?.vehicle_details ? (
+                                                <div className="absolute inset-0 flex items-center justify-center text-gray-400">
+                                                    Aucune infraction disponible
+                                                </div>
+                                            ) :(eco_data.vehicle_details.slice(0, 8).map((vehicle, idx) => {
+                                                const totalViolations = vehicle.total_violations || 0;
+                                                if (totalViolations === 0) return null;
+                                                
+                                                // Concentré au centre pour simuler Abidjan
+                                                const left = 35 + (idx * 7) % 30;
+                                                const top = 35 + (idx * 11) % 30;
+                                                const size = Math.min(8 + totalViolations / 15, 30);
+                                                const color = totalViolations > 100 ? 'bg-red-500 border-red-600' : 'bg-blue-500 border-blue-600';
+                                            
+                                                return (
+                                                    <div
+                                                        key={idx}
+                                                        className={`absolute rounded-full ${color} opacity-70 border-2`}
+                                                        style={{
+                                                            left: `${left}%`,
+                                                            top: `${top}%`,
+                                                            width: `${size}px`,
+                                                            height: `${size}px`
+                                                        }}
+                                                        title={`${vehicle.immatriculation}: ${totalViolations} infractions`}
+                                                    ></div>
+                                                );
+                                            }))}
+                                        </div>
+                                        <div className="relative z-10 text-center">
+                                            <MapPin className="h-12 w-12 mx-auto text-gray-400 mb-2" />
+                                            <p className="text-sm text-gray-500">Zone Abidjan</p>
+                                        </div>
+                                    </div>
+                                </CardContent>
+                            </Card>
+
+                            {/* Nombre de véhicules par Type d'événement */}
+                            <Card className="border-0 shadow-md hover:shadow-lg transition-shadow duration-300 bg-white">
+                                <CardHeader className="pb-3 bg-gradient-to-r from-cyan-50 to-teal-50 border-b border-gray-200">
+                                    <CardTitle className="text-base">Nombre de véhicules par Type d'événement</CardTitle>
+                                </CardHeader>
+                                <CardContent className="bg-white">
+                                    {(() => {
+                                        // Safety check for vehicle_details
+                                        if (!eco_data?.vehicle_details || eco_data.vehicle_details.length === 0) {
+                                            return <div className="text-center text-gray-500 py-8">Aucun véhicule</div>;
+                                        }
+                                        
+                                        const nightDriving = eco_data.vehicle_details.filter(v => (v.driving_time_violations || 0) > 0).length;
+                                        const durationViolation = eco_data.vehicle_details.filter(v => (v.driving_time_violations || 0) > 0).length;
+                                        const speedViolation = eco_data.vehicle_details.filter(v => (v.speed_violations || 0) > 0).length;
+                                        const total = eco_data.vehicle_details.length;
+                                        
+                                        const nightPercent = (nightDriving / total * 100).toFixed(2);
+                                        const durationPercent = (durationViolation / total * 100).toFixed(2);
+                                        const speedPercent = (speedViolation / total * 100).toFixed(2);
+                                        
+                                        return (
+                                            <div>
+                                                {/* Donut chart */}
+                                                <div className="relative w-48 h-48 mx-auto mb-4">
+                                                    <svg viewBox="0 0 100 100" className="transform -rotate-90">
+                                                        {(() => {
+                                                            let currentAngle = 0;
+                                                            const data = [
+                                                                { value: parseFloat(speedPercent), color: '#ef4444', label: 'Conduite de nuit' },
+                                                                { value: parseFloat(durationPercent), color: '#06b6d4', label: 'Infraction sur durée' },
+                                                                { value: parseFloat(nightPercent), color: '#10b981', label: 'SPEED' }
+                                                            ];
+                                                            
+                                                            return data.map((item, idx) => {
+                                                                const angle = (item.value / 100) * 360;
+                                                                const startAngle = currentAngle;
+                                                                currentAngle += angle;
+                                                                
+                                                                const startRad = (startAngle * Math.PI) / 180;
+                                                                const endRad = (currentAngle * Math.PI) / 180;
+                                                                
+                                                                const x1 = 50 + 40 * Math.cos(startRad);
+                                                                const y1 = 50 + 40 * Math.sin(startRad);
+                                                                const x2 = 50 + 40 * Math.cos(endRad);
+                                                                const y2 = 50 + 40 * Math.sin(endRad);
+                                                                
+                                                                const largeArc = angle > 180 ? 1 : 0;
+                                                                
+                                                                return (
+                                                                    <path
+                                                                        key={idx}
+                                                                        d={`M 50 50 L ${x1} ${y1} A 40 40 0 ${largeArc} 1 ${x2} ${y2} Z`}
+                                                                        fill={item.color}
+                                                                        stroke="white"
+                                                                        strokeWidth="0.5"
+                                                                    />
+                                                                );
+                                                            });
+                                                        })()}
+                                                        <circle cx="50" cy="50" r="25" fill="white" />
+                                                    </svg>
+                                                    {/* Percentages */}
+                                                    <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
+                                                        <div className="text-xs font-semibold">{speedPercent}%</div>
+                                                    </div>
+                                                </div>
+                                                
+                                                {/* Légende */}
+                                                <div className="space-y-2 text-sm">
+                                                    <div className="flex items-center justify-between">
+                                                        <div className="flex items-center gap-2">
+                                                            <div className="w-3 h-3 rounded-full bg-red-500"></div>
+                                                            <span>Conduite de nuit</span>
+                                                        </div>
+                                                        <span className="font-semibold">{nightPercent}%</span>
+                                                    </div>
+                                                    <div className="flex items-center justify-between">
+                                                        <div className="flex items-center gap-2">
+                                                            <div className="w-3 h-3 rounded-full bg-cyan-500"></div>
+                                                            <span>Infraction sur durée de...</span>
+                                                        </div>
+                                                        <span className="font-semibold">{durationPercent}%</span>
+                                                    </div>
+                                                    <div className="flex items-center justify-between">
+                                                        <div className="flex items-center gap-2">
+                                                            <div className="w-3 h-3 rounded-full bg-green-500"></div>
+                                                            <span>SPEED</span>
+                                                        </div>
+                                                        <span className="font-semibold">{speedPercent}%</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        );
+                                    })()}
+                                </CardContent>
+                            </Card>
+
+                           
                         </div>
                     </CardContent>
                 </Card>

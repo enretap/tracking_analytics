@@ -94,13 +94,6 @@ interface Props {
     data: DriverEcoDrivingData;
 }
 
-interface ColumnConfig {
-    key: string;
-    label: string;
-    visible: boolean;
-    essential?: boolean;
-}
-
 export function DriverEcoDrivingTemplate({ data }: Props) {
     
     return (

@@ -16,30 +16,7 @@ import {
   Clock
 } from 'lucide-react';
 
-interface ZoneEcoData {
-    zone_name: string;
-    zone_type?: string; // 'urban', 'highway', 'rural'
-    eco_score?: number;
-    fuel_efficiency?: number;
-    distance?: number;
-    average_speed?: number;
-    harsh_events?: number;
-    fuel_saved?: number;
-    co2_emissions?: number;
-    vehicle_count?: number;
-}
 
-interface RouteEcoData {
-    route_name: string;
-    start_location?: string;
-    end_location?: string;
-    eco_score?: number;
-    distance?: number;
-    fuel_consumption?: number;
-    average_speed?: number;
-    optimal_speed_rate?: number;
-    trip_count?: number;
-}
 
 interface VehicleDriverDetail {
     immatriculation: string;
@@ -107,36 +84,7 @@ interface Props {
 }
 
 export function GeoEcoDrivingTemplate({ data }: Props) {
-    const getScoreColor = (score: number) => {
-        if (score >= 85) return 'text-green-600 dark:text-green-400';
-        if (score >= 70) return 'text-amber-600 dark:text-amber-400';
-        return 'text-red-600 dark:text-red-400';
-    };
-
-    const getScoreBadge = (score: number) => {
-        if (score >= 85) return 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400';
-        if (score >= 70) return 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400';
-        return 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400';
-    };
-
-    const getZoneTypeLabel = (type?: string) => {
-        switch (type) {
-            case 'urban': return 'Urbain';
-            case 'highway': return 'Autoroute';
-            case 'rural': return 'Rural';
-            default: return 'Autre';
-        }
-    };
-
-    const getZoneTypeColor = (type?: string) => {
-        switch (type) {
-            case 'urban': return 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400';
-            case 'highway': return 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400';
-            case 'rural': return 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400';
-            default: return 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-400';
-        }
-    };
-
+    
     return (
         <div className="space-y-6">
             {/* Analyse géospatiale des comportements à risques */}
