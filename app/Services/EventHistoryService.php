@@ -136,6 +136,7 @@ class EventHistoryService
         
         $transformedEvents = [];
         $eventsByType = [];
+        $eventsByName = [];
         $eventsByVehicle = [];
         $eventsByDate = [];
 
@@ -172,6 +173,13 @@ class EventHistoryService
             }
             $eventsByType[$eventType][] = $transformedEvent;
 
+            // Group by event name
+            $eventName = $transformedEvent['event_name'];
+            if (!isset($eventsByName[$eventName])) {
+                $eventsByName[$eventName] = [];
+            }
+            $eventsByName[$eventName][] = $transformedEvent;
+
             // Group by vehicle
             $vehicleRef = $transformedEvent['reference'];
             if (!isset($eventsByVehicle[$vehicleRef])) {
@@ -197,6 +205,7 @@ class EventHistoryService
         $stats = [
             'total_events' => count($transformedEvents),
             'events_by_type' => array_map('count', $eventsByType),
+            'events_by_name' => array_map('count', $eventsByName),
             'events_by_vehicle' => array_map(fn($v) => count($v['events']), $eventsByVehicle),
             'unique_vehicles' => count($eventsByVehicle),
             'date_range' => [
@@ -209,6 +218,7 @@ class EventHistoryService
             'success' => true,
             'events' => $transformedEvents,
             'events_by_type' => $eventsByType,
+            'events_by_name' => $eventsByName,
             'events_by_vehicle' => $eventsByVehicle,
             'events_by_date' => $eventsByDate,
             'stats' => $stats,
@@ -260,11 +270,13 @@ class EventHistoryService
             'success' => false,
             'events' => [],
             'events_by_type' => [],
+            'events_by_name' => [],
             'events_by_vehicle' => [],
             'events_by_date' => [],
             'stats' => [
                 'total_events' => 0,
                 'events_by_type' => [],
+                'events_by_name' => [],
                 'events_by_vehicle' => [],
                 'unique_vehicles' => 0,
                 'date_range' => [

@@ -99,6 +99,7 @@ interface VehicleEventData {
     success: boolean;
     events: VehicleEventDetail[];
     events_by_type: Record<string, VehicleEventDetail[]>;
+    events_by_name: Record<string, VehicleEventDetail[]>;
     events_by_vehicle: Record<string, {
         vehicle: string;
         plate_number: string;
@@ -108,6 +109,7 @@ interface VehicleEventData {
     stats: {
         total_events: number;
         events_by_type: Record<string, number>;
+        events_by_name: Record<string, number>;
         events_by_vehicle: Record<string, number>;
         unique_vehicles: number;
         date_range: {
