@@ -369,26 +369,98 @@ Cache::forget("event_history_{$accountId}_{$startDate}_{$endDate}_" . md5(json_e
 ## Fichiers Créés
 
 - `app/Services/EventHistoryService.php` - Service principal
+- `app/Http/Controllers/Api/EventController.php` - Contrôleur API
+- `routes/api.php` - Routes API
 - `test-event-history-service.php` - Tests du service
 - `test-event-api-direct.php` - Tests directs de l'API
+- `test-events-api.php` - Tests des endpoints API
 - `EVENT_HISTORY_SERVICE.md` - Cette documentation
 
 ## Intégration dans le Dashboard
 
-Le service peut être intégré dans le dashboard via un nouveau composant ou une route API :
+### Routes API Disponibles
 
-```php
-// Dans routes/web.php ou routes/api.php
-Route::get('/api/events', function(Request $request) {
-    $account = Auth::user()->account;
-    $service = new \App\Services\EventHistoryService();
+Les routes API suivantes sont maintenant disponibles pour accéder aux événements :
+
+```
+GET  /api/events                           - Récupérer tous les événements
+GET  /api/events/stats                     - Récupérer les statistiques des événements
+GET  /api/events/type/{eventType}          - Récupérer les événements par type
+GET  /api/events/vehicle/{vehicleRef}      - Récupérer les événements par véhicule
+```
+
+#### Paramètres de requête disponibles :
+
+- `start_date` (optionnel) : Date de début au format Y-m-d
+- `end_date` (optionnel) : Date de fin au format Y-m-d
+- `event_type` (optionnel) : Filtrer par type d'événement
+- `vehicle_reference` (optionnel) : Filtrer par référence de véhicule
+
+#### Exemples d'utilisation :
+
+```javascript
+// Dans votre composant React/Vue
+async function fetchEvents() {
+    const response = await fetch('/api/events?start_date=2025-12-01&end_date=2025-12-31');
+    const data = await response.json();
     
-    return $service->fetchEventHistoryData(
-        account: $account,
-        startDate: $request->input('start_date'),
-        endDate: $request->input('end_date')
-    );
+    if (data.success) {
+        console.log('Total events:', data.stats.total_events);
+        console.log('Events:', data.events);
+    }
+}
+
+// Récupérer uniquement les événements de type SPEED
+async function fetchSpeedEvents() {
+    const response = await fetch('/api/events/type/SPEED?start_date=2025-12-01');
+    const data = await response.json();
+    console.log('Speed events:', data.events);
+}
+
+// Récupérer les événements pour un véhicule spécifique
+async function fetchVehicleEvents(vehicleRef) {
+    const response = await fetch(`/api/events/vehicle/${vehicleRef}`);
+    const data = await response.json();
+    console.log('Vehicle events:', data.vehicle.events);
+}
+
+// Récupérer uniquement les statistiques
+async function fetchEventStats() {
+    const response = await fetch('/api/events/stats?start_date=2025-12-01&end_date=2025-12-31');
+    const data = await response.json();
+    console.log('Stats:', data.stats);
+}
+```
+
+#### Utilisation avec Axios :
+
+```javascript
+import axios from 'axios';
+
+// Récupérer les événements
+const { data } = await axios.get('/api/events', {
+    params: {
+        start_date: '2025-12-01',
+        end_date: '2025-12-31'
+    }
 });
+
+// Récupérer les événements par type
+const speedEvents = await axios.get('/api/events/type/SPEED');
+```
+
+### Contrôleur
+
+Le contrôleur `EventController` gère toutes les requêtes API :
+
+- `app/Http/Controllers/Api/EventController.php`
+
+### Test de l'API
+
+Pour tester les endpoints API :
+
+```bash
+php test-events-api.php
 ```
 
 ## Prochaines Étapes
