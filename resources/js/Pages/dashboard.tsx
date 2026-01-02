@@ -651,7 +651,11 @@ export default function Dashboard({ eco_data, event_data }: Props) {
                                         if (!eco_data?.vehicle_details || eco_data.vehicle_details.length === 0) {
                                             return <div className="text-center text-gray-500 py-8">Aucune violation</div>;
                                         }
+                                        
+                                        // Calculer le total des violations de vitesse
                                         const totalViolations = eco_data.vehicle_details.reduce((sum, v) => sum + (v.speed_violations || 0), 0);
+                                        
+                                        // Récupérer les 5 véhicules avec le plus de violations de vitesse
                                         const topVehicles = eco_data.vehicle_details
                                             .filter(v => (v.speed_violations || 0) > 0)
                                             .sort((a, b) => (b.speed_violations || 0) - (a.speed_violations || 0))
@@ -661,17 +665,19 @@ export default function Dashboard({ eco_data, event_data }: Props) {
                                             return <div className="text-center text-gray-500 py-8">Aucune violation de vitesse</div>;
                                         }
 
+                                        // Couleurs distinctes pour chaque véhicule
                                         const colors = ['#1e3a5f', '#8B4513', '#d946ef', '#f59e0b', '#10b981'];
                                         
                                         return (
                                             <div className="flex flex-col items-center gap-4">
-                                                {/* Pie Chart */}
+                                                {/* Pie Chart avec tooltips */}
                                                 <div className="relative w-56 h-56">
                                                     <svg viewBox="0 0 200 200" className="transform -rotate-90">
                                                         {(() => {
                                                             let currentAngle = 0;
                                                             return topVehicles.map((vehicle, idx) => {
-                                                                const percentage = (vehicle.speed_violations || 0) / totalViolations;
+                                                                const violations = vehicle.speed_violations || 0;
+                                                                const percentage = violations / totalViolations;
                                                                 const angle = percentage * 360;
                                                                 const startAngle = currentAngle;
                                                                 const endAngle = currentAngle + angle;
@@ -688,15 +694,19 @@ export default function Dashboard({ eco_data, event_data }: Props) {
                                                                 const y2 = 100 + 80 * Math.sin(endRad);
                                                                 
                                                                 const largeArc = angle > 180 ? 1 : 0;
+                                                                const percentDisplay = (percentage * 100).toFixed(1);
                                                                 
                                                                 return (
-                                                                    <path
-                                                                        key={idx}
-                                                                        d={`M 100 100 L ${x1} ${y1} A 80 80 0 ${largeArc} 1 ${x2} ${y2} Z`}
-                                                                        fill={colors[idx]}
-                                                                        stroke="white"
-                                                                        strokeWidth="2"
-                                                                    />
+                                                                    <g key={idx}>
+                                                                        <title>{`${vehicle.immatriculation}: ${violations} violations (${percentDisplay}%)`}</title>
+                                                                        <path
+                                                                            d={`M 100 100 L ${x1} ${y1} A 80 80 0 ${largeArc} 1 ${x2} ${y2} Z`}
+                                                                            fill={colors[idx]}
+                                                                            stroke="white"
+                                                                            strokeWidth="2"
+                                                                            className="hover:opacity-80 transition-opacity cursor-pointer"
+                                                                        />
+                                                                    </g>
                                                                 );
                                                             });
                                                         })()}
@@ -704,21 +714,27 @@ export default function Dashboard({ eco_data, event_data }: Props) {
                                                     {/* Centre avec total */}
                                                     <div className="absolute inset-0 flex flex-col items-center justify-center">
                                                         <div className="text-2xl font-bold text-gray-800">{totalViolations}</div>
-                                                        <div className="text-xs text-gray-500">Total</div>
+                                                        <div className="text-xs text-gray-500">Violations</div>
                                                     </div>
                                                 </div>
                                                 
-                                                {/* Légende */}
+                                                {/* Légende améliorée */}
                                                 <div className="grid grid-cols-1 gap-2 w-full text-xs">
                                                     {topVehicles.map((vehicle, idx) => {
-                                                        const percentage = ((vehicle.speed_violations || 0) / totalViolations * 100).toFixed(1);
+                                                        const violations = vehicle.speed_violations || 0;
+                                                        const percentage = ((violations / totalViolations) * 100).toFixed(1);
                                                         return (
-                                                            <div key={idx} className="flex items-center justify-between gap-2">
-                                                                <div className="flex items-center gap-2">
-                                                                    <div className="w-3 h-3 rounded-sm" style={{ backgroundColor: colors[idx] }}></div>
-                                                                    <span className="font-medium">{vehicle.immatriculation}</span>
+                                                            <div key={idx} className="flex items-center justify-between gap-2 p-1.5 rounded hover:bg-gray-50 transition-colors">
+                                                                <div className="flex items-center gap-2 min-w-0 flex-1">
+                                                                    <div className="w-3 h-3 rounded-sm flex-shrink-0" style={{ backgroundColor: colors[idx] }}></div>
+                                                                    <span className="font-medium truncate" title={vehicle.immatriculation}>
+                                                                        {vehicle.immatriculation}
+                                                                    </span>
                                                                 </div>
-                                                                <span className="text-gray-600">{percentage}% ({vehicle.speed_violations})</span>
+                                                                <div className="flex items-center gap-2 flex-shrink-0">
+                                                                    <span className="font-bold text-gray-800">{percentage}%</span>
+                                                                    <span className="text-gray-500">({violations})</span>
+                                                                </div>
                                                             </div>
                                                         );
                                                     })}
@@ -729,10 +745,10 @@ export default function Dashboard({ eco_data, event_data }: Props) {
                                 </CardContent>
                             </Card>
 
-                            {/* Véhicules en infractions de vitesse */}
+                            {/* Véhicules avec les vitesses maximales */}
                             <Card className="border-0 shadow-md hover:shadow-lg transition-shadow duration-300 bg-white">
                                 <CardHeader className="pb-3 bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-gray-200">
-                                    <CardTitle className="text-base">Véhicules en infractions de vitesse (Km/h)</CardTitle>
+                                    <CardTitle className="text-base">Véhicules avec les vitesses maximales (Km/h)</CardTitle>
                                 </CardHeader>
                                 <CardContent className="bg-white">
                                     {(() => {
@@ -908,29 +924,107 @@ export default function Dashboard({ eco_data, event_data }: Props) {
                                 </CardHeader>
                                 <CardContent className="bg-white p-4">
                                     {(() => {
-                                        // Early return if vehicle_details doesn't exist
-                                        if (!eco_data?.vehicle_details) {
+                                        // Safety check for vehicle_details
+                                        if (!eco_data?.vehicle_details || eco_data.vehicle_details.length === 0) {
                                             return <div className="text-center text-gray-500 py-8">Aucune infraction</div>;
                                         }
 
+                                        // Récupérer le top 10 des véhicules avec le plus de violations
                                         const topViolators = eco_data.vehicle_details
-                                            .filter((v: VehicleDriverDetail) => 
-                                                (v.harsh_braking || 0) + (v.harsh_acceleration || 0) + (v.dangerous_turns || 0) > 0
-                                            )
+                                            .filter((v: VehicleDriverDetail) => (v.total_violations || 0) > 0)
                                             .sort((a: VehicleDriverDetail, b: VehicleDriverDetail) => 
-                                                ((b.harsh_braking || 0) + (b.harsh_acceleration || 0) + (b.dangerous_turns || 0)) -
-                                                ((a.harsh_braking || 0) + (a.harsh_acceleration || 0) + (a.dangerous_turns || 0))
+                                                (b.total_violations || 0) - (a.total_violations || 0)
                                             )
-                                            .slice(0, 4);
+                                            .slice(0, 10);
                                         
-                                        const maxValue = Math.max(
-                                            ...topViolators.map((v: VehicleDriverDetail) => 
-                                                Math.max(v.harsh_braking || 0, v.harsh_acceleration || 0, v.dangerous_turns || 0)
-                                            ),
-                                            0 // Fallback if topViolators is empty
+                                        if (topViolators.length === 0) {
+                                            return <div className="text-center text-gray-500 py-8">Aucune infraction</div>;
+                                        }
+                                        
+                                        // Valeur maximale pour l'échelle
+                                        const maxViolations = Math.max(...topViolators.map((v: VehicleDriverDetail) => v.total_violations || 0));
+                                        
+                                        // Couleur unique pour toutes les barres
+                                        const barColor = '#f59e0b'; // Bleu foncé uniforme
+                                        
+                                        return (
+                                            <div className="space-y-3">
+                                                {/* Graphique à bandes verticales avec axe Y */}
+                                                <div className="flex gap-2">
+                                                    {/* Axe Y avec graduations */}
+                                                    <div className="flex flex-col justify-between text-[9px] text-gray-500 font-medium" style={{ height: '160px' }}>
+                                                        <span>{maxViolations}</span>
+                                                        <span>{Math.round(maxViolations * 0.75)}</span>
+                                                        <span>{Math.round(maxViolations * 0.5)}</span>
+                                                        <span>{Math.round(maxViolations * 0.25)}</span>
+                                                        <span>0</span>
+                                                    </div>
+                                                    
+                                                    {/* Graphique */}
+                                                    <div className="flex-1 flex justify-between gap-1 border-l border-b border-gray-200 pl-2 pb-6 relative" style={{ height: '230px' }}>
+                                                        {topViolators.map((vehicle, idx) => {
+                                                            const violations = vehicle.total_violations || 0;
+                                                            // Hauteur max disponible pour les barres (160px - 30px pour les labels)
+                                                            const maxHeight = 200;
+                                                            const barHeight = (violations / maxViolations) * maxHeight;
+                                                            
+                                                            return (
+                                                                <div key={idx} className="flex-1 flex flex-col items-center justify-end relative">
+                                                                    {/* Nombre de violations au-dessus de la barre */}
+                                                                    <div className="absolute text-[10px] font-bold text-gray-700" style={{ bottom: `${barHeight + 5}px` }}>
+                                                                        {violations}
+                                                                    </div>
+                                                                    {/* Barre verticale */}
+                                                                    <div 
+                                                                        className="w-full rounded-t-md hover:opacity-80 hover:shadow-lg transition-all cursor-pointer relative group"
+                                                                        style={{ 
+                                                                            height: `${Math.max(barHeight, 4)}px`,
+                                                                            backgroundColor: barColor
+                                                                        }}
+                                                                        title={`${vehicle.immatriculation}: ${violations} infractions`}
+                                                                    >
+                                                                        {/* Tooltip hover */}
+                                                                        <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 hidden group-hover:block bg-gray-800 text-white text-xs rounded py-1 px-2 whitespace-nowrap z-10 shadow-lg">
+                                                                            <div className="font-semibold">{vehicle.immatriculation}</div>
+                                                                            <div className="text-gray-300">{violations} infraction{violations > 1 ? 's' : ''}</div>
+                                                                        </div>
+                                                                    </div>
+                                                                    {/* Numéro de rang */}
+                                                                    <div className="absolute text-[9px] font-medium text-gray-500" style={{ bottom: '-20px' }}>
+                                                                        #{idx + 1}
+                                                                    </div>
+                                                                </div>
+                                                            );
+                                                        })}
+                                                    </div>
+                                                </div>
+                                                
+                                                {/* Légende avec les 10 premiers véhicules */}
+                                                <div className="border-t border-gray-200 pt-3 space-y-1.5">
+                                                    <div className="text-[10px] font-semibold text-gray-600 mb-2">TOP 10 VÉHICULES</div>
+                                                    {topViolators.slice(0, 10).map((vehicle, idx) => {
+                                                        const violations = vehicle.total_violations || 0;
+                                                        
+                                                        return (
+                                                            <div key={idx} className="flex items-center justify-between gap-2 text-xs">
+                                                                <div className="flex items-center gap-2 min-w-0 flex-1">
+                                                                    <div 
+                                                                        className="w-2.5 h-2.5 rounded-sm flex-shrink-0" 
+                                                                        style={{ backgroundColor: barColor }}
+                                                                    ></div>
+                                                                    <span className="font-medium truncate" title={vehicle.immatriculation}>
+                                                                        {vehicle.immatriculation}
+                                                                    </span>
+                                                                </div>
+                                                                <span className="font-bold text-gray-800 flex-shrink-0">
+                                                                    {violations}
+                                                                </span>
+                                                            </div>
+                                                        );
+                                                    })}
+                                                </div>
+                                            </div>
                                         );
-                                        
-                                        // ...existing code...
                                     })()}
                                 </CardContent>
                             </Card>
@@ -1075,19 +1169,25 @@ export default function Dashboard({ eco_data, event_data }: Props) {
                                 </CardHeader>
                                 <CardContent className="bg-white">
                                     {(() => {
-                                        // Safety check for vehicle_details
-                                        if (!eco_data?.vehicle_details || eco_data.vehicle_details.length === 0) {
-                                            return <div className="text-center text-gray-500 py-8">Aucun véhicule</div>;
+                                        // Safety check for event_data
+                                        if (!event_data?.events_by_name || !event_data?.stats?.events_by_name) {
+                                            return <div className="text-center text-gray-500 py-8">Aucune donnée d'événements disponible</div>;
                                         }
                                         
-                                        const nightDriving = eco_data.vehicle_details.filter(v => (v.driving_time_violations || 0) > 0).length;
-                                        const durationViolation = eco_data.vehicle_details.filter(v => (v.driving_time_violations || 0) > 0).length;
-                                        const speedViolation = eco_data.vehicle_details.filter(v => (v.speed_violations || 0) > 0).length;
-                                        const total = eco_data.vehicle_details.length;
+                                        // Récupérer les événements groupés par nom
+                                        const eventsByName = event_data.stats.events_by_name;
+                                        const totalEvents = event_data.stats.total_events;
                                         
-                                        const nightPercent = (nightDriving / total * 100).toFixed(2);
-                                        const durationPercent = (durationViolation / total * 100).toFixed(2);
-                                        const speedPercent = (speedViolation / total * 100).toFixed(2);
+                                        if (totalEvents === 0) {
+                                            return <div className="text-center text-gray-500 py-8">Aucun événement trouvé</div>;
+                                        }
+                                        
+                                        // Prendre les 5 premiers types d'événements les plus fréquents
+                                        const topEvents = Object.entries(eventsByName)
+                                            .sort((a, b) => b[1] - a[1])
+                                            .slice(0, 5);
+                                        
+                                        const colors = ['#ef4444', '#06b6d4', '#10b981', '#f59e0b', '#8b5cf6'];
                                         
                                         return (
                                             <div>
@@ -1096,14 +1196,9 @@ export default function Dashboard({ eco_data, event_data }: Props) {
                                                     <svg viewBox="0 0 100 100" className="transform -rotate-90">
                                                         {(() => {
                                                             let currentAngle = 0;
-                                                            const data = [
-                                                                { value: parseFloat(speedPercent), color: '#ef4444', label: 'Conduite de nuit' },
-                                                                { value: parseFloat(durationPercent), color: '#06b6d4', label: 'Infraction sur durée' },
-                                                                { value: parseFloat(nightPercent), color: '#10b981', label: 'SPEED' }
-                                                            ];
-                                                            
-                                                            return data.map((item, idx) => {
-                                                                const angle = (item.value / 100) * 360;
+                                                            return topEvents.map(([eventName, count], idx) => {
+                                                                const percentage = (count / totalEvents) * 100;
+                                                                const angle = (percentage / 100) * 360;
                                                                 const startAngle = currentAngle;
                                                                 currentAngle += angle;
                                                                 
@@ -1118,47 +1213,50 @@ export default function Dashboard({ eco_data, event_data }: Props) {
                                                                 const largeArc = angle > 180 ? 1 : 0;
                                                                 
                                                                 return (
-                                                                    <path
-                                                                        key={idx}
-                                                                        d={`M 50 50 L ${x1} ${y1} A 40 40 0 ${largeArc} 1 ${x2} ${y2} Z`}
-                                                                        fill={item.color}
-                                                                        stroke="white"
-                                                                        strokeWidth="0.5"
-                                                                    />
+                                                                    <g key={idx}>
+                                                                        <title>{`${eventName}: ${count} (${percentage.toFixed(1)}%)`}</title>
+                                                                        <path
+                                                                            d={`M 50 50 L ${x1} ${y1} A 40 40 0 ${largeArc} 1 ${x2} ${y2} Z`}
+                                                                            fill={colors[idx]}
+                                                                            stroke="white"
+                                                                            strokeWidth="0.5"
+                                                                            className="hover:opacity-80 transition-opacity cursor-pointer"
+                                                                        />
+                                                                    </g>
                                                                 );
                                                             });
                                                         })()}
                                                         <circle cx="50" cy="50" r="25" fill="white" />
                                                     </svg>
-                                                    {/* Percentages */}
-                                                    <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
-                                                        <div className="text-xs font-semibold">{speedPercent}%</div>
+                                                    {/* Total au centre */}
+                                                    <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-center">
+                                                        <div className="text-xl font-bold text-gray-800">{totalEvents}</div>
+                                                        <div className="text-xs text-gray-500">Total</div>
                                                     </div>
                                                 </div>
                                                 
                                                 {/* Légende */}
-                                                <div className="space-y-2 text-sm">
-                                                    <div className="flex items-center justify-between">
-                                                        <div className="flex items-center gap-2">
-                                                            <div className="w-3 h-3 rounded-full bg-red-500"></div>
-                                                            <span>Conduite de nuit</span>
-                                                        </div>
-                                                        <span className="font-semibold">{nightPercent}%</span>
-                                                    </div>
-                                                    <div className="flex items-center justify-between">
-                                                        <div className="flex items-center gap-2">
-                                                            <div className="w-3 h-3 rounded-full bg-cyan-500"></div>
-                                                            <span>Infraction sur durée de...</span>
-                                                        </div>
-                                                        <span className="font-semibold">{durationPercent}%</span>
-                                                    </div>
-                                                    <div className="flex items-center justify-between">
-                                                        <div className="flex items-center gap-2">
-                                                            <div className="w-3 h-3 rounded-full bg-green-500"></div>
-                                                            <span>SPEED</span>
-                                                        </div>
-                                                        <span className="font-semibold">{speedPercent}%</span>
-                                                    </div>
+                                                <div className="space-y-2 text-xs">
+                                                    {topEvents.map(([eventName, count], idx) => {
+                                                        const percentage = ((count / totalEvents) * 100).toFixed(1);
+                                                        return (
+                                                            <div key={idx} className="flex items-center justify-between">
+                                                                <div className="flex items-center gap-2 min-w-0 flex-1">
+                                                                    <div 
+                                                                        className="w-3 h-3 rounded-full flex-shrink-0" 
+                                                                        style={{ backgroundColor: colors[idx] }}
+                                                                    ></div>
+                                                                    <span className="truncate" title={eventName}>
+                                                                        {eventName.length > 20 ? eventName.substring(0, 20) + '...' : eventName}
+                                                                    </span>
+                                                                </div>
+                                                                <div className="flex items-center gap-2 flex-shrink-0 ml-2">
+                                                                    <span className="font-semibold">{percentage}%</span>
+                                                                    <span className="text-gray-500">({count})</span>
+                                                                </div>
+                                                            </div>
+                                                        );
+                                                    })}
                                                 </div>
                                             </div>
                                         );
