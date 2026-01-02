@@ -72,6 +72,52 @@ interface VehicleDriverDetail {
     total_violations?: number;
 }
 
+interface VehicleEventDetail {
+    id: number;
+    vehicle: string;
+    plate_number: string;
+    reference: string;
+    driver: string;
+    event_time: string;
+    event_name: string;
+    event_type: string;
+    speed: number;
+    position: {
+        latitude: number | null;
+        longitude: number | null;
+    };
+    address: string;
+    poi_name: string;
+    is_poi: boolean;
+    initiator: string | null;
+    additional_info: string | null;
+    comment: string | null;
+    creation_date: string;
+}
+
+interface VehicleEventData {
+    success: boolean;
+    events: VehicleEventDetail[];
+    events_by_type: Record<string, VehicleEventDetail[]>;
+    events_by_vehicle: Record<string, {
+        vehicle: string;
+        plate_number: string;
+        events: VehicleEventDetail[];
+    }>;
+    events_by_date: Record<string, VehicleEventDetail[]>;
+    stats: {
+        total_events: number;
+        events_by_type: Record<string, number>;
+        events_by_vehicle: Record<string, number>;
+        unique_vehicles: number;
+        date_range: {
+            start: string | null;
+            end: string | null;
+        };
+    };
+    raw_total: number;
+}
+
 const breadcrumbs: BreadcrumbItem[] = [
     {
         title: 'Accueil',
@@ -255,9 +301,10 @@ interface EcoDrivingData {
 
 interface Props {
     eco_data: EcoDrivingData;
+    event_data?: VehicleEventData; // Optionnel car peut ne pas être passé
 }
 
-export default function Dashboard({ eco_data }: Props) {
+export default function Dashboard({ eco_data, event_data }: Props) {
     const [selectedPeriod, setSelectedPeriod] = useState('week');
     const [dateRange, setDateRange] = useState({ from: new Date(), to: new Date() });
     const [isRefreshing, setIsRefreshing] = useState(false);
@@ -371,7 +418,14 @@ export default function Dashboard({ eco_data }: Props) {
 
     // eco_data contient toutes les données TARGA TELEMATICS
     // console.log(eco_data.total_vehicles);
-    console.log(eco_data.vehicle_details);
+    
+    // Vérifier si event_data existe avant d'accéder à ses propriétés
+    if (event_data && event_data.events) {
+        console.log('Events:', event_data.events);
+        console.log('Total événements:', event_data.stats.total_events);
+    } else {
+        console.log('Aucune donnée d\'événements disponible');
+    }
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>

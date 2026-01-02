@@ -32,8 +32,21 @@ Route::middleware(['auth', 'verified'])->group(function () {
             $ecoData = $ecoDrivingService->fetchEcoDrivingData($account, $startDate, $endDate);
         }
         
+        // Récupérer les données d'événements depuis TARGA TELEMATICS
+        $eventData = [];
+        if ($account) {
+            $eventHistoryService = app(\App\Services\EventHistoryService::class);
+            
+            // Utiliser les mêmes dates que pour l'éco-conduite
+            $startDate = request('start_date', '2025-12-01');
+            $endDate = request('end_date', '2025-12-31');
+            
+            $eventData = $eventHistoryService->fetchEventHistoryData($account, $startDate, $endDate);
+        }
+        
         return Inertia::render('dashboard', [
             'eco_data' => $ecoData,
+            'event_data' => $eventData,
         ]);
     })->name('dashboard');
 
