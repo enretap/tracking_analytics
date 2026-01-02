@@ -25,8 +25,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
             $ecoDrivingService = app(\App\Services\EcoDrivingService::class);
             
             // Récupérer les paramètres de date depuis la requête (optionnel)
-            $startDate = request('start_date');
-            $endDate = request('end_date');
+            // Par défaut: du 1er au 31 décembre 2025
+            $startDate = request('start_date', '2025-12-01');
+            $endDate = request('end_date', '2025-12-31');
             
             $ecoData = $ecoDrivingService->fetchEcoDrivingData($account, $startDate, $endDate);
         }

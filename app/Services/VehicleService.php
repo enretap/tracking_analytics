@@ -42,6 +42,11 @@ class VehicleService
                 Log::warning("Missing API credentials for platform: {$platform->name}");
                 continue;
             }
+            
+            // Add specific endpoint for TARGA TELEMATICS vehicles
+            if ($platform->slug === 'targa-telematics') {
+                $apiUrl = rtrim($apiUrl, '/') . '/json/getVehicles';
+            }
 
             try {
                 // Build HTTP request based on configuration
@@ -218,13 +223,31 @@ class VehicleService
      */
     private function targaMapper(array $vehicle, int $platformId, string $slug): array
     {
+        // Determine status based on multiple fields
+        $status = 'unknown';
+        if (isset($vehicle['active'])) {
+            if (!$vehicle['active']) {
+                $status = 'inactive';
+            } elseif (isset($vehicle['status'])) {
+                // TARGA status: 1 = Moving, 2 = Stopped, 3 = Offline
+                $status = match ((int) $vehicle['status']) {
+                    1 => 'active',      // Moving
+                    2 => 'inactive',    // Stopped
+                    3 => 'inactive',    // Offline
+                    default => 'unknown',
+                };
+            } else {
+                $status = 'active';
+            }
+        }
+        
         return [
             'id' => 'V/'.$platformId.'/' . $vehicle['id'],
             'platform_id' => $platformId,
             'platform_slug' => $slug,
-            'name' => $vehicle['brand'].' '.$vehicle['model'] ?? 'N/A',
-            'plate' => $vehicle['plateNumber'] ?? 'N/A',
-            'status' => $this->normalizeStatus($vehicle['status'] ?? 'unknown'),
+            'name' => ($vehicle['brand'] ?? '') . ' ' . ($vehicle['model'] ?? ''),
+            'plate' => $vehicle['plateNumber'] ?? $vehicle['name'] ?? 'N/A',
+            'status' => $status,
             'distance' => (int) ($vehicle['totalDistance'] ?? 0),
             'latitude' => (float) ($vehicle['position']['latitude'] ?? 0),
             'longitude' => (float) ($vehicle['position']['longitude'] ?? 0),

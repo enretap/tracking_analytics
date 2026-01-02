@@ -291,6 +291,8 @@ export default function Dashboard({ eco_data }: Props) {
     
     // Utiliser les véhicules de l'API ou les mocks comme fallback
     const vehicles = apiVehicles.length > 0 ? apiVehicles : mockVehicles;
+
+    // console.log(apiVehicles);
     
     // État pour les véhicules sélectionnés (initialisé avec les actifs)
     const [selectedVehicleIds, setSelectedVehicleIds] = useState<string[]>([]);
@@ -366,6 +368,10 @@ export default function Dashboard({ eco_data }: Props) {
             v.plate.toLowerCase().includes(query)
         );
     }, [vehicles, vehicleSearchQuery]);
+
+    // eco_data contient toutes les données TARGA TELEMATICS
+    // console.log(eco_data.total_vehicles);
+    console.log(eco_data.vehicle_details);
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>

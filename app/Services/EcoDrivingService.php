@@ -107,7 +107,7 @@ class EcoDrivingService
 
         $data = $response->json();
 
-        if (!$data || !isset($data['result'])) {
+        if (!$data || !isset($data['dailyEcoSummaries'])) {
             Log::warning("Unexpected response format from TARGA TELEMATICS", [
                 'response' => $data
             ]);
@@ -126,94 +126,140 @@ class EcoDrivingService
      */
     protected function transformApiResponse(array $apiData): array
     {
-        $result = $apiData['result'] ?? [];
-        $vehicles = $result['data'] ?? [];
+        $dailyEcoSummaries = $apiData['dailyEcoSummaries'] ?? [];
+
+        Log::info("TARGA API Response received", [
+            'total_summaries' => count($dailyEcoSummaries),
+            'sample' => count($dailyEcoSummaries) > 0 ? $dailyEcoSummaries[0] : null
+        ]);
+
+        // Group by vehicleId and aggregate data
+        $vehicleGroups = [];
+        foreach ($dailyEcoSummaries as $summary) {
+            $vehicleId = $summary['vehicleId'];
+            
+            if (!isset($vehicleGroups[$vehicleId])) {
+                $vehicleGroups[$vehicleId] = [];
+            }
+            
+            $vehicleGroups[$vehicleId][] = $summary;
+        }
+
+        Log::info("Grouped vehicles", [
+            'total_groups' => count($vehicleGroups),
+            'vehicle_ids' => array_keys($vehicleGroups)
+        ]);
 
         // Initialize metrics
-        $totalVehicles = count($vehicles);
+        $totalVehicles = count($vehicleGroups);
         $activeVehicles = 0;
         $totalDistance = 0;
-        $totalFuelConsumption = 0;
         $totalViolations = 0;
-        $totalDrivers = 0;
         $driverSet = [];
 
         $vehicleDetails = [];
 
-        foreach ($vehicles as $vehicle) {
-            // Extract vehicle data
-            $immatriculation = $vehicle['vehicleName'] ?? $vehicle['plate'] ?? 'N/A';
-            $driver = $vehicle['driverName'] ?? 'Non assigné';
-            $distance = (float) ($vehicle['distance'] ?? 0);
-            $maxSpeed = (int) ($vehicle['maxSpeed'] ?? 0);
+        foreach ($vehicleGroups as $vehicleId => $summaries) {
+            // Aggregate data for this vehicle across all days
+            $totalRealMileage = 0;
+            $totalRealDuration = 0;
+            $totalIdleTime = 0;
+            $maxSpeedOverall = 0;
+            $totalAcceleration = 0;
+            $totalBraking = 0;
+            $totalTurns = 0;
+            $totalOverspeed = 0;
+            $totalViolationsVehicle = 0;
             
-            // Driving times
-            $drivingTime = $vehicle['drivingTime'] ?? '0h 00min';
-            $idleTime = $vehicle['idleTime'] ?? '0h 00min';
+            $vehicleName = '';
             
-            // Violations/Events
-            $harshBraking = (int) ($vehicle['harshBraking'] ?? 0);
-            $harshAcceleration = (int) ($vehicle['harshAcceleration'] ?? 0);
-            $dangerousTurns = (int) ($vehicle['dangerousTurns'] ?? 0);
-            $speedViolations = (int) ($vehicle['speedingEvents'] ?? 0);
-            $drivingTimeViolations = (int) ($vehicle['drivingTimeViolations'] ?? 0);
+            foreach ($summaries as $summary) {
+                $vehicleName = $summary['vehicle'] ?? 'N/A';
+                $totalRealMileage += (float) ($summary['realMileage'] ?? 0);
+                $totalRealDuration += (int) ($summary['realDuration'] ?? 0);
+                $totalIdleTime += (int) ($summary['idleTime'] ?? 0);
+                
+                $currentMaxSpeed = (float) ($summary['maxSpeed'] ?? 0);
+                if ($currentMaxSpeed > $maxSpeedOverall) {
+                    $maxSpeedOverall = $currentMaxSpeed;
+                }
+                
+                // Handle violations (-1 means not measured, treat as 0)
+                $accel = (int) ($summary['dailyViolationAcceleration'] ?? 0);
+                $brake = (int) ($summary['dailyViolationBreak'] ?? 0);
+                $turn = (int) ($summary['dailyViolationTurn'] ?? 0);
+                $overspeed = (int) ($summary['dailyViolationOverspeed'] ?? 0);
+                
+                $totalAcceleration += max(0, $accel);
+                $totalBraking += max(0, $brake);
+                $totalTurns += max(0, $turn);
+                $totalOverspeed += max(0, $overspeed);
+                
+                $totalViolationsVehicle += (float) ($summary['totalViolations'] ?? 0);
+            }
+
+            // Convert durations from seconds to "Xh XXmin" format
+            $drivingTime = $this->secondsToHourMinFormat($totalRealDuration);
+            $idleTime = $this->secondsToHourMinFormat($totalIdleTime);
             
-            $vehicleTotalViolations = $harshBraking + $harshAcceleration + $dangerousTurns + $speedViolations + $drivingTimeViolations;
+            // Extract driver name from project or use default
+            $driver = 'Non assigné'; // TARGA API doesn't provide driver in this endpoint
 
             // Accumulate metrics
-            if ($distance > 0) {
+            if ($totalRealMileage > 0) {
                 $activeVehicles++;
             }
-            $totalDistance += $distance;
-            $totalViolations += $vehicleTotalViolations;
-            
-            if ($driver !== 'Non assigné' && !in_array($driver, $driverSet)) {
-                $driverSet[] = $driver;
-                $totalDrivers++;
-            }
+            $totalDistance += $totalRealMileage;
+            $totalViolations += $totalViolationsVehicle;
 
             // Add to vehicle details
             $vehicleDetails[] = [
-                'immatriculation' => $immatriculation,
+                'immatriculation' => $vehicleName,
                 'driver' => $driver,
-                'project' => $vehicle['project'] ?? null,
-                'max_speed' => $maxSpeed,
-                'distance' => $distance,
+                'project' => null,
+                'max_speed' => (int) $maxSpeedOverall,
+                'distance' => round($totalRealMileage, 2),
                 'driving_time' => $drivingTime,
                 'idle_time' => $idleTime,
-                'harsh_braking' => $harshBraking,
-                'harsh_acceleration' => $harshAcceleration,
-                'dangerous_turns' => $dangerousTurns,
-                'speed_violations' => $speedViolations,
-                'driving_time_violations' => $drivingTimeViolations,
-                'total_violations' => $vehicleTotalViolations,
+                'harsh_braking' => $totalBraking,
+                'harsh_acceleration' => $totalAcceleration,
+                'dangerous_turns' => $totalTurns,
+                'speed_violations' => $totalOverspeed,
+                'driving_time_violations' => 0, // Not provided by API
+                'total_violations' => (int) $totalViolationsVehicle,
             ];
         }
 
-        // Calculate average fuel efficiency if available
-        $averageFuelEfficiency = $totalVehicles > 0 ? ($totalFuelConsumption / $totalVehicles) : 0;
+        // Count unique drivers (not available in this API, use vehicle count as proxy)
+        $totalDrivers = $totalVehicles;
+
+        Log::info("Transformation complete", [
+            'total_vehicles' => $totalVehicles,
+            'vehicle_details_count' => count($vehicleDetails),
+            'first_vehicle' => count($vehicleDetails) > 0 ? $vehicleDetails[0]['immatriculation'] : null
+        ]);
 
         return [
             // Métriques de la flotte
             'total_vehicles' => $totalVehicles,
             'active_vehicles' => $activeVehicles,
             'inactive_vehicles' => $totalVehicles - $activeVehicles,
-            'total_distance' => $totalDistance,
+            'total_distance' => round($totalDistance, 2),
             
             // Métriques des conducteurs
             'total_drivers' => $totalDrivers,
-            'active_drivers' => $totalDrivers, // Assuming all listed drivers are active
-            'average_driver_score' => $totalViolations > 0 ? (100 - min(100, $totalViolations / $totalVehicles)) : 100,
+            'active_drivers' => $totalDrivers,
+            'average_driver_score' => $totalViolations > 0 ? max(0, 100 - ($totalViolations / $totalVehicles)) : 100,
             
             // Métriques opérationnelles
-            'total_trips' => 0, // Not available in this endpoint
-            'average_trip_distance' => $activeVehicles > 0 ? ($totalDistance / $activeVehicles) : 0,
-            'operating_hours' => 0, // Calculate from driving times if needed
+            'total_trips' => 0,
+            'average_trip_distance' => $activeVehicles > 0 ? round($totalDistance / $activeVehicles, 2) : 0,
+            'operating_hours' => 0,
             
             // Métriques de carburant
-            'total_fuel_consumption' => $totalFuelConsumption,
-            'average_fuel_efficiency' => $averageFuelEfficiency,
-            'fuel_cost' => 0, // Not available
+            'total_fuel_consumption' => 0,
+            'average_fuel_efficiency' => 0,
+            'fuel_cost' => 0,
             
             // Métriques de maintenance
             'scheduled_maintenances' => 0,
@@ -222,23 +268,39 @@ class EcoDrivingService
             'maintenance_cost' => 0,
             
             // Alertes et incidents
-            'total_alerts' => $totalViolations,
+            'total_alerts' => (int) $totalViolations,
             'critical_alerts' => array_reduce($vehicleDetails, function ($carry, $v) {
                 return $carry + (($v['total_violations'] ?? 0) > 50 ? 1 : 0);
             }, 0),
             'resolved_alerts' => 0,
             
             // Performance
-            'compliance_rate' => $totalViolations > 0 ? (100 - min(100, ($totalViolations / $totalVehicles) * 10)) : 100,
+            'compliance_rate' => $totalVehicles > 0 ? max(0, 100 - (($totalViolations / $totalVehicles) * 10)) : 100,
             'on_time_delivery' => 0,
             
             // Période
-            'period_start' => $apiData['startDate'] ?? null,
-            'period_end' => $apiData['endDate'] ?? null,
+            'period_start' => isset($dailyEcoSummaries[0]['datum']) ? $dailyEcoSummaries[0]['datum'] : null,
+            'period_end' => isset($dailyEcoSummaries[count($dailyEcoSummaries) - 1]['datum']) 
+                ? $dailyEcoSummaries[count($dailyEcoSummaries) - 1]['datum'] 
+                : null,
             
             // Détails véhicules/conducteurs
             'vehicle_details' => $vehicleDetails,
         ];
+    }
+
+    /**
+     * Convert seconds to "Xh XXmin" format
+     *
+     * @param int $seconds
+     * @return string
+     */
+    protected function secondsToHourMinFormat(int $seconds): string
+    {
+        $hours = floor($seconds / 3600);
+        $minutes = floor(($seconds % 3600) / 60);
+        
+        return sprintf('%dh %02dmin', $hours, $minutes);
     }
 
     /**
