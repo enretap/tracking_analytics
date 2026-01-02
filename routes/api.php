@@ -14,7 +14,7 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::middleware('auth')->group(function () {
+Route::middleware(['web', 'api.auth'])->group(function () {
     
     // Event History API endpoints
     Route::prefix('events')->group(function () {

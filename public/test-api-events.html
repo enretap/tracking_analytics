@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test API Events</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+            color: #555;
+        }
+        input, select, button {
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        input, select {
+            width: 200px;
+        }
+        button {
+            background: #3490dc;
+            color: white;
+            border: none;
+            cursor: pointer;
+            padding: 10px 20px;
+        }
+        button:hover {
+            background: #2779bd;
+        }
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        .loading {
+            color: #666;
+            margin: 20px 0;
+        }
+        .error {
+            background: #fee;
+            border: 1px solid #fcc;
+            color: #c33;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 20px 0;
+        }
+        .success {
+            background: #efe;
+            border: 1px solid #cfc;
+            color: #3c3;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 20px 0;
+        }
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        .stat-card {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 6px;
+            border-left: 4px solid #3490dc;
+        }
+        .stat-label {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 5px;
+        }
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #333;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        th {
+            background: #f8f9fa;
+            font-weight: 600;
+            color: #555;
+        }
+        tr:hover {
+            background: #f8f9fa;
+        }
+        .badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        .badge-speed { background: #fee; color: #c33; }
+        .badge-idle { background: #fef3cd; color: #856404; }
+        .badge-default { background: #e3f2fd; color: #1976d2; }
+        pre {
+            background: #f5f5f5;
+            padding: 15px;
+            border-radius: 4px;
+            overflow-x: auto;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚗 Test API - Historique des Événements</h1>
+        
+        <div class="form-group">
+            <label>Endpoint à tester:</label>
+            <select id="endpoint">
+                <option value="/api/events">Tous les événements</option>
+                <option value="/api/events/stats">Statistiques uniquement</option>
+                <option value="/api/events/type/SPEED">Événements SPEED</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label>Date de début:</label>
+            <input type="date" id="startDate" value="2025-12-01">
+        </div>
+
+        <div class="form-group">
+            <label>Date de fin:</label>
+            <input type="date" id="endDate" value="2025-12-31">
+        </div>
+
+        <button onclick="fetchEvents()">📊 Récupérer les données</button>
+        
+        <div id="loading" class="loading" style="display: none;">
+            ⏳ Chargement en cours...
+        </div>
+        
+        <div id="error" class="error" style="display: none;"></div>
+        <div id="success" class="success" style="display: none;"></div>
+        
+        <div id="stats" class="stats" style="display: none;"></div>
+        <div id="results"></div>
+        <div id="raw" style="margin-top: 20px;"></div>
+    </div>
+
+    <script>
+        async function fetchEvents() {
+            const endpoint = document.getElementById('endpoint').value;
+            const startDate = document.getElementById('startDate').value;
+            const endDate = document.getElementById('endDate').value;
+            
+            const loadingEl = document.getElementById('loading');
+            const errorEl = document.getElementById('error');
+            const successEl = document.getElementById('success');
+            const statsEl = document.getElementById('stats');
+            const resultsEl = document.getElementById('results');
+            const rawEl = document.getElementById('raw');
+            
+            // Reset
+            loadingEl.style.display = 'block';
+            errorEl.style.display = 'none';
+            successEl.style.display = 'none';
+            statsEl.style.display = 'none';
+            resultsEl.innerHTML = '';
+            rawEl.innerHTML = '';
+            
+            try {
+                const url = `${endpoint}?start_date=${startDate}&end_date=${endDate}`;
+                console.log('Fetching:', url);
+                
+                const response = await fetch(url, {
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                });
+                
+                loadingEl.style.display = 'none';
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const data = await response.json();
+                
+                // Show raw response
+                rawEl.innerHTML = '<h3>📄 Réponse brute (JSON):</h3><pre>' + 
+                    JSON.stringify(data, null, 2) + '</pre>';
+                
+                if (data.success === false) {
+                    if (data.error === 'Unauthenticated') {
+                        errorEl.textContent = '❌ Non authentifié. Veuillez vous connecter à l\'application d\'abord.';
+                        errorEl.style.display = 'block';
+                        return;
+                    }
+                    errorEl.textContent = '⚠️ ' + (data.error || 'Aucun événement trouvé');
+                    errorEl.style.display = 'block';
+                    return;
+                }
+                
+                successEl.textContent = '✅ Données récupérées avec succès!';
+                successEl.style.display = 'block';
+                
+                // Show stats if available
+                if (data.stats) {
+                    statsEl.innerHTML = `
+                        <div class="stat-card">
+                            <div class="stat-label">Total événements</div>
+                            <div class="stat-value">${data.stats.total_events || 0}</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">Véhicules uniques</div>
+                            <div class="stat-value">${data.stats.unique_vehicles || 0}</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">Types d'événements</div>
+                            <div class="stat-value">${Object.keys(data.stats.events_by_type || {}).length}</div>
+                        </div>
+                    `;
+                    statsEl.style.display = 'grid';
+                }
+                
+                // Show events table if available
+                if (data.events && data.events.length > 0) {
+                    let tableHtml = '<h3>📋 Liste des événements (50 premiers):</h3><table><thead><tr>' +
+                        '<th>Date/Heure</th><th>Véhicule</th><th>Événement</th><th>Type</th><th>Vitesse</th><th>Lieu</th>' +
+                        '</tr></thead><tbody>';
+                    
+                    data.events.slice(0, 50).forEach(event => {
+                        const badgeClass = event.event_type === 'SPEED' ? 'badge-speed' : 
+                                         event.event_type === 'IDLE' ? 'badge-idle' : 'badge-default';
+                        tableHtml += `
+                            <tr>
+                                <td>${new Date(event.event_time).toLocaleString()}</td>
+                                <td><strong>${event.vehicle}</strong><br><small>${event.plate_number}</small></td>
+                                <td>${event.event_name}</td>
+                                <td><span class="badge ${badgeClass}">${event.event_type}</span></td>
+                                <td>${event.speed} km/h</td>
+                                <td><small>${event.address}</small></td>
+                            </tr>
+                        `;
+                    });
+                    
+                    tableHtml += '</tbody></table>';
+                    
+                    if (data.events.length > 50) {
+                        tableHtml += `<p style="text-align:center; color:#666; margin-top:10px;">
+                            Affichage de 50 événements sur ${data.events.length} au total
+                        </p>`;
+                    }
+                    
+                    resultsEl.innerHTML = tableHtml;
+                }
+                
+            } catch (error) {
+                loadingEl.style.display = 'none';
+                errorEl.textContent = '❌ Erreur: ' + error.message;
+                errorEl.style.display = 'block';
+                console.error('Error:', error);
+            }
+        }
+        
+        // Set default dates
+        const today = new Date();
+        const lastMonth = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+        document.getElementById('endDate').value = today.toISOString().split('T')[0];
+        document.getElementById('startDate').value = lastMonth.toISOString().split('T')[0];
+    </script>
+</body>
+</html>

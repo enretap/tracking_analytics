@@ -26,6 +26,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'account.required' => \App\Http\Middleware\EnsureUserHasAccount::class,
             'super-admin' => \App\Http\Middleware\EnsureSuperAdmin::class,
+            'api.auth' => \App\Http\Middleware\EnsureApiAuthenticated::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
