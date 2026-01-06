@@ -41,6 +41,7 @@ export interface User {
     updated_at: string;
     account_name?: string;
     account_logo?: string;
+    account_domain?: string;
     [key: string]: unknown; // This allows for additional properties...
 }
 
@@ -56,6 +57,9 @@ export interface Platform {
 export interface Account {
     id: number;
     name: string;
+    domain?: string;
+    reference_ctrack?: string;
+    logo?: string;
     platforms?: Platform[];
     created_at: string;
     updated_at: string;

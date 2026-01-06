@@ -56,7 +56,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
             $eventData = $eventHistoryService->fetchEventHistoryData($account, $startDate, $endDate);
         }
         
-        return Inertia::render('dashboard', [
+        // Déterminer le tableau de bord à afficher en fonction du domaine du compte
+        $dashboardView = 'dashboard'; // Par défaut
+        if ($account && $account->domain === 'Leasing') {
+            $dashboardView = 'leasingDashboard';
+        }
+        
+        return Inertia::render($dashboardView, [
             'eco_data' => $ecoData,
             'event_data' => $eventData,
         ]);

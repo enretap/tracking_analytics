@@ -50,6 +50,7 @@ class HandleInertiaRequests extends Middleware
                     'hasAdminAccess' => $request->user()->hasAdminAccess(),
                     'account_name' => $request->user()->account?->name,
                     'account_logo' => $request->user()->account?->logo,
+                    'account_domain' => $request->user()->account?->domain,
                 ] : null,
             ],
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
