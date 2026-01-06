@@ -18,65 +18,73 @@ import {
   Shield
 } from 'lucide-react';
 
+/**
+ * Interface pour les détails d'un véhicule/conducteur
+ * Correspond aux données de l'endpoint TARGA TELEMATICS: /json/getDailyVehicleEcoSummary
+ */
 interface VehicleDriverDetail {
-    immatriculation: string;
-    driver: string;
-    project?: string;
-    max_speed?: number;
-    distance?: number;
-    driving_time?: string;
-    idle_time?: string;
-    harsh_braking?: number;
-    harsh_acceleration?: number;
-    dangerous_turns?: number;
-    speed_violations?: number;
-    driving_time_violations?: number;
-    total_violations?: number;
+    immatriculation: string;        // vehicleName de l'API TARGA
+    driver: string;                  // Nom du conducteur (non fourni par TARGA, défaut: "Non assigné")
+    project?: string | null;         // Projet associé (optionnel)
+    max_speed?: number;              // maxSpeed - Vitesse maximale atteinte (km/h)
+    distance?: number;               // realMileage - Distance parcourue (km)
+    driving_time?: string;           // realDuration - Temps de conduite formaté "Xh XXmin"
+    idle_time?: string;              // idleTime - Temps au ralenti formaté "Xh XXmin"
+    harsh_braking?: number;          // dailyViolationBreak - Nombre de freinages brusques
+    harsh_acceleration?: number;     // dailyViolationAcceleration - Nombre d'accélérations brusques
+    dangerous_turns?: number;        // dailyViolationTurn - Nombre de virages dangereux
+    speed_violations?: number;       // dailyViolationOverspeed - Nombre d'excès de vitesse
+    driving_time_violations?: number;// Non fourni par l'API TARGA (défaut: 0)
+    total_violations?: number;       // totalViolations - Total des infractions
 }
 
+/**
+ * Interface pour les données d'éco-conduite
+ * Données transformées depuis l'endpoint TARGA TELEMATICS: /json/getDailyVehicleEcoSummary
+ */
 interface EcoDrivingData {
     // Métriques de la flotte
-    total_vehicles?: number;
-    active_vehicles?: number;
-    inactive_vehicles?: number;
-    total_distance?: number;
+    total_vehicles?: number;         // Nombre total de véhicules
+    active_vehicles?: number;        // Véhicules ayant parcouru une distance > 0
+    inactive_vehicles?: number;      // total_vehicles - active_vehicles
+    total_distance?: number;         // Somme de realMileage de tous les véhicules (km)
     
     // Métriques des conducteurs
-    total_drivers?: number;
-    active_drivers?: number;
-    average_driver_score?: number;
+    total_drivers?: number;          // Nombre total de conducteurs (proxy: nombre de véhicules)
+    active_drivers?: number;         // Conducteurs actifs (proxy: nombre de véhicules)
+    average_driver_score?: number;   // Score moyen calculé: 100 - (totalViolations / totalVehicles)
     
     // Métriques opérationnelles
-    total_trips?: number;
-    average_trip_distance?: number;
-    operating_hours?: number;
+    total_trips?: number;            // Non fourni par l'API TARGA (défaut: 0)
+    average_trip_distance?: number;  // Calculé: total_distance / active_vehicles
+    operating_hours?: number;        // Non fourni par l'API TARGA (défaut: 0)
     
     // Métriques de carburant
-    total_fuel_consumption?: number;
-    average_fuel_efficiency?: number;
-    fuel_cost?: number;
+    total_fuel_consumption?: number; // Non fourni par l'API TARGA (défaut: 0)
+    average_fuel_efficiency?: number;// Non fourni par l'API TARGA (défaut: 0)
+    fuel_cost?: number;              // Non fourni par l'API TARGA (défaut: 0)
     
     // Métriques de maintenance
-    scheduled_maintenances?: number;
-    completed_maintenances?: number;
-    pending_maintenances?: number;
-    maintenance_cost?: number;
+    scheduled_maintenances?: number; // Non fourni par l'API TARGA (défaut: 0)
+    completed_maintenances?: number; // Non fourni par l'API TARGA (défaut: 0)
+    pending_maintenances?: number;   // Non fourni par l'API TARGA (défaut: 0)
+    maintenance_cost?: number;       // Non fourni par l'API TARGA (défaut: 0)
     
     // Alertes et incidents
-    total_alerts?: number;
-    critical_alerts?: number;
-    resolved_alerts?: number;
+    total_alerts?: number;           // Somme de totalViolations de tous les véhicules
+    critical_alerts?: number;        // Nombre de véhicules avec total_violations > 50
+    resolved_alerts?: number;        // Non fourni par l'API TARGA (défaut: 0)
     
     // Performance
-    compliance_rate?: number;
-    on_time_delivery?: number;
+    compliance_rate?: number;        // Calculé: 100 - ((totalViolations / totalVehicles) * 10)
+    on_time_delivery?: number;       // Non fourni par l'API TARGA (défaut: 0)
     
     // Période
-    period_start?: string;
-    period_end?: string;
+    period_start?: string;           // Date de début de la période (format: Y-m-d)
+    period_end?: string;             // Date de fin de la période (format: Y-m-d)
     
     // Détails véhicules/conducteurs
-    vehicle_details?: VehicleDriverDetail[];
+    vehicle_details?: VehicleDriverDetail[]; // Tableau des données détaillées par véhicule
 }
 
 interface Props {
@@ -84,9 +92,25 @@ interface Props {
 }
 
 export function EcoDrivingTemplate({ data }: Props) {
- 
     return (
         <div className="space-y-5 p-3 bg-gradient-to-br from-gray-50 to-gray-100 min-h-screen text-sm">
+            {/* En-tête avec période */}
+            {(data.period_start || data.period_end) && (
+                <div className="bg-white rounded-lg shadow-md p-4 mb-4">
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                            <Clock className="h-5 w-5 text-blue-600" />
+                            <span className="text-sm font-semibold text-gray-700">Période d'analyse:</span>
+                        </div>
+                        <div className="text-sm font-medium text-gray-900">
+                            {data.period_start && new Date(data.period_start).toLocaleDateString('fr-FR')}
+                            {' → '}
+                            {data.period_end && new Date(data.period_end).toLocaleDateString('fr-FR')}
+                        </div>
+                    </div>
+                </div>
+            )}
+            
             {/* Analyse des comportements à risques */}
             {data.vehicle_details && data.vehicle_details.length > 0 && (
                 <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
@@ -293,19 +317,26 @@ export function EcoDrivingTemplate({ data }: Props) {
                                         <CardContent className="bg-white p-4">
                                             {(() => {
                                                 const sortedByDistance = [...data.vehicle_details]
+                                                    .filter(v => (v.distance || 0) > 0)
                                                     .sort((a, b) => (b.distance || 0) - (a.distance || 0))
                                                     .slice(0, 8);
+                                                
+                                                if (sortedByDistance.length === 0) {
+                                                    return <div className="text-center text-gray-500 py-8">Aucune distance parcourue</div>;
+                                                }
+                                                
                                                 const maxDistance = Math.max(...sortedByDistance.map(v => v.distance || 0));
                                                 
                                                 return (
                                                     <div className="space-y-2">
                                                         <div className="flex items-end justify-around h-64 gap-2 pb-6">
                                                             {sortedByDistance.map((vehicle, idx) => {
-                                                                const heightPercent = (vehicle.distance || 0) / maxDistance * 100;
+                                                                const distance = vehicle.distance || 0;
+                                                                const heightPercent = maxDistance > 0 ? (distance / maxDistance * 100) : 0;
                                                                 return (
                                                                     <div key={idx} className="flex flex-col items-center justify-end flex-1 h-full">
                                                                         <div className="text-xs font-semibold mb-1 text-[#1e3a5f]">
-                                                                            {vehicle.distance ? (vehicle.distance).toFixed(0) : '0'}
+                                                                            {distance.toFixed(1)}
                                                                         </div>
                                                                         <div 
                                                                             className="w-full bg-gradient-to-t from-[#1e3a5f] to-[#3b5998] rounded-t transition-all duration-300 hover:opacity-80 min-h-[4px]"
@@ -532,7 +563,7 @@ export function EcoDrivingTemplate({ data }: Props) {
 
                     {/* Classification des Niveaux de Risque (sidebar) */}
                     <div className="lg:col-span-1">
-                        <Card className="bg-gradient-to-br from-[#D4A76A] to-[#C19A5B] shadow-xl border-0 text-white sticky top-6 overflow-hidden">
+                        <Card className="bg-gradient-to-br from-yellow-400 to-yellow-600 shadow-xl border-0 text-white sticky top-6 overflow-hidden">
                             <CardHeader className="border-b border-white/20 pb-3">
                                 <CardTitle className="text-center text-sm font-bold">
                                     <div className="flex items-center justify-center gap-2 mb-2">

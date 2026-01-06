@@ -1,8 +1,8 @@
 import { useState, useEffect, useMemo, lazy, Suspense } from 'react';
 import AppLayout from '@/layouts/app-layout';
 import { dashboard } from '@/routes';
-import { type BreadcrumbItem } from '@/types';
-import { Head } from '@inertiajs/react';
+import { type BreadcrumbItem, type SharedData } from '@/types';
+import { Head, usePage } from '@inertiajs/react';
 import { 
   Car, 
   Activity, 
@@ -22,7 +22,8 @@ import {
   FileText,
   Image as ImageIcon,
   PauseCircle,
-  Globe
+  Globe,
+  User
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -307,6 +308,7 @@ interface Props {
 }
 
 export default function Dashboard({ eco_data, event_data }: Props) {
+    const { auth } = usePage<SharedData>().props;
     const [selectedPeriod, setSelectedPeriod] = useState('week');
     const [dateRange, setDateRange] = useState({ from: new Date(), to: new Date() });
     const [isRefreshing, setIsRefreshing] = useState(false);
@@ -433,12 +435,12 @@ export default function Dashboard({ eco_data, event_data }: Props) {
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Dashboard - Tracking Analytics" />
             
-            <div className="flex h-full flex-1 flex-col gap-4 p-4 pt-2">
+            <div className="flex h-full flex-1 flex-col gap-4 p-4 pt-2 bg-gray-100 dark:bg-gray-900">
                 {/* En-tête du Dashboard */}
                 <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
                     <div>
                         <h1 className="text-2xl font-bold tracking-tight text-gray-900 dark:text-white">
-                            Tableau de bord
+                            Tableau de bord - {auth.user.account_name || auth.user.name}
                         </h1>
                         <p className="text-gray-600 dark:text-gray-400">
                             Vue d'ensemble des activités de votre flotte
@@ -637,12 +639,12 @@ export default function Dashboard({ eco_data, event_data }: Props) {
                             </div>
                         </div>
                     </CardHeader>
-                    <CardContent className="p-6 bg-gray-50">
+                    <CardContent className="space-y-4">
                         {/* Graphiques */}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             {/* Répartition des violations de vitesse par véhicule (%) */}
                             <Card className="border-0 shadow-md hover:shadow-lg transition-shadow duration-300 bg-white">
-                                <CardHeader className="pb-3 bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-gray-200">
+                                <CardHeader className="pb-3 bg-gradient-to-r from-red-50 to-yellow-50 border-b border-gray-200">
                                     <CardTitle className="text-base">Répartition des violations de vitesse (%)</CardTitle>
                                 </CardHeader>
                                 <CardContent className="bg-white p-4">
@@ -747,7 +749,7 @@ export default function Dashboard({ eco_data, event_data }: Props) {
 
                             {/* Véhicules avec les vitesses maximales */}
                             <Card className="border-0 shadow-md hover:shadow-lg transition-shadow duration-300 bg-white">
-                                <CardHeader className="pb-3 bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-gray-200">
+                                <CardHeader className="pb-3 bg-gradient-to-r from-red-50 to-yellow-50 border-b border-gray-200">
                                     <CardTitle className="text-base">Véhicules avec les vitesses maximales (Km/h)</CardTitle>
                                 </CardHeader>
                                 <CardContent className="bg-white">
@@ -822,7 +824,7 @@ export default function Dashboard({ eco_data, event_data }: Props) {
                             </div>
                         </div>
                     </CardHeader>
-                    <CardContent className="p-6 bg-gray-50">
+                    <CardContent className="space-y-4">
                         {/* Graphiques */}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             {/* Répartition des infractions par véhicule (%) */}
@@ -1067,105 +1069,19 @@ export default function Dashboard({ eco_data, event_data }: Props) {
                             </div>
                         </div>
                     </CardHeader>
-                    <CardContent className="p-6 bg-gray-50">
+                    <CardContent className="space-y-4">
                         {/* Graphiques */}
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
 
-                            {/* Cartographie des infractions */}
-                            <Card className="border-0 shadow-md hover:shadow-lg transition-shadow duration-300 bg-white">
-                                <CardHeader className="pb-3 bg-gradient-to-r from-cyan-50 to-teal-50 border-b border-gray-200">
-                                    <CardTitle className="text-base font-semibold text-gray-800">Cartographie génarale des infractions</CardTitle>
-                                </CardHeader>
-                                <CardContent className="bg-white">
-                                    <div className="aspect-square bg-gray-100 rounded flex items-center justify-center relative overflow-hidden">
-                                        <div className="absolute inset-0 bg-gradient-to-br from-green-50 to-blue-50">
-                                            {/* Simuler une carte avec des points */}
-                                            {!eco_data?.vehicle_details ? (
-                                                    <div className="absolute inset-0 flex items-center justify-center text-gray-400">
-                                                        Aucune infraction disponible
-                                                    </div>
-                                                ) :(eco_data.vehicle_details.map((vehicle, idx) => {
-                                                    const totalViolations = vehicle.total_violations || 0;
-                                                    if (totalViolations === 0) return null;
-                                                    
-                                                    // Position pseudo-aléatoire basée sur l'index
-                                                    const left = 20 + (idx * 17) % 60;
-                                                    const top = 15 + (idx * 23) % 70;
-                                                    const size = Math.min(10 + totalViolations / 10, 40);
-                                                    
-                                                    return (
-                                                        <div
-                                                            key={idx}
-                                                            className="absolute rounded-full bg-red-500 opacity-60 border-2 border-red-600"
-                                                            style={{
-                                                                left: `${left}%`,
-                                                                top: `${top}%`,
-                                                                width: `${size}px`,
-                                                                height: `${size}px`
-                                                            }}
-                                                            title={`${vehicle.immatriculation}: ${totalViolations} infractions`}
-                                                        ></div>
-                                                    );
-                                            }))}
-                                        </div>
-                                        <div className="relative z-10 text-center">
-                                            <MapPin className="h-12 w-12 mx-auto text-gray-400 mb-2" />
-                                            <p className="text-sm text-gray-500">Carte des infractions</p>
-                                        </div>
-                                    </div>
-                                </CardContent>
-                            </Card>
+                           
 
-                            {/* Cartographie des infractions sur Abidjan */}
-                            <Card className="border-0 shadow-md hover:shadow-lg transition-shadow duration-300 bg-white">
-                                <CardHeader className="pb-3 bg-gradient-to-r from-cyan-50 to-teal-50 border-b border-gray-200">
-                                    <CardTitle className="text-base">Cartographie des infractions sur Abidjan</CardTitle>
-                                </CardHeader>
-                                <CardContent className="bg-white">
-                                    <div className="aspect-square bg-gray-100 rounded flex items-center justify-center relative overflow-hidden">
-                                        <div className="absolute inset-0 bg-gradient-to-br from-blue-50 to-green-50">
-                                            {/* Points concentrés pour simulation zone urbaine */}
-                                            {!eco_data?.vehicle_details ? (
-                                                <div className="absolute inset-0 flex items-center justify-center text-gray-400">
-                                                    Aucune infraction disponible
-                                                </div>
-                                            ) :(eco_data.vehicle_details.slice(0, 8).map((vehicle, idx) => {
-                                                const totalViolations = vehicle.total_violations || 0;
-                                                if (totalViolations === 0) return null;
-                                                
-                                                // Concentré au centre pour simuler Abidjan
-                                                const left = 35 + (idx * 7) % 30;
-                                                const top = 35 + (idx * 11) % 30;
-                                                const size = Math.min(8 + totalViolations / 15, 30);
-                                                const color = totalViolations > 100 ? 'bg-red-500 border-red-600' : 'bg-blue-500 border-blue-600';
-                                            
-                                                return (
-                                                    <div
-                                                        key={idx}
-                                                        className={`absolute rounded-full ${color} opacity-70 border-2`}
-                                                        style={{
-                                                            left: `${left}%`,
-                                                            top: `${top}%`,
-                                                            width: `${size}px`,
-                                                            height: `${size}px`
-                                                        }}
-                                                        title={`${vehicle.immatriculation}: ${totalViolations} infractions`}
-                                                    ></div>
-                                                );
-                                            }))}
-                                        </div>
-                                        <div className="relative z-10 text-center">
-                                            <MapPin className="h-12 w-12 mx-auto text-gray-400 mb-2" />
-                                            <p className="text-sm text-gray-500">Zone Abidjan</p>
-                                        </div>
-                                    </div>
-                                </CardContent>
-                            </Card>
+                            {/* Tableau des données par chauffeur */}
+                            
 
                             {/* Nombre de véhicules par Type d'événement */}
                             <Card className="border-0 shadow-md hover:shadow-lg transition-shadow duration-300 bg-white">
-                                <CardHeader className="pb-3 bg-gradient-to-r from-cyan-50 to-teal-50 border-b border-gray-200">
-                                    <CardTitle className="text-base">Nombre de véhicules par Type d'événement</CardTitle>
+                                <CardHeader className="pb-3 bg-gradient-to-r from-red-50 to-yellow-50 border-b border-gray-200">
+                                    <CardTitle className="text-base">Nombre d'alertes par Type d'événement</CardTitle>
                                 </CardHeader>
                                 <CardContent className="bg-white">
                                     {(() => {
@@ -1173,6 +1089,17 @@ export default function Dashboard({ eco_data, event_data }: Props) {
                                         if (!event_data?.events_by_name || !event_data?.stats?.events_by_name) {
                                             return <div className="text-center text-gray-500 py-8">Aucune donnée d'événements disponible</div>;
                                         }
+                                        
+                                        // Fonction pour traduire les noms d'événements
+                                        const getEventDisplayName = (eventName: string): string => {
+                                            if (eventName === '2HS_Between 20h and 04h') {
+                                                return 'Conduite de nuit';
+                                            }
+                                            if (eventName === 'SPEED') {
+                                                return 'Vitesse';
+                                            }
+                                            return eventName;
+                                        };
                                         
                                         // Récupérer les événements groupés par nom
                                         const eventsByName = event_data.stats.events_by_name;
@@ -1211,10 +1138,11 @@ export default function Dashboard({ eco_data, event_data }: Props) {
                                                                 const y2 = 50 + 40 * Math.sin(endRad);
                                                                 
                                                                 const largeArc = angle > 180 ? 1 : 0;
+                                                                const displayName = getEventDisplayName(eventName);
                                                                 
                                                                 return (
                                                                     <g key={idx}>
-                                                                        <title>{`${eventName}: ${count} (${percentage.toFixed(1)}%)`}</title>
+                                                                        <title>{`${displayName}: ${count} (${percentage.toFixed(1)}%)`}</title>
                                                                         <path
                                                                             d={`M 50 50 L ${x1} ${y1} A 40 40 0 ${largeArc} 1 ${x2} ${y2} Z`}
                                                                             fill={colors[idx]}
@@ -1239,6 +1167,7 @@ export default function Dashboard({ eco_data, event_data }: Props) {
                                                 <div className="space-y-2 text-xs">
                                                     {topEvents.map(([eventName, count], idx) => {
                                                         const percentage = ((count / totalEvents) * 100).toFixed(1);
+                                                        const displayName = getEventDisplayName(eventName);
                                                         return (
                                                             <div key={idx} className="flex items-center justify-between">
                                                                 <div className="flex items-center gap-2 min-w-0 flex-1">
@@ -1246,8 +1175,8 @@ export default function Dashboard({ eco_data, event_data }: Props) {
                                                                         className="w-3 h-3 rounded-full flex-shrink-0" 
                                                                         style={{ backgroundColor: colors[idx] }}
                                                                     ></div>
-                                                                    <span className="truncate" title={eventName}>
-                                                                        {eventName.length > 20 ? eventName.substring(0, 20) + '...' : eventName}
+                                                                    <span className="truncate" title={displayName}>
+                                                                        {displayName.length > 20 ? displayName.substring(0, 20) + '...' : displayName}
                                                                     </span>
                                                                 </div>
                                                                 <div className="flex items-center gap-2 flex-shrink-0 ml-2">
@@ -1269,225 +1198,99 @@ export default function Dashboard({ eco_data, event_data }: Props) {
                     </CardContent>
                 </Card>
 
-                {/* Graphiques et tableaux */}
-                <Tabs defaultValue="overview" className="space-y-4">
-                    <TabsList>
-                        <TabsTrigger value="overview" className="flex items-center gap-2">
-                            <BarChart3 className="h-4 w-4" />
-                            Vue d'ensemble
-                        </TabsTrigger>
-                        <TabsTrigger value="ranking" className="flex items-center gap-2">
-                            <Award className="h-4 w-4" />
-                            Classement
-                        </TabsTrigger>
-                        <TabsTrigger value="analytics" className="flex items-center gap-2">
-                            <TrendingUp className="h-4 w-4" />
-                            Analytics
-                        </TabsTrigger>
-                    </TabsList>
-
-                    <TabsContent value="overview" className="space-y-4">
-                        <div className="grid gap-4 md:grid-cols-2">
-                            {/* Top 10 des distances */}
-                            <Card>
-                                <CardHeader>
-                                    <CardTitle className="flex items-center gap-2">
-                                        <MapPin className="h-5 w-5" />
-                                        Top 5 des distances parcourues
-                                    </CardTitle>
-                                    <CardDescription>
-                                        Classement des véhicules par distance parcourue
-                                    </CardDescription>
-                                </CardHeader>
-                                <CardContent>
-                                    <div className="space-y-3">
-                                        {topVehiclesByDistance.map((vehicle, index) => (
-                                            <div key={vehicle.id} className="flex items-center justify-between rounded-lg border border-gray-200 p-3 dark:border-gray-800">
-                                                <div className="flex items-center gap-3">
-                                                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900/30">
-                                                        <span className="text-sm font-bold text-blue-600 dark:text-blue-400">
-                                                            #{index + 1}
-                                                        </span>
-                                                    </div>
-                                                    <div>
-                                                        <div className="font-medium text-gray-900 dark:text-white">
-                                                            {vehicle.name}
-                                                        </div>
-                                                        <div className="text-xs text-gray-500 dark:text-gray-500">
-                                                            {vehicle.plate}
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                                <div className="text-right">
-                                                    <div className="font-bold text-gray-900 dark:text-white">
-                                                        {vehicle.distance.toLocaleString()} km
-                                                    </div>
-                                                    <Badge variant={vehicle.status === 'active' ? 'default' : 'secondary'} className="mt-1">
-                                                        {vehicle.status === 'active' ? 'Actif' : 
-                                                         vehicle.status === 'maintenance' ? 'Maintenance' : 'À l\'arrêt'}
-                                                    </Badge>
-                                                </div>
-                                            </div>
-                                        ))}
-                                    </div>
-                                </CardContent>
-                            </Card>
-
-                            {/* Tendance des vitesses */}
-                            <Card>
-                                <CardHeader>
-                                    <CardTitle className="flex items-center gap-2">
-                                        <Gauge className="h-5 w-5" />
-                                        Tendance des vitesses maximales
-                                    </CardTitle>
-                                    <CardDescription>
-                                        Évolution des vitesses maximales atteintes par heure
-                                    </CardDescription>
-                                </CardHeader>
-                                <CardContent>
-                                    <div className="space-y-4">
-                                        {speedTrendData.map((data) => (
-                                            <div key={data.hour} className="space-y-2">
-                                                <div className="flex items-center justify-between">
-                                                    <span className="text-sm text-gray-600 dark:text-gray-400">
-                                                        {data.hour}
-                                                    </span>
-                                                    <span className="font-medium text-gray-900 dark:text-white">
-                                                        {data.maxSpeed} km/h
-                                                    </span>
-                                                </div>
-                                                <div className="h-2 w-full overflow-hidden rounded-full bg-gray-200 dark:bg-gray-800">
-                                                    <div 
-                                                        className="h-full rounded-full bg-gradient-to-r from-blue-500 to-cyan-500"
-                                                        style={{ width: `${(data.maxSpeed / 120) * 100}%` }}
-                                                    />
-                                                </div>
-                                            </div>
-                                        ))}
-                                    </div>
-                                </CardContent>
-                            </Card>
-                        </div>
-                    </TabsContent>
-
-                    <TabsContent value="ranking" className="space-y-4">
-                        <Card>
-                            <CardHeader>
-                                <CardTitle>Classement détaillé</CardTitle>
-                                <CardDescription>
-                                    Analyse complète des performances par véhicule
+                 {/* Top 5 des distances */}
+                <Card>
+                    <CardHeader>
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <CardTitle className="flex items-center gap-2 text-xl">
+                                    <MapPin className="h-6 w-6 text-blue-600" />
+                                    Top 5 des distances parcourues
+                                </CardTitle>
+                                <CardDescription className="mt-1">
+                                    Classement des véhicules par distance parcourue
                                 </CardDescription>
-                            </CardHeader>
-                            <CardContent>
-                                <div className="overflow-x-auto">
-                                    <table className="w-full">
-                                        <thead>
-                                            <tr className="border-b border-gray-200 dark:border-gray-800">
-                                                <th className="px-4 py-3 text-left text-sm font-medium text-gray-900 dark:text-white">Position</th>
-                                                <th className="px-4 py-3 text-left text-sm font-medium text-gray-900 dark:text-white">Véhicule</th>
-                                                <th className="px-4 py-3 text-left text-sm font-medium text-gray-900 dark:text-white">Distance (km)</th>
-                                                <th className="px-4 py-3 text-left text-sm font-medium text-gray-900 dark:text-white">Temps actif</th>
-                                                <th className="px-4 py-3 text-left text-sm font-medium text-gray-900 dark:text-white">Vitesse max</th>
-                                                <th className="px-4 py-3 text-left text-sm font-medium text-gray-900 dark:text-white">Statut</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            {topVehiclesByDistance.map((vehicle, index) => (
-                                                <tr key={vehicle.id} className="border-b border-gray-100 dark:border-gray-800">
-                                                    <td className="px-4 py-3">
-                                                        <div className="flex h-6 w-6 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900/30">
-                                                            <span className="text-sm font-bold text-blue-600 dark:text-blue-400">
-                                                                {index + 1}
-                                                            </span>
-                                                        </div>
-                                                    </td>
-                                                    <td className="px-4 py-3">
-                                                        <div className="font-medium text-gray-900 dark:text-white">{vehicle.name}</div>
-                                                        <div className="text-sm text-gray-500 dark:text-gray-500">{vehicle.plate}</div>
-                                                    </td>
-                                                    <td className="px-4 py-3">
-                                                        <div className="font-bold text-gray-900 dark:text-white">
-                                                            {vehicle.distance.toLocaleString()} km
-                                                        </div>
-                                                    </td>
-                                                    <td className="px-4 py-3">
-                                                        <div className="flex items-center gap-2">
-                                                            <Clock className="h-4 w-4 text-gray-500" />
-                                                            <span className="text-gray-700 dark:text-gray-300">
-                                                                {Math.floor(Math.random() * 24)}h {Math.floor(Math.random() * 60)}min
-                                                            </span>
-                                                        </div>
-                                                    </td>
-                                                    <td className="px-4 py-3">
-                                                        <div className="flex items-center gap-2">
-                                                            <Gauge className="h-4 w-4 text-green-500" />
-                                                            <span className="font-medium text-gray-900 dark:text-white">
-                                                                {Math.floor(Math.random() * 60) + 60} km/h
-                                                            </span>
-                                                        </div>
-                                                    </td>
-                                                    <td className="px-4 py-3">
-                                                        <Badge 
-                                                            variant={vehicle.status === 'active' ? 'default' : 'secondary'}
-                                                            className={vehicle.status === 'active' ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' : 
-                                                                     vehicle.status === 'maintenance' ? 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400' :
-                                                                     'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-400'}
-                                                        >
-                                                            {vehicle.status === 'active' ? 'Actif' : 
-                                                             vehicle.status === 'maintenance' ? 'Maintenance' : 'À l\'arrêt'}
-                                                        </Badge>
-                                                    </td>
-                                                </tr>
-                                            ))}
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </CardContent>
-                        </Card>
-                    </TabsContent>
-
-                    <TabsContent value="analytics" className="space-y-4">
-                        <div className="grid gap-4 md:grid-cols-2">
-                            <Card>
-                                <CardHeader>
-                                    <CardTitle className="flex items-center gap-2">
-                                        <Fuel className="h-5 w-5" />
-                                        Consommation moyenne
-                                    </CardTitle>
-                                </CardHeader>
-                                <CardContent>
-                                    <div className="text-center">
-                                        <div className="text-4xl font-bold text-gray-900 dark:text-white">
-                                            8.2 L/100km
-                                        </div>
-                                        <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
-                                            Moyenne de la flotte sur la période sélectionnée
-                                        </p>
-                                    </div>
-                                </CardContent>
-                            </Card>
-
-                            <Card>
-                                <CardHeader>
-                                    <CardTitle className="flex items-center gap-2">
-                                        <Clock className="h-5 w-5" />
-                                        Temps d'utilisation
-                                    </CardTitle>
-                                </CardHeader>
-                                <CardContent>
-                                    <div className="text-center">
-                                        <div className="text-4xl font-bold text-gray-900 dark:text-white">
-                                            78%
-                                        </div>
-                                        <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
-                                            Taux d'utilisation moyen des véhicules
-                                        </p>
-                                    </div>
-                                </CardContent>
-                            </Card>
+                            </div>
+                            <div className="hidden sm:flex items-center gap-2 px-4 py-2 rounded-lg bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm">
+                                <Activity className="h-5 w-5 text-green-500" />
+                                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                                    {topVehiclesByDistance.filter(v => v.status === 'active').length} actifs
+                                </span>
+                            </div>
                         </div>
-                    </TabsContent>
-                </Tabs>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                        <div className="space-y-2.5">
+                            {topVehiclesByDistance.map((vehicle, index) => (
+                                <div 
+                                    key={vehicle.id} 
+                                    className="group flex items-center justify-between rounded-lg border border-gray-200 bg-gradient-to-r from-white to-gray-50/50 p-3 shadow-sm transition-all hover:shadow-md hover:scale-[1.01] dark:border-gray-700 dark:from-gray-800 dark:to-gray-800/50"
+                                >
+                                    <div className="flex items-center gap-3">
+                                        {/* Position badge with gradient */}
+                                        <div className="relative flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-blue-500 to-blue-600 shadow-md">
+                                            <span className="text-sm font-bold text-white">
+                                                #{index + 1}
+                                            </span>
+                                            {index === 0 && (
+                                                <div className="absolute -top-0.5 -right-0.5">
+                                                    <div className="h-2.5 w-2.5 rounded-full bg-yellow-400 animate-pulse"></div>
+                                                </div>
+                                            )}
+                                        </div>
+                                        
+                                        {/* Vehicle info */}
+                                        <div>
+                                            <div className="flex items-center gap-2">
+                                                <span className="text-sm font-semibold text-gray-900 dark:text-white">
+                                                    {vehicle.name}
+                                                </span>
+                                                {vehicle.status === 'active' && (
+                                                    <div className="flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-green-100 dark:bg-green-900/30">
+                                                        <div className="h-1 w-1 rounded-full bg-green-500 animate-pulse"></div>
+                                                        <span className="text-[10px] font-medium text-green-700 dark:text-green-400">En mouvement</span>
+                                                    </div>
+                                                )}
+                                            </div>
+                                            <div className="flex items-center gap-1.5 mt-0.5">
+                                                <Car className="h-3 w-3 text-gray-400" />
+                                                <span className="text-xs text-gray-500 dark:text-gray-400">
+                                                    {vehicle.plate}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    {/* Distance and status */}
+                                    <div className="flex items-center gap-4">
+                                        <div className="text-right">
+                                            <div className="text-lg font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-400">
+                                                {vehicle.distance.toLocaleString()}
+                                            </div>
+                                            <div className="text-[10px] text-gray-500 dark:text-gray-400">
+                                                kilomètres
+                                            </div>
+                                        </div>
+                                        
+                                        <Badge 
+                                            variant={vehicle.status === 'active' ? 'default' : 'secondary'} 
+                                            className={`px-2 py-0.5 text-xs ${
+                                                vehicle.status === 'active' 
+                                                    ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 border-green-200 dark:border-green-800' 
+                                                    : vehicle.status === 'maintenance' 
+                                                    ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 border-amber-200 dark:border-amber-800'
+                                                    : 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-400 border-gray-200 dark:border-gray-700'
+                                            }`}
+                                        >
+                                            {vehicle.status === 'active' ? 'Actif' : 
+                                                vehicle.status === 'maintenance' ? 'Maintenance' : 'À l\'arrêt'}
+                                        </Badge>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </CardContent>
+                </Card>
               
                 {/* Carte de la flotte */}
                 <Card>
@@ -1496,7 +1299,7 @@ export default function Dashboard({ eco_data, event_data }: Props) {
                             <div>
                                 <CardTitle className="flex items-center gap-2">
                                     <MapPin className="h-5 w-5" />
-                                    Localisation en temps réel
+                                    Dernière position des véhicules
                                 </CardTitle>
                                 <CardDescription>
                                     {selectedVehicleIds.length} véhicule{selectedVehicleIds.length > 1 ? 's' : ''} affiché{selectedVehicleIds.length > 1 ? 's' : ''} sur {stats.totalVehicles}
@@ -1533,98 +1336,102 @@ export default function Dashboard({ eco_data, event_data }: Props) {
                             </div>
                         </div>
                     </CardHeader>
-                    <CardContent className="space-y-4">
-                        {/* Sélection des véhicules avec recherche */}
-                        <div className="space-y-3">
-                            <div className="relative">
-                                <input
-                                    type="text"
-                                    placeholder="Rechercher par nom ou plaque..."
-                                    value={vehicleSearchQuery}
-                                    onChange={(e) => setVehicleSearchQuery(e.target.value)}
-                                    className="w-full rounded-md border border-gray-300 bg-white px-4 py-2 pr-10 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-gray-700 dark:bg-gray-800 dark:text-white"
-                                />
-                                {vehicleSearchQuery && (
-                                    <button
-                                        onClick={() => setVehicleSearchQuery('')}
-                                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
-                                    >
-                                        ×
-                                    </button>
-                                )}
+                    <CardContent>
+                        <div className="flex gap-4">
+                            {/* Sélection des véhicules avec recherche - 25% */}
+                            <div className="w-1/4 space-y-3">
+                                <div className="relative">
+                                    <input
+                                        type="text"
+                                        placeholder="Rechercher par nom ou plaque..."
+                                        value={vehicleSearchQuery}
+                                        onChange={(e) => setVehicleSearchQuery(e.target.value)}
+                                        className="w-full rounded-md border border-gray-300 bg-white px-4 py-2 pr-10 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-gray-700 dark:bg-gray-800 dark:text-white"
+                                    />
+                                    {vehicleSearchQuery && (
+                                        <button
+                                            onClick={() => setVehicleSearchQuery('')}
+                                            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                                        >
+                                            ×
+                                        </button>
+                                    )}
+                                </div>
+                                
+                                <div className="h-[550px] overflow-y-auto rounded-lg border border-gray-200 dark:border-gray-800">
+                                    {filteredVehicles.length > 0 ? (
+                                        <div className="divide-y divide-gray-200 dark:divide-gray-800">
+                                            {filteredVehicles.map((vehicle) => (
+                                                <label
+                                                    key={vehicle.id}
+                                                    className="flex cursor-pointer items-center gap-3 px-3 py-2 transition-colors hover:bg-gray-50 dark:hover:bg-gray-800/50"
+                                                >
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={selectedVehicleIds.includes(vehicle.id)}
+                                                        onChange={() => handleToggleVehicle(vehicle.id)}
+                                                        className="h-4 w-4 shrink-0 rounded border-gray-300 text-blue-600 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700"
+                                                    />
+                                                    <div className="flex flex-1 items-center gap-2 overflow-hidden">
+                                                        <span className="font-medium text-gray-900 dark:text-white shrink-0">
+                                                            {vehicle.plate}
+                                                        </span>
+                                                        <span className="text-gray-400">•</span>
+                                                        <span className="text-sm text-gray-600 dark:text-gray-400 truncate">
+                                                            {vehicle.name}
+                                                        </span>
+                                                        <Badge
+                                                            variant="outline"
+                                                            className={`text-xs shrink-0 ${
+                                                                vehicle.status === 'active'
+                                                                    ? 'border-green-500 text-green-600 dark:text-green-400'
+                                                                    : vehicle.status === 'maintenance'
+                                                                    ? 'border-amber-500 text-amber-600 dark:text-amber-400'
+                                                                    : 'border-gray-500 text-gray-600 dark:text-gray-400'
+                                                            }`}
+                                                        >
+                                                            {vehicle.status === 'active' ? 'Actif' :
+                                                             vehicle.status === 'maintenance' ? 'Maint.' : 'À l\'arrêt'}
+                                                        </Badge>
+                                                        {vehicle.speed !== undefined && vehicle.speed > 0 && (
+                                                            <div className="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400 shrink-0 ml-auto">
+                                                                <Gauge className="h-3 w-3" />
+                                                                <span>{vehicle.speed} km/h</span>
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                </label>
+                                            ))}
+                                        </div>
+                                    ) : (
+                                        <div className="p-8 text-center text-gray-500 dark:text-gray-400">
+                                            <Car className="mx-auto h-12 w-12 opacity-50" />
+                                            <p className="mt-2 text-sm">
+                                                {vehicleSearchQuery ? 'Aucun véhicule trouvé' : 'Aucun véhicule disponible'}
+                                            </p>
+                                        </div>
+                                    )}
+                                </div>
                             </div>
                             
-                            <div className="max-h-32 overflow-y-auto rounded-lg border border-gray-200 dark:border-gray-800">
-                                {filteredVehicles.length > 0 ? (
-                                    <div className="divide-y divide-gray-200 dark:divide-gray-800">
-                                        {filteredVehicles.map((vehicle) => (
-                                            <label
-                                                key={vehicle.id}
-                                                className="flex cursor-pointer items-center gap-3 px-3 py-2 transition-colors hover:bg-gray-50 dark:hover:bg-gray-800/50"
-                                            >
-                                                <input
-                                                    type="checkbox"
-                                                    checked={selectedVehicleIds.includes(vehicle.id)}
-                                                    onChange={() => handleToggleVehicle(vehicle.id)}
-                                                    className="h-4 w-4 shrink-0 rounded border-gray-300 text-blue-600 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700"
-                                                />
-                                                <div className="flex flex-1 items-center gap-2 overflow-hidden">
-                                                    <span className="font-medium text-gray-900 dark:text-white shrink-0">
-                                                        {vehicle.plate}
-                                                    </span>
-                                                    <span className="text-gray-400">•</span>
-                                                    <span className="text-sm text-gray-600 dark:text-gray-400 truncate">
-                                                        {vehicle.name}
-                                                    </span>
-                                                    <Badge
-                                                        variant="outline"
-                                                        className={`text-xs shrink-0 ${
-                                                            vehicle.status === 'active'
-                                                                ? 'border-green-500 text-green-600 dark:text-green-400'
-                                                                : vehicle.status === 'maintenance'
-                                                                ? 'border-amber-500 text-amber-600 dark:text-amber-400'
-                                                                : 'border-gray-500 text-gray-600 dark:text-gray-400'
-                                                        }`}
-                                                    >
-                                                        {vehicle.status === 'active' ? 'Actif' :
-                                                         vehicle.status === 'maintenance' ? 'Maint.' : 'À l\'arrêt'}
-                                                    </Badge>
-                                                    {vehicle.speed !== undefined && vehicle.speed > 0 && (
-                                                        <div className="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400 shrink-0 ml-auto">
-                                                            <Gauge className="h-3 w-3" />
-                                                            <span>{vehicle.speed} km/h</span>
-                                                        </div>
-                                                    )}
-                                                </div>
-                                            </label>
-                                        ))}
+                            {/* Carte avec lazy loading - 75% */}
+                            <div className="w-3/4">
+                                <Suspense fallback={
+                                    <div className="flex flex-col items-center gap-3">
+                                        <RefreshCw className="h-8 w-8 animate-spin text-blue-500" />
+                                        <p className="text-sm text-gray-600 dark:text-gray-400">Chargement de la carte...</p>
                                     </div>
-                                ) : (
-                                    <div className="p-8 text-center text-gray-500 dark:text-gray-400">
-                                        <Car className="mx-auto h-12 w-12 opacity-50" />
-                                        <p className="mt-2 text-sm">
-                                            {vehicleSearchQuery ? 'Aucun véhicule trouvé' : 'Aucun véhicule disponible'}
-                                        </p>
-                                    </div>
-                                )}
+                                }>
+                                    <VehicleMap 
+                                        vehicles={displayedVehicles.map(v => ({
+                                            ...v,
+                                            status: v.status === 'unknown' ? 'inactive' : v.status
+                                        }))}
+                                        height="600px"
+                                    />
+                                </Suspense>
                             </div>
                         </div>
-                        
-                        {/* Carte avec lazy loading */}
-                        
-                        <Suspense fallback={
-                            <div className="flex flex-col items-center gap-3">
-                                <RefreshCw className="h-8 w-8 animate-spin text-blue-500" />
-                                <p className="text-sm text-gray-600 dark:text-gray-400">Chargement de la carte...</p>
-                            </div>
-                        }>
-                            <VehicleMap 
-                                vehicles={displayedVehicles.map(v => ({
-                                    ...v,
-                                    status: v.status === 'unknown' ? 'inactive' : v.status
-                                }))} 
-                            />
-                        </Suspense>
                     </CardContent>
                 </Card>
             </div>

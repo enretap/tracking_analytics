@@ -88,8 +88,6 @@ interface DriverEcoDrivingData {
     vehicle_details?: VehicleDriverDetail[];
 }
 
-
-
 interface Props {
     data: DriverEcoDrivingData;
 }
@@ -656,7 +654,7 @@ export function DriverEcoDrivingTemplate({ data }: Props) {
 
                     {/* Classification des Niveaux de Risque (sidebar) - Identique à la section 2 */}
                     <div className="lg:col-span-1">
-                        <Card className="bg-gradient-to-br from-[#D4A76A] to-[#C19A5B] shadow-lg text-white sticky top-6">
+                        <Card className="bg-gradient-to-br from-yellow-400 to-yellow-600 shadow-lg text-white sticky top-6">
                             <CardHeader>
                                 <CardTitle className="text-center text-base">
                                     Classification des Niveaux de Risque

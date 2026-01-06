@@ -28,6 +28,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
             // Par défaut: du 1er au 31 décembre 2025
             $startDate = request('start_date', '2025-12-01');
             $endDate = request('end_date', '2025-12-31');
+            $forceRefresh = request('force_refresh', false);
+            
+            // Vider le cache si demandé
+            if ($forceRefresh) {
+                $ecoDrivingService->clearCache($account);
+            }
             
             $ecoData = $ecoDrivingService->fetchEcoDrivingData($account, $startDate, $endDate);
         }
@@ -40,6 +46,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
             // Utiliser les mêmes dates que pour l'éco-conduite
             $startDate = request('start_date', '2025-12-01');
             $endDate = request('end_date', '2025-12-31');
+            $forceRefresh = request('force_refresh', false);
+            
+            // Vider le cache si demandé
+            if ($forceRefresh) {
+                $eventHistoryService->clearCache($account);
+            }
             
             $eventData = $eventHistoryService->fetchEventHistoryData($account, $startDate, $endDate);
         }
@@ -207,203 +219,53 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
             case 'eco_driving':
             case 'driver_eco_driving':
-            case 'geo_eco_driving':
             case 'summary':
-                $reportData['data'] = [
-                    // Métriques de la flotte
-                    'total_vehicles' => 10,
-                    'active_vehicles' => 8,
-                    'inactive_vehicles' => 2,
-                    'total_distance' => 7816.49,
-                    
-                    // Métriques des conducteurs
-                    'total_drivers' => 10,
-                    'active_drivers' => 8,
-                    'average_driver_score' => 75.5,
-                    
-                    // Métriques opérationnelles
-                    'total_trips' => 250,
-                    'average_trip_distance' => 31.27,
-                    'operating_hours' => 450,
-                    
-                    // Métriques de carburant
-                    'total_fuel_consumption' => 1200,
-                    'average_fuel_efficiency' => 8.5,
-                    'fuel_cost' => 1800,
-                    
-                    // Métriques de maintenance
-                    'scheduled_maintenances' => 30,
-                    'completed_maintenances' => 25,
-                    'pending_maintenances' => 5,
-                    'maintenance_cost' => 5000,
-                    
-                    // Alertes et incidents
-                    'total_alerts' => 776,
-                    'critical_alerts' => 49,
-                    'resolved_alerts' => 650,
-                    
-                    // Performance
-                    'compliance_rate' => 85,
-                    'on_time_delivery' => 92,
-                    
-                    // Période
-                    'period_start' => '2024-12-01',
-                    'period_end' => '2024-12-22',
-                    
-                    // Détails véhicules/conducteurs
-                    'vehicle_details' => [
-                        [
-                            'immatriculation' => '577KF01',
-                            'driver' => 'Chauffeur 577KF01',
-                            'project' => null,
-                            'max_speed' => 87,
-                            'distance' => 478.93,
-                            'driving_time' => '01h 44min',
-                            'idle_time' => '00h 07min',
-                            'harsh_braking' => 11,
-                            'harsh_acceleration' => 7,
-                            'dangerous_turns' => 18,
-                            'speed_violations' => 0,
-                            'driving_time_violations' => 0,
-                            'total_violations' => 36,
-                        ],
-                        [
-                            'immatriculation' => 'AA-150-BQ',
-                            'driver' => 'FAMOUSSA IBRAHIM SANOGO',
-                            'project' => null,
-                            'max_speed' => 89,
-                            'distance' => 883.63,
-                            'driving_time' => '01h 38min',
-                            'idle_time' => '00h 06min',
-                            'harsh_braking' => 0,
-                            'harsh_acceleration' => 0,
-                            'dangerous_turns' => 0,
-                            'speed_violations' => 1,
-                            'driving_time_violations' => 0,
-                            'total_violations' => 1,
-                        ],
-                        [
-                            'immatriculation' => 'AA-154-BQ',
-                            'driver' => 'Chauffeur AA-154-BQ',
-                            'project' => null,
-                            'max_speed' => 59,
-                            'distance' => 21.27,
-                            'driving_time' => '00h 27min',
-                            'idle_time' => '00h 05min',
-                            'harsh_braking' => 3,
-                            'harsh_acceleration' => 0,
-                            'dangerous_turns' => 2,
-                            'speed_violations' => 0,
-                            'driving_time_violations' => 0,
-                            'total_violations' => 5,
-                        ],
-                        [
-                            'immatriculation' => 'AA-270-KB',
-                            'driver' => 'Chauffeur AA-270-KB',
-                            'project' => null,
-                            'max_speed' => 57,
-                            'distance' => 53.00,
-                            'driving_time' => '00h 20min',
-                            'idle_time' => '00h 04min',
-                            'harsh_braking' => 0,
-                            'harsh_acceleration' => 0,
-                            'dangerous_turns' => 0,
-                            'speed_violations' => 0,
-                            'driving_time_violations' => 0,
-                            'total_violations' => 0,
-                        ],
-                        [
-                            'immatriculation' => 'AA-570-BR',
-                            'driver' => 'OLIVIER KOUASSI',
-                            'project' => null,
-                            'max_speed' => 64,
-                            'distance' => 115.98,
-                            'driving_time' => '00h 33min',
-                            'idle_time' => '00h 04min',
-                            'harsh_braking' => 2,
-                            'harsh_acceleration' => 1,
-                            'dangerous_turns' => 0,
-                            'speed_violations' => 1,
-                            'driving_time_violations' => 0,
-                            'total_violations' => 4,
-                        ],
-                        [
-                            'immatriculation' => 'AA-701-RF',
-                            'driver' => 'Chauffeur AA-701-RF',
-                            'project' => null,
-                            'max_speed' => 87,
-                            'distance' => 763.06,
-                            'driving_time' => '00h 40min',
-                            'idle_time' => '00h 06min',
-                            'harsh_braking' => 68,
-                            'harsh_acceleration' => 5,
-                            'dangerous_turns' => 6,
-                            'speed_violations' => 4,
-                            'driving_time_violations' => 0,
-                            'total_violations' => 83,
-                        ],
-                        [
-                            'immatriculation' => 'AA-704-RF',
-                            'driver' => 'Chauffeur AA-704-RF',
-                            'project' => null,
-                            'max_speed' => 92,
-                            'distance' => 1132.49,
-                            'driving_time' => '01h 37min',
-                            'idle_time' => '00h 06min',
-                            'harsh_braking' => 33,
-                            'harsh_acceleration' => 4,
-                            'dangerous_turns' => 0,
-                            'speed_violations' => 2,
-                            'driving_time_violations' => 4,
-                            'total_violations' => 43,
-                        ],
-                        [
-                            'immatriculation' => 'AA-714-AT',
-                            'driver' => 'SODIKI HASSAN',
-                            'project' => null,
-                            'max_speed' => 89,
-                            'distance' => 1905.24,
-                            'driving_time' => '00h 53min',
-                            'idle_time' => '00h 07min',
-                            'harsh_braking' => 240,
-                            'harsh_acceleration' => 16,
-                            'dangerous_turns' => 16,
-                            'speed_violations' => 8,
-                            'driving_time_violations' => 0,
-                            'total_violations' => 280,
-                        ],
-                        [
-                            'immatriculation' => 'AA-759-RF',
-                            'driver' => 'Chauffeur AA-759-RF',
-                            'project' => null,
-                            'max_speed' => 107,
-                            'distance' => 262.00,
-                            'driving_time' => '00h 26min',
-                            'idle_time' => '00h 07min',
-                            'harsh_braking' => 0,
-                            'harsh_acceleration' => 0,
-                            'dangerous_turns' => 0,
-                            'speed_violations' => 1,
-                            'driving_time_violations' => 0,
-                            'total_violations' => 1,
-                        ],
-                        [
-                            'immatriculation' => 'AA-805-RF',
-                            'driver' => 'Chauffeur AA-805-RF',
-                            'project' => null,
-                            'max_speed' => 100,
-                            'distance' => 2200.89,
-                            'driving_time' => '01h 08min',
-                            'idle_time' => '00h 07min',
-                            'harsh_braking' => 256,
-                            'harsh_acceleration' => 33,
-                            'dangerous_turns' => 7,
-                            'speed_violations' => 21,
-                            'driving_time_violations' => 6,
-                            'total_violations' => 323,
-                        ],
-                    ],
-                ];
+                // Utiliser le vrai service EcoDrivingService au lieu de données factices
+                $ecoDrivingService = app(\App\Services\EcoDrivingService::class);
+                
+                // Récupérer les dates depuis la requête ou utiliser les valeurs par défaut
+                $startDate = request('start_date', '2025-12-01');
+                $endDate = request('end_date', '2025-12-31');
+                $forceRefresh = request('force_refresh', false);
+                
+                // Vider le cache si demandé
+                if ($forceRefresh) {
+                    $ecoDrivingService->clearCache($user->account);
+                }
+                
+                // Récupérer les vraies données de l'API
+                $reportData['data'] = $ecoDrivingService->fetchEcoDrivingData($user->account, $startDate, $endDate);
+                $reportData['period_start'] = $reportData['data']['period_start'] ?? $startDate;
+                $reportData['period_end'] = $reportData['data']['period_end'] ?? $endDate;
+                break;
+            
+            case 'geo_eco_driving':
+                // Utiliser les services EcoDrivingService et EventHistoryService
+                $ecoDrivingService = app(\App\Services\EcoDrivingService::class);
+                $eventHistoryService = app(\App\Services\EventHistoryService::class);
+                
+                // Récupérer les dates depuis la requête ou utiliser les valeurs par défaut
+                $startDate = request('start_date', '2025-12-01');
+                $endDate = request('end_date', '2025-12-31');
+                $forceRefresh = request('force_refresh', false);
+                
+                // Vider le cache si demandé
+                if ($forceRefresh) {
+                    $ecoDrivingService->clearCache($user->account);
+                    $eventHistoryService->clearCache($user->account);
+                }
+                
+                // Récupérer les données d'éco-conduite
+                $ecoData = $ecoDrivingService->fetchEcoDrivingData($user->account, $startDate, $endDate);
+                
+                // Récupérer les données d'événements
+                $eventData = $eventHistoryService->fetchEventHistoryData($user->account, $startDate, $endDate);
+                
+                // Combiner les données
+                $reportData['data'] = $eventData; // Utiliser les données d'événements comme données principales
+                $reportData['eco_data'] = $ecoData; // Ajouter les données d'éco-conduite si nécessaire
+                $reportData['period_start'] = $startDate;
+                $reportData['period_end'] = $endDate;
                 break;
 
             default:

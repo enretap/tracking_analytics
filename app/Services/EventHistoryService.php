@@ -51,6 +51,13 @@ class EventHistoryService
             // Cache key for this request
             $cacheKey = "event_history_{$account->id}_{$startDate}_{$endDate}_" . md5(json_encode($filters));
 
+            // Store cache key for later cleanup
+            $cacheKeys = Cache::get('event_history_cache_keys_' . $account->id, []);
+            if (!in_array($cacheKey, $cacheKeys)) {
+                $cacheKeys[] = $cacheKey;
+                Cache::put('event_history_cache_keys_' . $account->id, $cacheKeys, 86400); // 24 hours
+            }
+
             // Try to get from cache (5 minutes TTL)
             return Cache::remember($cacheKey, 300, function () use ($apiUrl, $apiToken, $startDate, $endDate, $filters) {
                 return $this->callEventHistoryEndpoint($apiUrl, $apiToken, $startDate, $endDate, $filters);
@@ -257,6 +264,28 @@ class EventHistoryService
         }
 
         return !empty($parts) ? implode(', ', $parts) : 'Adresse inconnue';
+    }
+
+    /**
+     * Clear cache for a specific account
+     *
+     * @param Account $account
+     * @return void
+     */
+    public function clearCache(Account $account): void
+    {
+        $pattern = "event_history_{$account->id}_*";
+        
+        // Clear all cache entries matching the pattern
+        $cacheKeys = Cache::get('event_history_cache_keys_' . $account->id, []);
+        
+        foreach ($cacheKeys as $key) {
+            Cache::forget($key);
+        }
+        
+        Cache::forget('event_history_cache_keys_' . $account->id);
+        
+        Log::info("Event history cache cleared for account {$account->id}");
     }
 
     /**

@@ -79,8 +79,56 @@ interface GeoEcoDrivingData {
     vehicle_details?: VehicleDriverDetail[];
 }
 
+interface VehicleEventDetail {
+    id: number;
+    vehicle: string;
+    plate_number: string;
+    reference: string;
+    driver: string;
+    event_time: string;
+    event_name: string;
+    event_type: string;
+    speed: number;
+    position: {
+        latitude: number | null;
+        longitude: number | null;
+    };
+    address: string;
+    poi_name: string;
+    is_poi: boolean;
+    initiator: string | null;
+    additional_info: string | null;
+    comment: string | null;
+    creation_date: string;
+}
+
+interface VehicleEventData {
+    success: boolean;
+    events: VehicleEventDetail[];
+    events_by_type: Record<string, VehicleEventDetail[]>;
+    events_by_name: Record<string, VehicleEventDetail[]>;
+    events_by_vehicle: Record<string, {
+        vehicle: string;
+        plate_number: string;
+        events: VehicleEventDetail[];
+    }>;
+    events_by_date: Record<string, VehicleEventDetail[]>;
+    stats: {
+        total_events: number;
+        events_by_type: Record<string, number>;
+        events_by_name: Record<string, number>;
+        events_by_vehicle: Record<string, number>;
+        unique_vehicles: number;
+        date_range: {
+            start: string | null;
+            end: string | null;
+        };
+    };
+    raw_total: number;
+}
+
 interface Props {
-    data: GeoEcoDrivingData;
+    data: VehicleEventData;
 }
 
 export function GeoEcoDrivingTemplate({ data }: Props) {
@@ -88,94 +136,16 @@ export function GeoEcoDrivingTemplate({ data }: Props) {
     return (
         <div className="space-y-6">
             {/* Analyse géospatiale des comportements à risques */}
-            {data.vehicle_details && data.vehicle_details.length > 0 && (
+            {data.events && data.events.length > 0 && (
                 <Card className="shadow-lg hover:shadow-xl transition-shadow duration-300 border-0 overflow-hidden">
                     
                     <CardContent className="p-6 bg-gray-50">
                         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                             {/* Cartographie des infractions */}
-                            <Card className="border-0 shadow-md hover:shadow-lg transition-shadow duration-300 bg-white">
-                                <CardHeader className="pb-3 bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-gray-200">
-                                    <CardTitle className="text-base font-semibold text-gray-800">Cartographie des infractions</CardTitle>
-                                </CardHeader>
-                                <CardContent className="bg-white">
-                                    <div className="aspect-square bg-gray-100 rounded flex items-center justify-center relative overflow-hidden">
-                                        <div className="absolute inset-0 bg-gradient-to-br from-green-50 to-blue-50">
-                                            {/* Simuler une carte avec des points */}
-                                            {data.vehicle_details.map((vehicle, idx) => {
-                                                const totalViolations = vehicle.total_violations || 0;
-                                                if (totalViolations === 0) return null;
-                                                
-                                                // Position pseudo-aléatoire basée sur l'index
-                                                const left = 20 + (idx * 17) % 60;
-                                                const top = 15 + (idx * 23) % 70;
-                                                const size = Math.min(10 + totalViolations / 10, 40);
-                                                
-                                                return (
-                                                    <div
-                                                        key={idx}
-                                                        className="absolute rounded-full bg-red-500 opacity-60 border-2 border-red-600"
-                                                        style={{
-                                                            left: `${left}%`,
-                                                            top: `${top}%`,
-                                                            width: `${size}px`,
-                                                            height: `${size}px`
-                                                        }}
-                                                        title={`${vehicle.immatriculation}: ${totalViolations} infractions`}
-                                                    ></div>
-                                                );
-                                            })}
-                                        </div>
-                                        <div className="relative z-10 text-center">
-                                            <MapPin className="h-12 w-12 mx-auto text-gray-400 mb-2" />
-                                            <p className="text-sm text-gray-500">Carte des infractions</p>
-                                        </div>
-                                    </div>
-                                </CardContent>
-                            </Card>
+                           
 
                             {/* Cartographie des infractions sur Abidjan */}
-                            <Card className="border-0 shadow-md hover:shadow-lg transition-shadow duration-300 bg-white">
-                                <CardHeader className="pb-3 bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-gray-200">
-                                    <CardTitle className="text-base">Cartographie des infractions sur Abidjan</CardTitle>
-                                </CardHeader>
-                                <CardContent className="bg-white">
-                                    <div className="aspect-square bg-gray-100 rounded flex items-center justify-center relative overflow-hidden">
-                                        <div className="absolute inset-0 bg-gradient-to-br from-blue-50 to-green-50">
-                                            {/* Points concentrés pour simulation zone urbaine */}
-                                            {data.vehicle_details.slice(0, 8).map((vehicle, idx) => {
-                                                const totalViolations = vehicle.total_violations || 0;
-                                                if (totalViolations === 0) return null;
-                                                
-                                                // Concentré au centre pour simuler Abidjan
-                                                const left = 35 + (idx * 7) % 30;
-                                                const top = 35 + (idx * 11) % 30;
-                                                const size = Math.min(8 + totalViolations / 15, 30);
-                                                const color = totalViolations > 100 ? 'bg-red-500 border-red-600' : 'bg-blue-500 border-blue-600';
-                                                
-                                                return (
-                                                    <div
-                                                        key={idx}
-                                                        className={`absolute rounded-full ${color} opacity-70 border-2`}
-                                                        style={{
-                                                            left: `${left}%`,
-                                                            top: `${top}%`,
-                                                            width: `${size}px`,
-                                                            height: `${size}px`
-                                                        }}
-                                                        title={`${vehicle.immatriculation}: ${totalViolations} infractions`}
-                                                    ></div>
-                                                );
-                                            })}
-                                        </div>
-                                        <div className="relative z-10 text-center">
-                                            <MapPin className="h-12 w-12 mx-auto text-gray-400 mb-2" />
-                                            <p className="text-sm text-gray-500">Zone Abidjan</p>
-                                        </div>
-                                    </div>
-                                </CardContent>
-                            </Card>
-
+                            
                             {/* Nombre de véhicules par Type d'événement */}
                             <Card className="border-0 shadow-md hover:shadow-lg transition-shadow duration-300 bg-white">
                                 <CardHeader className="pb-3 bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-gray-200">
@@ -183,14 +153,36 @@ export function GeoEcoDrivingTemplate({ data }: Props) {
                                 </CardHeader>
                                 <CardContent className="bg-white">
                                     {(() => {
-                                        const nightDriving = data.vehicle_details.filter(v => (v.driving_time_violations || 0) > 0).length;
-                                        const durationViolation = data.vehicle_details.filter(v => (v.driving_time_violations || 0) > 0).length;
-                                        const speedViolation = data.vehicle_details.filter(v => (v.speed_violations || 0) > 0).length;
-                                        const total = data.vehicle_details.length;
+                                        // Safety check for event_data
+                                        if (!data?.events_by_name || !data?.stats?.events_by_name) {
+                                            return <div className="text-center text-gray-500 py-8">Aucune donnée d'événements disponible</div>;
+                                        }
                                         
-                                        const nightPercent = (nightDriving / total * 100).toFixed(2);
-                                        const durationPercent = (durationViolation / total * 100).toFixed(2);
-                                        const speedPercent = (speedViolation / total * 100).toFixed(2);
+                                        // Fonction pour traduire les noms d'événements
+                                        const getEventDisplayName = (eventName: string): string => {
+                                            if (eventName === '2HS_Between 20h and 04h') {
+                                                return 'Conduite de nuit';
+                                            }
+                                            if (eventName === 'SPEED') {
+                                                return 'Vitesse';
+                                            }
+                                            return eventName;
+                                        };
+                                        
+                                        // Récupérer les événements groupés par nom
+                                        const eventsByName = data.stats.events_by_name;
+                                        const totalEvents = data.stats.total_events;
+                                        
+                                        if (totalEvents === 0) {
+                                            return <div className="text-center text-gray-500 py-8">Aucun événement trouvé</div>;
+                                        }
+                                        
+                                        // Prendre les 5 premiers types d'événements les plus fréquents
+                                        const topEvents = Object.entries(eventsByName)
+                                            .sort((a, b) => b[1] - a[1])
+                                            .slice(0, 5);
+                                        
+                                        const colors = ['#ef4444', '#06b6d4', '#10b981', '#f59e0b', '#8b5cf6'];
                                         
                                         return (
                                             <div>
@@ -199,14 +191,9 @@ export function GeoEcoDrivingTemplate({ data }: Props) {
                                                     <svg viewBox="0 0 100 100" className="transform -rotate-90">
                                                         {(() => {
                                                             let currentAngle = 0;
-                                                            const data = [
-                                                                { value: parseFloat(speedPercent), color: '#ef4444', label: 'Conduite de nuit' },
-                                                                { value: parseFloat(durationPercent), color: '#06b6d4', label: 'Infraction sur durée' },
-                                                                { value: parseFloat(nightPercent), color: '#10b981', label: 'SPEED' }
-                                                            ];
-                                                            
-                                                            return data.map((item, idx) => {
-                                                                const angle = (item.value / 100) * 360;
+                                                            return topEvents.map(([eventName, count], idx) => {
+                                                                const percentage = (count / totalEvents) * 100;
+                                                                const angle = (percentage / 100) * 360;
                                                                 const startAngle = currentAngle;
                                                                 currentAngle += angle;
                                                                 
@@ -219,49 +206,54 @@ export function GeoEcoDrivingTemplate({ data }: Props) {
                                                                 const y2 = 50 + 40 * Math.sin(endRad);
                                                                 
                                                                 const largeArc = angle > 180 ? 1 : 0;
+                                                                const displayName = getEventDisplayName(eventName);
                                                                 
                                                                 return (
-                                                                    <path
-                                                                        key={idx}
-                                                                        d={`M 50 50 L ${x1} ${y1} A 40 40 0 ${largeArc} 1 ${x2} ${y2} Z`}
-                                                                        fill={item.color}
-                                                                        stroke="white"
-                                                                        strokeWidth="0.5"
-                                                                    />
+                                                                    <g key={idx}>
+                                                                        <title>{`${displayName}: ${count} (${percentage.toFixed(1)}%)`}</title>
+                                                                        <path
+                                                                            d={`M 50 50 L ${x1} ${y1} A 40 40 0 ${largeArc} 1 ${x2} ${y2} Z`}
+                                                                            fill={colors[idx]}
+                                                                            stroke="white"
+                                                                            strokeWidth="0.5"
+                                                                            className="hover:opacity-80 transition-opacity cursor-pointer"
+                                                                        />
+                                                                    </g>
                                                                 );
                                                             });
                                                         })()}
                                                         <circle cx="50" cy="50" r="25" fill="white" />
                                                     </svg>
-                                                    {/* Percentages */}
-                                                    <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
-                                                        <div className="text-xs font-semibold">{speedPercent}%</div>
+                                                    {/* Total au centre */}
+                                                    <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-center">
+                                                        <div className="text-xl font-bold text-gray-800">{totalEvents}</div>
+                                                        <div className="text-xs text-gray-500">Total</div>
                                                     </div>
                                                 </div>
                                                 
                                                 {/* Légende */}
-                                                <div className="space-y-2 text-sm">
-                                                    <div className="flex items-center justify-between">
-                                                        <div className="flex items-center gap-2">
-                                                            <div className="w-3 h-3 rounded-full bg-red-500"></div>
-                                                            <span>Conduite de nuit</span>
-                                                        </div>
-                                                        <span className="font-semibold">{nightPercent}%</span>
-                                                    </div>
-                                                    <div className="flex items-center justify-between">
-                                                        <div className="flex items-center gap-2">
-                                                            <div className="w-3 h-3 rounded-full bg-cyan-500"></div>
-                                                            <span>Infraction sur durée de...</span>
-                                                        </div>
-                                                        <span className="font-semibold">{durationPercent}%</span>
-                                                    </div>
-                                                    <div className="flex items-center justify-between">
-                                                        <div className="flex items-center gap-2">
-                                                            <div className="w-3 h-3 rounded-full bg-green-500"></div>
-                                                            <span>SPEED</span>
-                                                        </div>
-                                                        <span className="font-semibold">{speedPercent}%</span>
-                                                    </div>
+                                                <div className="space-y-2 text-xs">
+                                                    {topEvents.map(([eventName, count], idx) => {
+                                                        const percentage = ((count / totalEvents) * 100).toFixed(1);
+                                                        const displayName = getEventDisplayName(eventName);
+                                                        return (
+                                                            <div key={idx} className="flex items-center justify-between">
+                                                                <div className="flex items-center gap-2 min-w-0 flex-1">
+                                                                    <div 
+                                                                        className="w-3 h-3 rounded-full flex-shrink-0" 
+                                                                        style={{ backgroundColor: colors[idx] }}
+                                                                    ></div>
+                                                                    <span className="truncate" title={displayName}>
+                                                                        {displayName.length > 20 ? displayName.substring(0, 20) + '...' : displayName}
+                                                                    </span>
+                                                                </div>
+                                                                <div className="flex items-center gap-2 flex-shrink-0 ml-2">
+                                                                    <span className="font-semibold">{percentage}%</span>
+                                                                    <span className="text-gray-500">({count})</span>
+                                                                </div>
+                                                            </div>
+                                                        );
+                                                    })}
                                                 </div>
                                             </div>
                                         );
@@ -271,7 +263,7 @@ export function GeoEcoDrivingTemplate({ data }: Props) {
                         </div>
 
                         {/* Tableau des données par chauffeur */}
-                        <Card className="mt-6 border-2">
+                        {/* <Card className="mt-6 border-2">
                             <CardContent className="p-0">
                                 <div className="overflow-x-auto p-4">
                                     <table className="w-full text-sm">
@@ -285,7 +277,7 @@ export function GeoEcoDrivingTemplate({ data }: Props) {
                                             </tr>
                                         </thead>
                                         <tbody className="divide-y divide-gray-200">
-                                            {data.vehicle_details.map((vehicle, index) => {
+                                            {data.events.map((vehicle, index) => {
                                                 // Simuler conduite de nuit (basé sur driving_time_violations)
                                                 const nightDriving = vehicle.driving_time_violations || 0;
                                                 const durationViolation = vehicle.driving_time_violations || 0;
@@ -305,16 +297,16 @@ export function GeoEcoDrivingTemplate({ data }: Props) {
                                             <tr className="bg-gray-900 text-white font-bold">
                                                 <td className="px-4 py-3">Total</td>
                                                 <td className="px-4 py-3 text-center">
-                                                    {data.vehicle_details.reduce((sum, v) => sum + (v.driving_time_violations || 0), 0)}
+                                                    {data.events.reduce((sum, v) => sum + (v.driving_time_violations || 0), 0)}
                                                 </td>
                                                 <td className="px-4 py-3 text-center">
-                                                    {data.vehicle_details.reduce((sum, v) => sum + (v.driving_time_violations || 0), 0)}
+                                                    {data.events.reduce((sum, v) => sum + (v.driving_time_violations || 0), 0)}
                                                 </td>
                                                 <td className="px-4 py-3 text-center">
-                                                    {data.vehicle_details.reduce((sum, v) => sum + (v.speed_violations || 0), 0)}
+                                                    {data.events.reduce((sum, v) => sum + (v.speed_violations || 0), 0)}
                                                 </td>
                                                 <td className="px-4 py-3 text-center">
-                                                    {data.vehicle_details.reduce((sum, v) => 
+                                                    {data.events.reduce((sum, v) => 
                                                         sum + (v.driving_time_violations || 0) * 2 + (v.speed_violations || 0), 0
                                                     )}
                                                 </td>
@@ -323,7 +315,7 @@ export function GeoEcoDrivingTemplate({ data }: Props) {
                                     </table>
                                 </div>
                             </CardContent>
-                        </Card>
+                        </Card> */}
                     </CardContent>
                 </Card>
             )}

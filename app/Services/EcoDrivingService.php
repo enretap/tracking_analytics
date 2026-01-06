@@ -347,10 +347,27 @@ class EcoDrivingService
      */
     public function clearCache(Account $account): void
     {
-        $pattern = "eco_driving_{$account->id}_*";
+        // Clear specific cache keys for this account
+        // Generate all possible cache keys for the last year
+        $dates = [];
+        $start = now()->subYear();
+        $end = now()->addMonth();
         
-        // Note: This is a simple implementation. For production, you may want to use
-        // a more sophisticated cache tagging system
+        while ($start <= $end) {
+            $dates[] = $start->format('Y-m-d');
+            $start->addDay();
+        }
+        
+        // Clear cache for common date ranges
+        foreach ($dates as $i => $startDate) {
+            for ($j = $i; $j < count($dates) && $j < $i + 400; $j++) {
+                $endDate = $dates[$j];
+                $cacheKey = "eco_driving_{$account->id}_{$startDate}_{$endDate}";
+                Cache::forget($cacheKey);
+            }
+        }
+        
+        // Also flush entire cache as fallback
         Cache::flush();
         
         Log::info("Cleared eco-driving cache for account {$account->id}");
