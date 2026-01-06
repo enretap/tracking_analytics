@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
-import { ArrowLeft, Building2 } from 'lucide-react';
+import { ArrowLeft, Building2, Image, Globe, Tag } from 'lucide-react';
 
 interface Platform {
     id: number;
@@ -19,12 +19,17 @@ interface Props {
 export default function CreateAccount({ platforms }: Props) {
     const { data, setData, post, processing, errors } = useForm({
         name: '',
+        domain: '',
+        reference_ctrack: '',
+        logo: null as File | null,
         platform_ids: [] as number[],
     });
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        post('/settings/accounts');
+        post('/settings/accounts', {
+            forceFormData: true,
+        });
     };
 
     const togglePlatform = (platformId: number) => {
@@ -84,6 +89,59 @@ export default function CreateAccount({ platforms }: Props) {
                                 />
                                 {errors.name && (
                                     <p className="text-sm text-red-600">{errors.name}</p>
+                                )}
+                            </div>
+
+                            <div className="space-y-2">
+                                <Label htmlFor="domain" className="flex items-center gap-2">
+                                    <Globe className="h-4 w-4" />
+                                    Domaine d'activité
+                                </Label>
+                                <Input
+                                    id="domain"
+                                    type="text"
+                                    value={data.domain}
+                                    onChange={(e) => setData('domain', e.target.value)}
+                                    placeholder="Transport, Logistique, etc."
+                                />
+                                {errors.domain && (
+                                    <p className="text-sm text-red-600">{errors.domain}</p>
+                                )}
+                            </div>
+
+                            <div className="space-y-2">
+                                <Label htmlFor="reference_ctrack" className="flex items-center gap-2">
+                                    <Tag className="h-4 w-4" />
+                                    Référence CTRACK
+                                </Label>
+                                <Input
+                                    id="reference_ctrack"
+                                    type="text"
+                                    value={data.reference_ctrack}
+                                    onChange={(e) => setData('reference_ctrack', e.target.value)}
+                                    placeholder="Référence du compte sur CTRACK"
+                                />
+                                {errors.reference_ctrack && (
+                                    <p className="text-sm text-red-600">{errors.reference_ctrack}</p>
+                                )}
+                            </div>
+
+                            <div className="space-y-2">
+                                <Label htmlFor="logo" className="flex items-center gap-2">
+                                    <Image className="h-4 w-4" />
+                                    Logo du compte
+                                </Label>
+                                <Input
+                                    id="logo"
+                                    type="file"
+                                    accept="image/*"
+                                    onChange={(e) => setData('logo', e.target.files?.[0] || null)}
+                                />
+                                {data.logo && (
+                                    <p className="text-sm text-gray-600">Fichier sélectionné : {data.logo.name}</p>
+                                )}
+                                {errors.logo && (
+                                    <p className="text-sm text-red-600">{errors.logo}</p>
                                 )}
                             </div>
 

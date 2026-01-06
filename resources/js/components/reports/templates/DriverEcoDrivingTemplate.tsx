@@ -98,9 +98,7 @@ export function DriverEcoDrivingTemplate({ data }: Props) {
         <div className="space-y-5 p-3 bg-gradient-to-br from-gray-50 to-gray-100 min-h-screen text-sm">
              {/* Analyse des comportements à risques par driver */}
             {data.vehicle_details && data.vehicle_details.length > 0 && (
-                <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
-                    {/* Contenu principal (4 colonnes) */}
-                    <div className="lg:col-span-4 space-y-6">
+                <div className="space-y-6">
                         <Card className="shadow-lg hover:shadow-xl transition-shadow duration-300 border-0 overflow-hidden">
                             
                             <CardContent className="p-6 bg-gray-50">
@@ -650,80 +648,6 @@ export function DriverEcoDrivingTemplate({ data }: Props) {
                                 </div>
                             </CardContent>
                         </Card>
-                    </div>
-
-                    {/* Classification des Niveaux de Risque (sidebar) - Identique à la section 2 */}
-                    <div className="lg:col-span-1">
-                        <Card className="bg-gradient-to-br from-yellow-400 to-yellow-600 shadow-lg text-white sticky top-6">
-                            <CardHeader>
-                                <CardTitle className="text-center text-base">
-                                    Classification des Niveaux de Risque
-                                </CardTitle>
-                            </CardHeader>
-                            <CardContent className="space-y-3">
-                                {(() => {
-                                    const getRiskLevel = (vehicle: VehicleDriverDetail) => {
-                                        const totalViolations = vehicle.total_violations || 0;
-                                        if (totalViolations === 0) return 'ACCEPTABLE';
-                                        if (totalViolations < 50) return 'ÉLEVÉ';
-                                        return 'CRITIQUE';
-                                    };
-
-                                    const classifiedVehicles = data.vehicle_details.map(v => ({
-                                        ...v,
-                                        risk: getRiskLevel(v)
-                                    }));
-
-                                    const acceptable = classifiedVehicles.filter(v => v.risk === 'ACCEPTABLE');
-                                    const elevated = classifiedVehicles.filter(v => v.risk === 'ÉLEVÉ');
-                                    const critical = classifiedVehicles.filter(v => v.risk === 'CRITIQUE');
-
-                                    return (
-                                        <>
-                                            {/* CRITIQUE */}
-                                            <div>
-                                                <div className="flex items-center gap-2 mb-2">
-                                                    <div className="w-3 h-3 rounded-full bg-red-500"></div>
-                                                    <span className="font-semibold">CRITIQUE</span>
-                                                </div>
-                                                <div className="space-y-1 pl-5 text-sm">
-                                                    {critical.map((v, i) => (
-                                                        <div key={i}>{v.immatriculation}</div>
-                                                    ))}
-                                                </div>
-                                            </div>
-
-                                            {/* ÉLEVÉ */}
-                                            <div>
-                                                <div className="flex items-center gap-2 mb-2">
-                                                    <div className="w-3 h-3 rounded-full bg-yellow-400"></div>
-                                                    <span className="font-semibold">ÉLEVÉ</span>
-                                                </div>
-                                                <div className="space-y-1 pl-5 text-sm">
-                                                    {elevated.map((v, i) => (
-                                                        <div key={i}>{v.immatriculation}</div>
-                                                    ))}
-                                                </div>
-                                            </div>
-
-                                            {/* ACCEPTABLE */}
-                                            <div>
-                                                <div className="flex items-center gap-2 mb-2">
-                                                    <div className="w-3 h-3 rounded-full bg-green-500"></div>
-                                                    <span className="font-semibold">ACCEPTABLE</span>
-                                                </div>
-                                                <div className="space-y-1 pl-5 text-sm">
-                                                    {acceptable.map((v, i) => (
-                                                        <div key={i}>{v.immatriculation}</div>
-                                                    ))}
-                                                </div>
-                                            </div>
-                                        </>
-                                    );
-                                })()}
-                            </CardContent>
-                        </Card>
-                    </div>
                 </div>
             )}
            

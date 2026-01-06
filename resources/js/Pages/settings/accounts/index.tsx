@@ -13,6 +13,7 @@ interface Platform {
 interface Account {
     id: number;
     name: string;
+    logo?: string;
     platforms?: Platform[];
     created_at?: string;
 }
@@ -69,11 +70,19 @@ export default function AccountsIndex({ accounts }: Props) {
                                 {accounts.map((account) => (
                                     <div
                                         key={account.id}
-                                        className="flex items-center justify-between rounded-lg border border-gray-200 p-4 dark:border-gray-800"
+                                        className="flex items-center justify-between rounded-lg border border-gray-200 p-3 dark:border-gray-800"
                                     >
-                                        <div className="flex items-center gap-4">
-                                            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-green-100 dark:bg-green-900/30">
-                                                <Building2 className="h-6 w-6 text-green-600 dark:text-green-400" />
+                                        <div className="flex items-center gap-3">
+                                            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-green-100 dark:bg-green-900/30 overflow-hidden">
+                                                {account.logo ? (
+                                                    <img 
+                                                        src={`/storage/${account.logo}`} 
+                                                        alt={account.name}
+                                                        className="h-full w-full object-cover"
+                                                    />
+                                                ) : (
+                                                    <Building2 className="h-5 w-5 text-green-600 dark:text-green-400" />
+                                                )}
                                             </div>
                                             <div>
                                                 <div className="font-medium text-gray-900 dark:text-white">

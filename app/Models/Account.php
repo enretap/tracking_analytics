@@ -15,6 +15,9 @@ class Account extends Model
 
     protected $fillable = [
         'name',
+        'domain',
+        'reference_ctrack',
+        'logo',
         'settings',
         'is_active',
     ];

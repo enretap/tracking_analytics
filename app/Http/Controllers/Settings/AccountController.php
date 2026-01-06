@@ -16,6 +16,12 @@ class AccountController extends Controller
         if (isset($data['settings']) && is_string($data['settings'])) {
             $data['settings'] = json_decode($data['settings'], true);
         }
+        
+        // Gérer l'upload du logo
+        if ($request->hasFile('logo')) {
+            $data['logo'] = $request->file('logo')->store('logos', 'public');
+        }
+        
         $account = Account::create($data);
 
         // sync platforms if provided
@@ -32,6 +38,16 @@ class AccountController extends Controller
         if (isset($data['settings']) && is_string($data['settings'])) {
             $data['settings'] = json_decode($data['settings'], true);
         }
+        
+        // Gérer l'upload du nouveau logo
+        if ($request->hasFile('logo')) {
+            // Supprimer l'ancien logo si existe
+            if ($account->logo) {
+                \Storage::disk('public')->delete($account->logo);
+            }
+            $data['logo'] = $request->file('logo')->store('logos', 'public');
+        }
+        
         $account->update($data);
 
         // sync platforms if provided

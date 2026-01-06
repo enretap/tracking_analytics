@@ -5,11 +5,14 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
-import { ArrowLeft, Building2 } from 'lucide-react';
+import { ArrowLeft, Building2, Image, Globe, Tag } from 'lucide-react';
 
 interface Account {
     id: number;
     name: string;
+    domain?: string;
+    reference_ctrack?: string;
+    logo?: string;
     platforms?: { id: number }[];
 }
 
@@ -26,12 +29,17 @@ interface Props {
 export default function EditAccount({ account, platforms }: Props) {
     const { data, setData, put, processing, errors } = useForm({
         name: account.name || '',
+        domain: account.domain || '',
+        reference_ctrack: account.reference_ctrack || '',
+        logo: null as File | null,
         platform_ids: account.platforms?.map(p => p.id) || [] as number[],
     });
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        put(`/settings/accounts/${account.id}`);
+        put(`/settings/accounts/${account.id}`, {
+            forceFormData: true,
+        });
     };
 
     const togglePlatform = (platformId: number) => {
@@ -92,6 +100,69 @@ export default function EditAccount({ account, platforms }: Props) {
                                 />
                                 {errors.name && (
                                     <p className="text-sm text-red-600">{errors.name}</p>
+                                )}
+                            </div>
+
+                            <div className="space-y-2">
+                                <Label htmlFor="domain" className="flex items-center gap-2">
+                                    <Globe className="h-4 w-4" />
+                                    Domaine d'activité
+                                </Label>
+                                <Input
+                                    id="domain"
+                                    type="text"
+                                    value={data.domain}
+                                    onChange={(e) => setData('domain', e.target.value)}
+                                    placeholder="Transport, Logistique, etc."
+                                />
+                                {errors.domain && (
+                                    <p className="text-sm text-red-600">{errors.domain}</p>
+                                )}
+                            </div>
+
+                            <div className="space-y-2">
+                                <Label htmlFor="reference_ctrack" className="flex items-center gap-2">
+                                    <Tag className="h-4 w-4" />
+                                    Référence CTRACK
+                                </Label>
+                                <Input
+                                    id="reference_ctrack"
+                                    type="text"
+                                    value={data.reference_ctrack}
+                                    onChange={(e) => setData('reference_ctrack', e.target.value)}
+                                    placeholder="Référence du compte sur CTRACK"
+                                />
+                                {errors.reference_ctrack && (
+                                    <p className="text-sm text-red-600">{errors.reference_ctrack}</p>
+                                )}
+                            </div>
+
+                            <div className="space-y-2">
+                                <Label htmlFor="logo" className="flex items-center gap-2">
+                                    <Image className="h-4 w-4" />
+                                    Logo du compte
+                                </Label>
+                                {account.logo && !data.logo && (
+                                    <div className="mb-2">
+                                        <img 
+                                            src={`/storage/${account.logo}`} 
+                                            alt="Logo actuel" 
+                                            className="h-16 w-auto rounded border border-gray-200"
+                                        />
+                                        <p className="text-sm text-gray-600 mt-1">Logo actuel</p>
+                                    </div>
+                                )}
+                                <Input
+                                    id="logo"
+                                    type="file"
+                                    accept="image/*"
+                                    onChange={(e) => setData('logo', e.target.files?.[0] || null)}
+                                />
+                                {data.logo && (
+                                    <p className="text-sm text-gray-600">Nouveau fichier sélectionné : {data.logo.name}</p>
+                                )}
+                                {errors.logo && (
+                                    <p className="text-sm text-red-600">{errors.logo}</p>
                                 )}
                             </div>
 

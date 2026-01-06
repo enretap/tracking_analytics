@@ -1,5 +1,6 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
   Leaf,
   TrendingDown,
@@ -95,7 +96,7 @@ export function EcoDrivingTemplate({ data }: Props) {
     return (
         <div className="space-y-5 p-3 bg-gradient-to-br from-gray-50 to-gray-100 min-h-screen text-sm">
             {/* En-tête avec période */}
-            {(data.period_start || data.period_end) && (
+            {/* {(data.period_start || data.period_end) && (
                 <div className="bg-white rounded-lg shadow-md p-4 mb-4">
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
@@ -109,13 +110,11 @@ export function EcoDrivingTemplate({ data }: Props) {
                         </div>
                     </div>
                 </div>
-            )}
+            )} */}
             
             {/* Analyse des comportements à risques */}
             {data.vehicle_details && data.vehicle_details.length > 0 && (
-                <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
-                    {/* Contenu principal (4 colonnes) */}
-                    <div className="lg:col-span-4 space-y-6">
+                <div className="space-y-6">
                         {/* Card principale */}
                         <Card className="shadow-lg hover:shadow-xl transition-shadow duration-300 border-0 overflow-hidden">
                             
@@ -189,24 +188,42 @@ export function EcoDrivingTemplate({ data }: Props) {
 
                                 {/* Graphiques */}
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                    {/* Répartition des violations de vitesse par véhicule (%) */}
+                                    
+                                    {/* Répartition des violations par niveau de risque */}
                                     <Card className="border-0 shadow-md hover:shadow-lg transition-shadow duration-300 bg-white">
                                         <CardHeader className="pb-3 bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-gray-200">
-                                            <CardTitle className="text-base">Répartition des violations de vitesse par véhicule (%)</CardTitle>
+                                            <CardTitle className="text-base">Répartition des violations par niveau de risque</CardTitle>
                                         </CardHeader>
                                         <CardContent className="bg-white p-4">
                                             {(() => {
-                                                const totalViolations = data.vehicle_details.reduce((sum, v) => sum + (v.speed_violations || 0), 0);
-                                                const topVehicles = data.vehicle_details
-                                                    .filter(v => (v.speed_violations || 0) > 0)
-                                                    .sort((a, b) => (b.speed_violations || 0) - (a.speed_violations || 0))
-                                                    .slice(0, 5);
-                                                
-                                                if (totalViolations === 0) {
-                                                    return <div className="text-center text-gray-500 py-8">Aucune violation de vitesse</div>;
+                                                // Classification des véhicules par niveau de risque
+                                                const getRiskLevel = (vehicle: VehicleDriverDetail) => {
+                                                    const totalViolations = vehicle.total_violations || 0;
+                                                    if (totalViolations === 0) return 'ACCEPTABLE';
+                                                    if (totalViolations < 50) return 'ÉLEVÉ';
+                                                    return 'CRITIQUE';
+                                                };
+
+                                                const classifiedVehicles = data.vehicle_details.map(v => ({
+                                                    ...v,
+                                                    risk: getRiskLevel(v)
+                                                }));
+
+                                                const acceptable = classifiedVehicles.filter(v => v.risk === 'ACCEPTABLE').length;
+                                                const elevated = classifiedVehicles.filter(v => v.risk === 'ÉLEVÉ').length;
+                                                const critical = classifiedVehicles.filter(v => v.risk === 'CRITIQUE').length;
+                                                const total = data.vehicle_details.length;
+
+                                                if (total === 0) {
+                                                    return <div className="text-center text-gray-500 py-8">Aucune donnée disponible</div>;
                                                 }
 
-                                                const colors = ['#1e3a5f', '#8B4513', '#d946ef', '#f59e0b', '#10b981'];
+                                                // Données pour le diagramme circulaire
+                                                const riskData = [
+                                                    { label: 'ACCEPTABLE', count: acceptable, color: '#3b82f6' },
+                                                    { label: 'ÉLEVÉ', count: elevated, color: '#f59e0b' },
+                                                    { label: 'CRITIQUE', count: critical, color: '#ef4444' }
+                                                ].filter(item => item.count > 0);
                                                 
                                                 return (
                                                     <div className="flex flex-col items-center gap-4">
@@ -215,8 +232,8 @@ export function EcoDrivingTemplate({ data }: Props) {
                                                             <svg viewBox="0 0 200 200" className="transform -rotate-90">
                                                                 {(() => {
                                                                     let currentAngle = 0;
-                                                                    return topVehicles.map((vehicle, idx) => {
-                                                                        const percentage = (vehicle.speed_violations || 0) / totalViolations;
+                                                                    return riskData.map((item, idx) => {
+                                                                        const percentage = item.count / total;
                                                                         const angle = percentage * 360;
                                                                         const startAngle = currentAngle;
                                                                         const endAngle = currentAngle + angle;
@@ -238,7 +255,7 @@ export function EcoDrivingTemplate({ data }: Props) {
                                                                             <path
                                                                                 key={idx}
                                                                                 d={`M 100 100 L ${x1} ${y1} A 80 80 0 ${largeArc} 1 ${x2} ${y2} Z`}
-                                                                                fill={colors[idx]}
+                                                                                fill={item.color}
                                                                                 stroke="white"
                                                                                 strokeWidth="2"
                                                                             />
@@ -248,22 +265,22 @@ export function EcoDrivingTemplate({ data }: Props) {
                                                             </svg>
                                                             {/* Centre avec total */}
                                                             <div className="absolute inset-0 flex flex-col items-center justify-center">
-                                                                <div className="text-2xl font-bold text-gray-800">{totalViolations}</div>
-                                                                <div className="text-xs text-gray-500">Total</div>
+                                                                <div className="text-2xl font-bold text-gray-800">{total}</div>
+                                                                <div className="text-xs text-gray-500">Véhicules</div>
                                                             </div>
                                                         </div>
                                                         
                                                         {/* Légende */}
                                                         <div className="grid grid-cols-1 gap-2 w-full text-xs">
-                                                            {topVehicles.map((vehicle, idx) => {
-                                                                const percentage = ((vehicle.speed_violations || 0) / totalViolations * 100).toFixed(1);
+                                                            {riskData.map((item, idx) => {
+                                                                const percentage = ((item.count / total) * 100).toFixed(1);
                                                                 return (
                                                                     <div key={idx} className="flex items-center justify-between gap-2">
                                                                         <div className="flex items-center gap-2">
-                                                                            <div className="w-3 h-3 rounded-sm" style={{ backgroundColor: colors[idx] }}></div>
-                                                                            <span className="font-medium">{vehicle.immatriculation}</span>
+                                                                            <div className="w-3 h-3 rounded-full" style={{ backgroundColor: item.color }}></div>
+                                                                            <span className="font-medium">{item.label}</span>
                                                                         </div>
-                                                                        <span className="text-gray-600">{percentage}% ({vehicle.speed_violations})</span>
+                                                                        <span className="text-gray-600">{percentage}% ({item.count})</span>
                                                                     </div>
                                                                 );
                                                             })}
@@ -274,36 +291,113 @@ export function EcoDrivingTemplate({ data }: Props) {
                                         </CardContent>
                                     </Card>
 
-                                    {/* Véhicules en infractions de vitesse */}
+                                    {/* Véhicules par niveau de risque */}
                                     <Card className="border-0 shadow-md hover:shadow-lg transition-shadow duration-300 bg-white">
                                         <CardHeader className="pb-3 bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-gray-200">
-                                            <CardTitle className="text-base">Véhicules en infractions de vitesse (Km/h)</CardTitle>
+                                            <CardTitle className="text-base">Véhicules par niveau de risque</CardTitle>
                                         </CardHeader>
-                                        <CardContent className="bg-white">
+                                        <CardContent className="bg-white p-4">
                                             {(() => {
-                                                const speedViolators = data.vehicle_details
-                                                    .filter(v => (v.max_speed || 0) > 90)
-                                                    .sort((a, b) => (b.max_speed || 0) - (a.max_speed || 0))
-                                                    .slice(0, 5);
-                                                const maxSpeed = Math.max(...speedViolators.map(v => v.max_speed || 0));
-                                                
+                                                // Classification des véhicules par niveau de risque
+                                                const getRiskLevel = (vehicle: VehicleDriverDetail) => {
+                                                    const totalViolations = vehicle.total_violations || 0;
+                                                    if (totalViolations === 0) return 'ACCEPTABLE';
+                                                    if (totalViolations < 50) return 'ÉLEVÉ';
+                                                    return 'CRITIQUE';
+                                                };
+
+                                                const classifiedVehicles = data.vehicle_details.map(v => ({
+                                                    ...v,
+                                                    risk: getRiskLevel(v)
+                                                }));
+
+                                                const acceptable = classifiedVehicles.filter(v => v.risk === 'ACCEPTABLE');
+                                                const elevated = classifiedVehicles.filter(v => v.risk === 'ÉLEVÉ');
+                                                const critical = classifiedVehicles.filter(v => v.risk === 'CRITIQUE');
+
                                                 return (
-                                                    <div className="space-y-2">
-                                                        {speedViolators.map((vehicle, idx) => (
-                                                            <div key={idx}>
-                                                                <div className="flex justify-between mb-1 text-sm">
-                                                                    <span>{vehicle.immatriculation}</span>
-                                                                    <span className="font-bold text-[#8B4513]">{vehicle.max_speed}</span>
+                                                    <Tabs defaultValue="acceptable" className="w-full">
+                                                        <TabsList className="grid w-full grid-cols-3">
+                                                            <TabsTrigger value="acceptable" className="flex items-center gap-2">
+                                                                <div className="w-2 h-2 rounded-full bg-blue-500"></div>
+                                                                ACCEPTABLE ({acceptable.length})
+                                                            </TabsTrigger>
+                                                            <TabsTrigger value="elevated" className="flex items-center gap-2">
+                                                                <div className="w-2 h-2 rounded-full bg-amber-500"></div>
+                                                                ÉLEVÉ ({elevated.length})
+                                                            </TabsTrigger>
+                                                            <TabsTrigger value="critical" className="flex items-center gap-2">
+                                                                <div className="w-2 h-2 rounded-full bg-red-500"></div>
+                                                                CRITIQUE ({critical.length})
+                                                            </TabsTrigger>
+                                                        </TabsList>
+                                                        
+                                                        <TabsContent value="acceptable" className="mt-4">
+                                                            {acceptable.length > 0 ? (
+                                                                <div className="space-y-2 max-h-64 overflow-y-auto pr-2">
+                                                                    {acceptable.map((vehicle, idx) => (
+                                                                        <div key={idx} className="flex items-center justify-between p-3 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors">
+                                                                            <div className="flex items-center gap-3">
+                                                                                <div className="w-8 h-8 flex items-center justify-center rounded-full bg-blue-500 text-white font-bold text-xs">
+                                                                                    {idx + 1}
+                                                                                </div>
+                                                                                <span className="font-medium text-gray-900">{vehicle.immatriculation}</span>
+                                                                            </div>
+                                                                            <Badge variant="outline" className="bg-blue-100 text-blue-700 border-blue-300">
+                                                                                {vehicle.total_violations || 0} violations
+                                                                            </Badge>
+                                                                        </div>
+                                                                    ))}
                                                                 </div>
-                                                                <div className="w-full bg-gray-200 rounded h-5">
-                                                                    <div 
-                                                                        className="bg-[#1e3a5f] h-5 rounded"
-                                                                        style={{ width: `${((vehicle.max_speed || 0) / maxSpeed * 100)}%` }}
-                                                                    ></div>
+                                                            ) : (
+                                                                <div className="text-center text-gray-500 py-8">Aucun véhicule dans cette catégorie</div>
+                                                            )}
+                                                        </TabsContent>
+                                                        
+                                                        <TabsContent value="elevated" className="mt-4">
+                                                            {elevated.length > 0 ? (
+                                                                <div className="space-y-2 max-h-64 overflow-y-auto pr-2">
+                                                                    {elevated.map((vehicle, idx) => (
+                                                                        <div key={idx} className="flex items-center justify-between p-3 bg-amber-50 rounded-lg hover:bg-amber-100 transition-colors">
+                                                                            <div className="flex items-center gap-3">
+                                                                                <div className="w-8 h-8 flex items-center justify-center rounded-full bg-amber-500 text-white font-bold text-xs">
+                                                                                    {idx + 1}
+                                                                                </div>
+                                                                                <span className="font-medium text-gray-900">{vehicle.immatriculation}</span>
+                                                                            </div>
+                                                                            <Badge variant="outline" className="bg-amber-100 text-amber-700 border-amber-300">
+                                                                                {vehicle.total_violations || 0} violations
+                                                                            </Badge>
+                                                                        </div>
+                                                                    ))}
                                                                 </div>
-                                                            </div>
-                                                        ))}
-                                                    </div>
+                                                            ) : (
+                                                                <div className="text-center text-gray-500 py-8">Aucun véhicule dans cette catégorie</div>
+                                                            )}
+                                                        </TabsContent>
+                                                        
+                                                        <TabsContent value="critical" className="mt-4">
+                                                            {critical.length > 0 ? (
+                                                                <div className="space-y-2 max-h-64 overflow-y-auto pr-2">
+                                                                    {critical.map((vehicle, idx) => (
+                                                                        <div key={idx} className="flex items-center justify-between p-3 bg-red-50 rounded-lg hover:bg-red-100 transition-colors">
+                                                                            <div className="flex items-center gap-3">
+                                                                                <div className="w-8 h-8 flex items-center justify-center rounded-full bg-red-500 text-white font-bold text-xs">
+                                                                                    {idx + 1}
+                                                                                </div>
+                                                                                <span className="font-medium text-gray-900">{vehicle.immatriculation}</span>
+                                                                            </div>
+                                                                            <Badge variant="outline" className="bg-red-100 text-red-700 border-red-300">
+                                                                                {vehicle.total_violations || 0} violations
+                                                                            </Badge>
+                                                                        </div>
+                                                                    ))}
+                                                                </div>
+                                                            ) : (
+                                                                <div className="text-center text-gray-500 py-8">Aucun véhicule dans cette catégorie</div>
+                                                            )}
+                                                        </TabsContent>
+                                                    </Tabs>
                                                 );
                                             })()}
                                         </CardContent>
@@ -559,85 +653,6 @@ export function EcoDrivingTemplate({ data }: Props) {
                                 </div>
                             </CardContent>
                         </Card>
-                    </div>
-
-                    {/* Classification des Niveaux de Risque (sidebar) */}
-                    <div className="lg:col-span-1">
-                        <Card className="bg-gradient-to-br from-yellow-400 to-yellow-600 shadow-xl border-0 text-white sticky top-6 overflow-hidden">
-                            <CardHeader className="border-b border-white/20 pb-3">
-                                <CardTitle className="text-center text-sm font-bold">
-                                    <div className="flex items-center justify-center gap-2 mb-2">
-                                        <div className="p-2 bg-white/20 rounded-lg">
-                                            <Shield className="h-5 w-5" />
-                                        </div>
-                                    </div>
-                                    Classification des Niveaux de Risque
-                                </CardTitle>
-                            </CardHeader>
-                            <CardContent className="space-y-4 pt-6">
-                                {(() => {
-                                    const getRiskLevel = (vehicle: VehicleDriverDetail) => {
-                                        const totalViolations = vehicle.total_violations || 0;
-                                        if (totalViolations === 0) return 'ACCEPTABLE';
-                                        if (totalViolations < 50) return 'ÉLEVÉ';
-                                        return 'CRITIQUE';
-                                    };
-
-                                    const classifiedVehicles = data.vehicle_details.map(v => ({
-                                        ...v,
-                                        risk: getRiskLevel(v)
-                                    }));
-
-                                    const acceptable = classifiedVehicles.filter(v => v.risk === 'ACCEPTABLE');
-                                    const elevated = classifiedVehicles.filter(v => v.risk === 'ÉLEVÉ');
-                                    const critical = classifiedVehicles.filter(v => v.risk === 'CRITIQUE');
-
-                                    return (
-                                        <>
-                                            {/* ACCEPTABLE */}
-                                            <div>
-                                                <div className="flex items-center gap-2 mb-2">
-                                                    <div className="w-3 h-3 rounded-full bg-blue-500"></div>
-                                                    <span className="font-semibold">ACCEPTABLE</span>
-                                                </div>
-                                                <div className="space-y-1 pl-5 text-sm">
-                                                    {acceptable.map((v, i) => (
-                                                        <div key={i}>{v.immatriculation}</div>
-                                                    ))}
-                                                </div>
-                                            </div>
-
-                                            {/* ÉLEVÉ */}
-                                            <div>
-                                                <div className="flex items-center gap-2 mb-2">
-                                                    <div className="w-3 h-3 rounded-full bg-yellow-400"></div>
-                                                    <span className="font-semibold">ÉLEVÉ</span>
-                                                </div>
-                                                <div className="space-y-1 pl-5 text-sm">
-                                                    {elevated.map((v, i) => (
-                                                        <div key={i}>{v.immatriculation}</div>
-                                                    ))}
-                                                </div>
-                                            </div>
-
-                                            {/* CRITIQUE */}
-                                            <div>
-                                                <div className="flex items-center gap-2 mb-2">
-                                                    <div className="w-3 h-3 rounded-full bg-red-500"></div>
-                                                    <span className="font-semibold">CRITIQUE</span>
-                                                </div>
-                                                <div className="space-y-1 pl-5 text-sm">
-                                                    {critical.map((v, i) => (
-                                                        <div key={i}>{v.immatriculation}</div>
-                                                    ))}
-                                                </div>
-                                            </div>
-                                        </>
-                                    );
-                                })()}
-                            </CardContent>
-                        </Card>
-                    </div>
                 </div>
             )}
         </div>
