@@ -511,6 +511,20 @@ export default function Dashboard({ eco_data: initialEcoData, event_data: initia
         setSelectedVehicleIds([]);
     };
 
+    // Générer l'URL du rapport avec les paramètres de date
+    const getReportUrl = (reportId: number) => {
+        const { startDate, endDate } = getDateRangeFromPeriod(selectedPeriod);
+        const formatDate = (date: Date) => {
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        };
+        const startDateStr = formatDate(startDate);
+        const endDateStr = formatDate(endDate);
+        return `/reports/${reportId}?start_date=${startDateStr}&end_date=${endDateStr}`;
+    };
+    
     // Filtrer les véhicules par recherche
     const filteredVehicles = useMemo(() => {
         if (!vehicleSearchQuery.trim()) return vehicles;
@@ -729,7 +743,7 @@ export default function Dashboard({ eco_data: initialEcoData, event_data: initia
                                             <Button
                                                 variant="outline"
                                                 size="sm"
-                                                onClick={() => window.location.href = `/reports/${driverReport.id}`}
+                                                onClick={() => window.location.href = getReportUrl(driverReport.id)}
                                                 className="flex items-center gap-2"
                                             >
                                                 <FileText className="h-4 w-4" />
@@ -974,7 +988,7 @@ export default function Dashboard({ eco_data: initialEcoData, event_data: initia
                                             <Button
                                                 variant="outline"
                                                 size="sm"
-                                                onClick={() => window.location.href = `/reports/${ecoReport.id}`}
+                                                onClick={() => window.location.href = getReportUrl(ecoReport.id)}
                                                 className="flex items-center gap-2"
                                             >
                                                 <FileText className="h-4 w-4" />
@@ -1159,7 +1173,7 @@ export default function Dashboard({ eco_data: initialEcoData, event_data: initia
                                             <Button
                                                 variant="outline"
                                                 size="sm"
-                                                onClick={() => window.location.href = `/reports/${geoReport.id}`}
+                                                onClick={() => window.location.href = getReportUrl(geoReport.id)}
                                                 className="flex items-center gap-2"
                                             >
                                                 <FileText className="h-4 w-4" />
