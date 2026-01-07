@@ -1202,7 +1202,7 @@ export default function Dashboard({ eco_data: initialEcoData, event_data: initia
                             {/* Nombre de véhicules par Type d'événement */}
                             <Card className="border-0 shadow-md hover:shadow-lg transition-shadow duration-300 bg-white">
                                 <CardHeader className="pb-3 bg-gradient-to-r from-red-50 to-yellow-50 border-b border-gray-200">
-                                    <CardTitle className="text-base">Nombre d'alertes par Type d'événement</CardTitle>
+                                    <CardTitle className="text-base">Alertes par Type d'événement</CardTitle>
                                 </CardHeader>
                                 <CardContent className="bg-white">
                                     {(() => {
@@ -1382,9 +1382,6 @@ export default function Dashboard({ eco_data: initialEcoData, event_data: initia
                                                                         Nom de l'événement
                                                                     </th>
                                                                     <th className="px-4 py-1.5 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                                                                        Type d'événement
-                                                                    </th>
-                                                                    <th className="px-4 py-1.5 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
                                                                         Vitesse
                                                                     </th>
                                                                     <th className="px-4 py-1.5 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
@@ -1419,23 +1416,19 @@ export default function Dashboard({ eco_data: initialEcoData, event_data: initia
                                                                             </td>
                                                                             <td className="px-4 py-2 whitespace-nowrap">
                                                                                 <span className="text-sm text-gray-700">
-                                                                                    {event.event_name || 'N/A'}
+                                                                                    {(() => {
+                                                                                        const eventName = event.event_name || 'N/A';
+                                                                                        if (eventName === '2HS_Between 20h and 04h') {
+                                                                                            return 'Conduite de nuit';
+                                                                                        }
+                                                                                        if (eventName === 'SPEED') {
+                                                                                            return 'Vitesse';
+                                                                                        }
+                                                                                        return eventName;
+                                                                                    })()}
                                                                                 </span>
                                                                             </td>
-                                                                            <td className="px-4 py-2 whitespace-nowrap">
-                                                                                <Badge 
-                                                                                    variant="outline"
-                                                                                    className={`text-xs ${
-                                                                                        event.event_type === 'SPEED' || event.event_name === 'SPEED'
-                                                                                            ? 'border-red-500 text-red-700 bg-red-50'
-                                                                                            : event.event_type?.includes('BRAKE') || event.event_name?.includes('BRAKE')
-                                                                                            ? 'border-orange-500 text-orange-700 bg-orange-50'
-                                                                                            : 'border-blue-500 text-blue-700 bg-blue-50'
-                                                                                    }`}
-                                                                                >
-                                                                                    {event.event_type || event.event_name || 'N/A'}
-                                                                                </Badge>
-                                                                            </td>
+                                                                            
                                                                             <td className="px-4 py-2 whitespace-nowrap">
                                                                                 <div className="flex items-center gap-2">
                                                                                     <Gauge className="h-4 w-4 text-gray-400" />
@@ -1534,7 +1527,6 @@ export default function Dashboard({ eco_data: initialEcoData, event_data: initia
                                 </CardContent>
                             </Card>
 
-                           
                         </div>
                     </CardContent>
                 </Card>
