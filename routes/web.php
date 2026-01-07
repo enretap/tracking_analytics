@@ -105,6 +105,64 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ]);
     })->name('api.eco-driving');
 
+    // Daily Vehicle Eco Summary API endpoint
+    Route::get('/api/getDailyVehicleEcoSummary', function () {
+        $user = auth()->user();
+        $account = $user->account;
+        
+        if (!$account) {
+            return response()->json([
+                'success' => false,
+                'error' => 'Compte non trouvé',
+            ], 404);
+        }
+        
+        $ecoDrivingService = app(\App\Services\EcoDrivingService::class);
+        
+        // Récupérer les paramètres de date depuis la requête
+        $startDate = request('start_date');
+        $endDate = request('end_date');
+        $forceRefresh = request('force_refresh', false);
+        
+        // Clear cache if force refresh
+        if ($forceRefresh) {
+            $ecoDrivingService->clearCache($account);
+        }
+        
+        $data = $ecoDrivingService->fetchEcoDrivingData($account, $startDate, $endDate);
+        
+        return response()->json($data);
+    })->name('api.getDailyVehicleEcoSummary');
+
+    // Event History Report API endpoint
+    Route::get('/api/getEventHistoryReport', function () {
+        $user = auth()->user();
+        $account = $user->account;
+        
+        if (!$account) {
+            return response()->json([
+                'success' => false,
+                'error' => 'Compte non trouvé',
+            ], 404);
+        }
+        
+        $eventHistoryService = app(\App\Services\EventHistoryService::class);
+        
+        // Récupérer les paramètres de date depuis la requête
+        $startDate = request('start_date');
+        $endDate = request('end_date');
+        $forceRefresh = request('force_refresh', false);
+        
+        // Clear cache if force refresh
+        if ($forceRefresh) {
+            $eventHistoryService->clearCache($account);
+        }
+        
+        $data = $eventHistoryService->fetchEventHistoryData($account, $startDate, $endDate);
+        
+        return response()->json($data);
+    })->name('api.getEventHistoryReport');
+
     // Reports routes
     Route::get('/api/reports', function () {
         $user = auth()->user();

@@ -389,8 +389,8 @@ export default function Dashboard({ eco_data: initialEcoData, event_data: initia
             
             // Appel parallèle aux deux endpoints
             const [ecoResponse, eventResponse] = await Promise.all([
-                fetch(`/getDailyVehicleEcoSummary?start_date=${startDateStr}&end_date=${endDateStr}`),
-                fetch(`/getEventHistoryReport?start_date=${startDateStr}&end_date=${endDateStr}`)
+                fetch(`/api/getDailyVehicleEcoSummary?start_date=${startDateStr}&end_date=${endDateStr}`),
+                fetch(`/api/getEventHistoryReport?start_date=${startDateStr}&end_date=${endDateStr}`)
             ]);
             
             if (ecoResponse.ok) {
