@@ -308,7 +308,7 @@ interface Props {
     event_data?: VehicleEventData; // Optionnel car peut ne pas être passé
 }
 
-export default function Dashboard({ eco_data, event_data }: Props) {
+export default function Dashboard({ eco_data: initialEcoData, event_data: initialEventData }: Props) {
     const { auth } = usePage<SharedData>().props;
     const [selectedPeriod, setSelectedPeriod] = useState('week');
     const [dateRange, setDateRange] = useState({ from: new Date(), to: new Date() });
@@ -317,9 +317,109 @@ export default function Dashboard({ eco_data, event_data }: Props) {
     const [reports, setReports] = useState<Report[]>([]);
     const [loadingReports, setLoadingReports] = useState(false);
     const [totalReports, setTotalReports] = useState(0);
+    
+    // États pour les données actualisables
+    const [ecoData, setEcoData] = useState<EcoDrivingData>(initialEcoData);
+    const [eventData, setEventData] = useState<VehicleEventData | undefined>(initialEventData);
 
     // Récupérer les véhicules depuis l'API
     const { vehicles: apiVehicles, loading: vehiclesLoading, refetch: refetchVehicles } = useVehicles();
+    
+    // Fonction pour calculer les dates selon la période sélectionnée
+    const getDateRangeFromPeriod = (period: string) => {
+        const now = new Date();
+        const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        let startDate = new Date(today);
+        let endDate = new Date(today);
+        endDate.setHours(23, 59, 59, 999);
+        
+        switch (period) {
+            case 'today':
+                startDate = new Date(today);
+                break;
+            case 'yesterday':
+                startDate = new Date(today);
+                startDate.setDate(today.getDate() - 1);
+                endDate = new Date(today);
+                endDate.setDate(today.getDate() - 1);
+                endDate.setHours(23, 59, 59, 999);
+                break;
+            case 'week':
+                startDate = new Date(today);
+                startDate.setDate(today.getDate() - 7);
+                break;
+            case 'month':
+                startDate = new Date(today);
+                startDate.setDate(today.getDate() - 30);
+                break;
+            case 'quarter':
+                startDate = new Date(today);
+                startDate.setDate(today.getDate() - 90);
+                break;
+            case 'year':
+                startDate = new Date(today);
+                startDate.setDate(today.getDate() - 365);
+                break;
+            case 'custom':
+                return { startDate: dateRange.from, endDate: dateRange.to };
+            default:
+                startDate = new Date(today);
+                startDate.setDate(today.getDate() - 7);
+        }
+        
+        return { startDate, endDate };
+    };
+    
+    // Fonction pour rafraîchir les données depuis les endpoints
+    const refreshData = async () => {
+        setIsRefreshing(true);
+        try {
+            const { startDate, endDate } = getDateRangeFromPeriod(selectedPeriod);
+            
+            // Formater les dates pour l'API (YYYY-MM-DD)
+            const formatDate = (date: Date) => {
+                const year = date.getFullYear();
+                const month = String(date.getMonth() + 1).padStart(2, '0');
+                const day = String(date.getDate()).padStart(2, '0');
+                return `${year}-${month}-${day}`;
+            };
+            
+            const startDateStr = formatDate(startDate);
+            const endDateStr = formatDate(endDate);
+            
+            // Appel parallèle aux deux endpoints
+            const [ecoResponse, eventResponse] = await Promise.all([
+                fetch(`/getDailyVehicleEcoSummary?start_date=${startDateStr}&end_date=${endDateStr}`),
+                fetch(`/getEventHistoryReport?start_date=${startDateStr}&end_date=${endDateStr}`)
+            ]);
+            
+            if (ecoResponse.ok) {
+                const ecoDataResult = await ecoResponse.json();
+                setEcoData(ecoDataResult);
+            }
+            
+            if (eventResponse.ok) {
+                const eventDataResult = await eventResponse.json();
+                setEventData(eventDataResult);
+            }
+        } catch (error) {
+            console.error('Erreur lors du rafraîchissement des données:', error);
+        } finally {
+            setIsRefreshing(false);
+        }
+    };
+    
+    // Rafraîchir les données quand la période change
+    useEffect(() => {
+        refreshData();
+    }, [selectedPeriod]);
+    
+    // Rafraîchir les données quand la plage de dates personnalisée change
+    useEffect(() => {
+        if (selectedPeriod === 'custom') {
+            refreshData();
+        }
+    }, [dateRange]);
     
     // Charger les rapports de l'utilisateur
     useEffect(() => {
@@ -421,13 +521,13 @@ export default function Dashboard({ eco_data, event_data }: Props) {
         );
     }, [vehicles, vehicleSearchQuery]);
 
-    // eco_data contient toutes les données TARGA TELEMATICS
-    // console.log(eco_data.total_vehicles);
+    // ecoData contient toutes les données TARGA TELEMATICS
+    // console.log(ecoData.total_vehicles);
     
-    // Vérifier si event_data existe avant d'accéder à ses propriétés
-    if (event_data && event_data.events) {
-        console.log('Events:', event_data.events);
-        console.log('Total événements:', event_data.stats.total_events);
+    // Vérifier si eventData existe avant d'accéder à ses propriétés
+    if (eventData && eventData.events) {
+        console.log('Events:', eventData.events);
+        console.log('Total événements:', eventData.stats.total_events);
     } else {
         console.log('Aucune donnée d\'événements disponible');
     }
@@ -488,7 +588,7 @@ export default function Dashboard({ eco_data, event_data }: Props) {
                 </div>
 
                 {/* Filtres */}
-                {/* <div className="rounded-xl border border-gray-200 bg-white p-4 dark:border-gray-800 dark:bg-gray-900">
+                <div className="rounded-xl border border-gray-200 bg-white p-4 dark:border-gray-800 dark:bg-gray-900">
                     <div className="flex flex-col items-start justify-between gap-4 lg:flex-row lg:items-center">
                         <div className="flex items-center gap-2">
                             <Filter className="h-5 w-5 text-gray-500" />
@@ -497,7 +597,7 @@ export default function Dashboard({ eco_data, event_data }: Props) {
                         
                         <div className="flex w-full flex-wrap items-center gap-4 lg:w-auto">
                             <div className="flex-1 lg:flex-none">
-                                <Select value={selectedPeriod} onValueChange={setSelectedPeriod}>
+                                <Select value={selectedPeriod} onValueChange={setSelectedPeriod} disabled={isRefreshing}>
                                     <SelectTrigger className="w-full lg:w-[180px]">
                                         <div className="flex items-center gap-2">
                                             <Calendar className="h-4 w-4" />
@@ -519,7 +619,7 @@ export default function Dashboard({ eco_data, event_data }: Props) {
                                     <DateRangePicker
                                     date={dateRange}
                                     onDateChange={(date) => {
-                                        if (!date) return; // ignore undefined (or handle/reset as needed)
+                                        if (!date) return;
                                         setDateRange({
                                         from: (date as any).from ?? (date as any).start ?? (date as any).startDate,
                                         to:   (date as any).to   ?? (date as any).end   ?? (date as any).endDate,
@@ -529,27 +629,19 @@ export default function Dashboard({ eco_data, event_data }: Props) {
                                 </div>
                             )}
                             
-                            <div className="flex-1 lg:flex-none">
-                                <Select>
-                                    <SelectTrigger className="w-full lg:w-[200px]">
-                                        <div className="flex items-center gap-2">
-                                            <Car className="h-4 w-4" />
-                                            <SelectValue placeholder="Sélectionner véhicule(s)" />
-                                        </div>
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="all">Tous les véhicules</SelectItem>
-                                        {vehicles.map((vehicle) => (
-                                            <SelectItem key={vehicle.id} value={vehicle.id}>
-                                                {vehicle.name} ({vehicle.plate})
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-                            </div>
+                            <Button 
+                                variant="outline" 
+                                size="sm"
+                                onClick={refreshData}
+                                disabled={isRefreshing}
+                                className="flex items-center gap-2"
+                            >
+                                <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+                                {isRefreshing ? 'Actualisation...' : 'Actualiser'}
+                            </Button>
                         </div>
                     </div>
-                </div> */}
+                </div>
 
                 {/* KPI Cards */}
                 <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -661,12 +753,12 @@ export default function Dashboard({ eco_data, event_data }: Props) {
                                 <CardContent className="bg-white p-4">
                                     {(() => {
                                         // Safety check for vehicle_details
-                                        if (!eco_data?.vehicle_details || eco_data.vehicle_details.length === 0) {
+                                        if (!ecoData?.vehicle_details || ecoData.vehicle_details.length === 0) {
                                             return <div className="text-center text-gray-500 py-8">Aucune infraction</div>;
                                         }
 
-                                        const totalViolations = eco_data.vehicle_details.reduce((sum, v) => sum + (v.total_violations || 0), 0);
-                                        const topViolators = eco_data.vehicle_details
+                                        const totalViolations = ecoData.vehicle_details.reduce((sum, v) => sum + (v.total_violations || 0), 0);
+                                        const topViolators = ecoData.vehicle_details
                                             .filter(v => (v.total_violations || 0) > 0)
                                             .sort((a, b) => (b.total_violations || 0) - (a.total_violations || 0))
                                             .slice(0, 6);
@@ -753,12 +845,12 @@ export default function Dashboard({ eco_data, event_data }: Props) {
                                 <CardContent className="bg-white p-4">
                                     {(() => {
                                         // Safety check for vehicle_details
-                                        if (!eco_data?.vehicle_details || eco_data.vehicle_details.length === 0) {
+                                        if (!ecoData?.vehicle_details || ecoData.vehicle_details.length === 0) {
                                             return <div className="text-center text-gray-500 py-8">Aucune infraction</div>;
                                         }
 
                                         // Récupérer le top 10 des véhicules avec le plus de violations
-                                        const topViolators = eco_data.vehicle_details
+                                        const topViolators = ecoData.vehicle_details
                                             .filter((v: VehicleDriverDetail) => (v.total_violations || 0) > 0)
                                             .sort((a: VehicleDriverDetail, b: VehicleDriverDetail) => 
                                                 (b.total_violations || 0) - (a.total_violations || 0)
@@ -906,15 +998,15 @@ export default function Dashboard({ eco_data, event_data }: Props) {
                                 <CardContent className="bg-white p-4">
                                     {(() => {
                                         // Safety check for vehicle_details
-                                        if (!eco_data?.vehicle_details || eco_data.vehicle_details.length === 0) {
+                                        if (!ecoData?.vehicle_details || ecoData.vehicle_details.length === 0) {
                                             return <div className="text-center text-gray-500 py-8">Aucune violation</div>;
                                         }
                                         
                                         // Calculer le total des violations de vitesse
-                                        const totalViolations = eco_data.vehicle_details.reduce((sum, v) => sum + (v.speed_violations || 0), 0);
+                                        const totalViolations = ecoData.vehicle_details.reduce((sum, v) => sum + (v.speed_violations || 0), 0);
                                         
                                         // Récupérer les 5 véhicules avec le plus de violations de vitesse
-                                        const topVehicles = eco_data.vehicle_details
+                                        const topVehicles = ecoData.vehicle_details
                                             .filter(v => (v.speed_violations || 0) > 0)
                                             .sort((a, b) => (b.speed_violations || 0) - (a.speed_violations || 0))
                                             .slice(0, 5);
@@ -1011,10 +1103,10 @@ export default function Dashboard({ eco_data, event_data }: Props) {
                                 <CardContent className="bg-white">
                                     {(() => {
                                         // Safety check for vehicle_details
-                                        if (!eco_data?.vehicle_details || eco_data.vehicle_details.length === 0) {
+                                        if (!ecoData?.vehicle_details || ecoData.vehicle_details.length === 0) {
                                             return <div className="text-center text-gray-500 py-8">Aucun véhicule</div>;
                                         }
-                                        const speedViolators = eco_data.vehicle_details
+                                        const speedViolators = ecoData.vehicle_details
                                             .filter(v => (v.max_speed || 0) > 90)
                                             .sort((a, b) => (b.max_speed || 0) - (a.max_speed || 0))
                                             .slice(0, 5);
@@ -1097,7 +1189,7 @@ export default function Dashboard({ eco_data, event_data }: Props) {
                                 <CardContent className="bg-white">
                                     {(() => {
                                         // Safety check for event_data
-                                        if (!event_data?.events_by_name || !event_data?.stats?.events_by_name) {
+                                        if (!eventData?.events_by_name || !eventData?.stats?.events_by_name) {
                                             return <div className="text-center text-gray-500 py-8">Aucune donnée d'événements disponible</div>;
                                         }
                                         
@@ -1113,8 +1205,8 @@ export default function Dashboard({ eco_data, event_data }: Props) {
                                         };
                                         
                                         // Récupérer les événements groupés par nom
-                                        const eventsByName = event_data.stats.events_by_name;
-                                        const totalEvents = event_data.stats.total_events;
+                                        const eventsByName = eventData.stats.events_by_name;
+                                        const totalEvents = eventData.stats.total_events;
                                         
                                         if (totalEvents === 0) {
                                             return <div className="text-center text-gray-500 py-8">Aucun événement trouvé</div>;
