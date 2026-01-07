@@ -1316,7 +1316,7 @@ export default function Dashboard({ eco_data: initialEcoData, event_data: initia
 
                             {/* Tableau de détail des évènements */}
                             <Card className="border-0 shadow-md hover:shadow-lg transition-shadow duration-300 bg-white md:col-span-2">
-                                <CardHeader className="pb-3 bg-gradient-to-r from-blue-50 to-purple-50 border-b border-gray-200">
+                                <CardHeader className="pb-3 bg-gradient-to-r from-red-50 to-yellow-50 border-b border-gray-200">
                                     <div className="flex items-center justify-between">
                                         <CardTitle className="text-base">Tableau de détail des évènements</CardTitle>
                                         <Badge variant="outline" className="text-xs">
@@ -1379,6 +1379,9 @@ export default function Dashboard({ eco_data: initialEcoData, event_data: initia
                                                                         Conducteur
                                                                     </th>
                                                                     <th className="px-4 py-1.5 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                                                                        Nom de l'événement
+                                                                    </th>
+                                                                    <th className="px-4 py-1.5 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
                                                                         Type d'événement
                                                                     </th>
                                                                     <th className="px-4 py-1.5 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
@@ -1415,6 +1418,11 @@ export default function Dashboard({ eco_data: initialEcoData, event_data: initia
                                                                                 </div>
                                                                             </td>
                                                                             <td className="px-4 py-2 whitespace-nowrap">
+                                                                                <span className="text-sm text-gray-700">
+                                                                                    {event.event_name || 'N/A'}
+                                                                                </span>
+                                                                            </td>
+                                                                            <td className="px-4 py-2 whitespace-nowrap">
                                                                                 <Badge 
                                                                                     variant="outline"
                                                                                     className={`text-xs ${
@@ -1449,7 +1457,7 @@ export default function Dashboard({ eco_data: initialEcoData, event_data: initia
                                                                     ))
                                                                 ) : (
                                                                     <tr>
-                                                                        <td colSpan={5} className="px-4 py-8 text-center text-gray-500">
+                                                                        <td colSpan={6} className="px-4 py-8 text-center text-gray-500">
                                                                             Aucun événement trouvé
                                                                         </td>
                                                                     </tr>
