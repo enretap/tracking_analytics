@@ -329,7 +329,7 @@ export default function Dashboard({ eco_data: initialEcoData, event_data: initia
     // États pour le tableau d'événements
     const [eventsSearchQuery, setEventsSearchQuery] = useState('');
     const [eventsCurrentPage, setEventsCurrentPage] = useState(1);
-    const eventsItemsPerPage = 10;
+    const eventsItemsPerPage = 5;
 
     // Récupérer les véhicules depuis l'API
     const { vehicles: apiVehicles, loading: vehiclesLoading, refetch: refetchVehicles } = useVehicles();
