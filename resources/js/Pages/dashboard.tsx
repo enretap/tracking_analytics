@@ -1372,19 +1372,19 @@ export default function Dashboard({ eco_data: initialEcoData, event_data: initia
                                                         <table className="w-full min-w-full divide-y divide-gray-200">
                                                             <thead className="bg-gray-50">
                                                                 <tr>
-                                                                    <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                                                                    <th className="px-4 py-1.5 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
                                                                         Véhicule
                                                                     </th>
-                                                                    <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                                                                    <th className="px-4 py-1.5 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
                                                                         Conducteur
                                                                     </th>
-                                                                    <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                                                                    <th className="px-4 py-1.5 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
                                                                         Type d'événement
                                                                     </th>
-                                                                    <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                                                                    <th className="px-4 py-1.5 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
                                                                         Vitesse
                                                                     </th>
-                                                                    <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                                                                    <th className="px-4 py-1.5 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
                                                                         Adresse
                                                                     </th>
                                                                 </tr>
@@ -1393,7 +1393,7 @@ export default function Dashboard({ eco_data: initialEcoData, event_data: initia
                                                                 {paginatedEvents.length > 0 ? (
                                                                     paginatedEvents.map((event, idx) => (
                                                                         <tr key={event.id || idx} className="hover:bg-gray-50 transition-colors">
-                                                                            <td className="px-4 py-3 whitespace-nowrap">
+                                                                            <td className="px-4 py-2 whitespace-nowrap">
                                                                                 <div className="flex items-center gap-2">
                                                                                     <Car className="h-4 w-4 text-gray-400" />
                                                                                     <div>
@@ -1406,7 +1406,7 @@ export default function Dashboard({ eco_data: initialEcoData, event_data: initia
                                                                                     </div>
                                                                                 </div>
                                                                             </td>
-                                                                            <td className="px-4 py-3 whitespace-nowrap">
+                                                                            <td className="px-4 py-2 whitespace-nowrap">
                                                                                 <div className="flex items-center gap-2">
                                                                                     <User className="h-4 w-4 text-gray-400" />
                                                                                     <span className="text-sm text-gray-900">
@@ -1414,7 +1414,7 @@ export default function Dashboard({ eco_data: initialEcoData, event_data: initia
                                                                                     </span>
                                                                                 </div>
                                                                             </td>
-                                                                            <td className="px-4 py-3 whitespace-nowrap">
+                                                                            <td className="px-4 py-2 whitespace-nowrap">
                                                                                 <Badge 
                                                                                     variant="outline"
                                                                                     className={`text-xs ${
@@ -1428,7 +1428,7 @@ export default function Dashboard({ eco_data: initialEcoData, event_data: initia
                                                                                     {event.event_type || event.event_name || 'N/A'}
                                                                                 </Badge>
                                                                             </td>
-                                                                            <td className="px-4 py-3 whitespace-nowrap">
+                                                                            <td className="px-4 py-2 whitespace-nowrap">
                                                                                 <div className="flex items-center gap-2">
                                                                                     <Gauge className="h-4 w-4 text-gray-400" />
                                                                                     <span className="text-sm font-semibold text-gray-900">
@@ -1437,7 +1437,7 @@ export default function Dashboard({ eco_data: initialEcoData, event_data: initia
                                                                                     <span className="text-xs text-gray-500">km/h</span>
                                                                                 </div>
                                                                             </td>
-                                                                            <td className="px-4 py-3">
+                                                                            <td className="px-4 py-2">
                                                                                 <div className="flex items-start gap-2 max-w-xs">
                                                                                     <MapPin className="h-4 w-4 text-gray-400 mt-0.5 flex-shrink-0" />
                                                                                     <span className="text-xs text-gray-600 line-clamp-2">
