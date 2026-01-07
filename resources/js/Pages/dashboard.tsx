@@ -310,7 +310,7 @@ interface Props {
 
 export default function Dashboard({ eco_data: initialEcoData, event_data: initialEventData }: Props) {
     const { auth } = usePage<SharedData>().props;
-    const [selectedPeriod, setSelectedPeriod] = useState('week');
+    const [selectedPeriod, setSelectedPeriod] = useState('month');
     const [dateRange, setDateRange] = useState({ from: new Date(), to: new Date() });
     const [isRefreshing, setIsRefreshing] = useState(false);
     const [vehicleSearchQuery, setVehicleSearchQuery] = useState('');
