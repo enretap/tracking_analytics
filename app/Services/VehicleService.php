@@ -251,8 +251,10 @@ class VehicleService
             'distance' => (int) ($vehicle['totalDistance'] ?? 0),
             'latitude' => (float) ($vehicle['position']['latitude'] ?? 0),
             'longitude' => (float) ($vehicle['position']['longitude'] ?? 0),
+            'address' => ($vehicle['address']['country'] ?? '') . ' ' . ($vehicle['address']['city'] ?? '').' ' . ($vehicle['address']['street'] ?? ''),
             'speed' => (int) ($vehicle['speed'] ?? 0),
             'lastUpdate' => $this->normalizeDate($vehicle['lastUpdateTime'] ?? now()),
+            'active' => $vehicle['active'] ?? false,
         ];
     }
 

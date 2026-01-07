@@ -27,7 +27,11 @@ import {
   Building2,
   FileKey,
   DollarSign,
-  CheckCircle
+  CheckCircle,
+  Columns2,
+  Search,
+  ChevronLeft,
+  ChevronRight
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -36,6 +40,15 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { DateRangePicker } from '@/components/ui/date-range-picker';
 import { useVehicles } from '@/hooks/useVehicles';
+import {
+    DropdownMenu,
+    DropdownMenuCheckboxItem,
+    DropdownMenuContent,
+    DropdownMenuLabel,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { Input } from '@/components/ui/input';
 
 // Lazy load de la carte pour améliorer le temps de chargement initial
 const VehicleMap = lazy(() => import('@/components/maps/vehicle-map').then(module => ({ default: module.VehicleMap })));
@@ -48,8 +61,10 @@ interface Vehicle {
     distance: number;
     latitude: number;
     longitude: number;
+    address: string;
     speed?: number;
     lastUpdate: string;
+    active: boolean;
 }
 
 interface Report {
@@ -213,6 +228,18 @@ export default function LeasingDashboard({ eco_data, event_data }: Props) {
     const vehicles = apiVehicles.length > 0 ? apiVehicles : mockVehicles;
     
     const [selectedVehicleIds, setSelectedVehicleIds] = useState<string[]>([]);
+    const [searchQuery, setSearchQuery] = useState('');
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 10;
+    const [visibleColumns, setVisibleColumns] = useState({
+        plate: true,
+        brand: true,
+        model: true,
+        distance: true,
+        position: true,
+        lastUpdate: true,
+        status: true,
+    });
     
     useEffect(() => {
         if (vehicles.length > 0 && selectedVehicleIds.length === 0) {
@@ -226,12 +253,21 @@ export default function LeasingDashboard({ eco_data, event_data }: Props) {
         [vehicles, selectedVehicleIds]
     );
     
-    const stats = useMemo(() => ({
-        totalVehicles: vehicles.length,
-        activeVehicles: vehicles.filter(v => v.status === 'active').length,
-        inactiveVehicles: vehicles.filter(v => v.status === 'inactive').length,
-        maintenanceVehicles: vehicles.filter(v => v.status === 'maintenance').length,
-    }), [vehicles]);
+    const stats = useMemo(() => {
+        const now = new Date();
+        const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+        
+        return {
+            totalVehicles: vehicles.length,
+            activeVehicles: vehicles.filter(v => v.status === 'active').length,
+            inactiveVehicles: vehicles.filter(v => v.status === 'inactive').length,
+            maintenanceVehicles: vehicles.filter(v => v.status === 'maintenance').length,
+            outdatedVehicles: vehicles.filter(v => {
+                const lastUpdate = new Date(v.lastUpdate);
+                return lastUpdate < sevenDaysAgo;
+            }).length,
+        };
+    }, [vehicles]);
     
     const topVehiclesByDistance = useMemo(
         () => [...vehicles]
@@ -240,6 +276,11 @@ export default function LeasingDashboard({ eco_data, event_data }: Props) {
             .slice(0, 5),
         [vehicles]
     );
+
+    // Réinitialiser la page courante quand la recherche change
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [searchQuery]);
 
     const handleToggleVehicle = (vehicleId: string) => {
         setSelectedVehicleIds(prev => 
@@ -294,13 +335,13 @@ export default function LeasingDashboard({ eco_data, event_data }: Props) {
                             <span>{auth.user.account_name || auth.user.name}</span>
                         </h1>
                         <p className="text-gray-600 dark:text-gray-400">
-                            Gestion et suivi de votre flotte en leasing
+                            Gestion et suivi de votre flotte
                         </p>
                     </div>
                 </div>
 
                 {/* KPI Cards Spécifiques Leasing */}
-                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+                {/* <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
                     <Card className="border-purple-200 bg-gradient-to-br from-purple-50 to-white dark:border-purple-700 dark:from-purple-900/20 dark:to-gray-900">
                         <CardHeader className="flex flex-row items-center justify-between pb-2">
                             <CardTitle className="text-xs font-medium text-purple-600 dark:text-purple-400">
@@ -360,10 +401,90 @@ export default function LeasingDashboard({ eco_data, event_data }: Props) {
                             </p>
                         </CardContent>
                     </Card>
+                </div> */}
+
+                 {/* KPI Cards */}
+                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
+                    <Card className="border-yellow-200 bg-gradient-to-br from-yellow-50 to-white dark:border-yellow-700 dark:from-yellow-900/20 dark:to-gray-900">
+                        <CardHeader className="flex flex-row items-center justify-between pb-2">
+                            <CardTitle className="text-xs font-medium text-yellow-600 dark:text-yellow-400">
+                                Total des véhicules de la flotte
+                            </CardTitle>
+                            <Car className="h-8 w-8 text-yellow-500" />
+                        </CardHeader>
+                        <CardContent>
+                            <div className="text-xl font-bold text-gray-900 dark:text-white">{stats.totalVehicles}</div>
+                            <p className="text-xs text-gray-600 dark:text-gray-400">
+                                Tous les véhicules de la flotte
+                            </p>
+                        </CardContent>
+                    </Card>
+
+                    <Card className="border-green-200 bg-gradient-to-br from-green-50 to-white dark:border-green-800 dark:from-green-900/20 dark:to-gray-900">
+                        <CardHeader className="flex flex-row items-center justify-between pb-2">
+                            <CardTitle className="text-xs font-medium text-green-600 dark:text-green-400">
+                                Véhicules en mouvement
+                            </CardTitle>
+                            <Activity className="h-8 w-8 text-green-500" />
+                        </CardHeader>
+                        <CardContent>
+                            <div className="text-xl font-bold text-gray-900 dark:text-white">{stats.activeVehicles}</div>
+                            <p className="text-xs text-gray-600 dark:text-gray-400">
+                                En déplacement actuellement
+                            </p>
+                        </CardContent>
+                    </Card>
+
+                    <Card className="border-slate-200 bg-gradient-to-br from-slate-50 to-white dark:border-slate-700 dark:from-slate-800/30 dark:to-gray-900">
+                        <CardHeader className="flex flex-row items-center justify-between pb-2">
+                            <CardTitle className="text-xs font-medium text-slate-700 dark:text-slate-300">
+                                Véhicules à l'arrêt
+                            </CardTitle>
+                            <PauseCircle className="h-8 w-8 text-slate-600 dark:text-slate-400" />
+                        </CardHeader>
+                        <CardContent>
+                            <div className="text-xl font-bold text-gray-900 dark:text-white">{stats.totalVehicles - stats.activeVehicles}</div>
+                            <p className="text-xs text-slate-600 dark:text-slate-400">
+                                Tous les véhicules à l'arrêt
+                            </p>
+                        </CardContent>
+                    </Card>
+
+                    <Card className="border-orange-200 bg-gradient-to-br from-orange-50 to-white dark:border-orange-800 dark:from-orange-900/20 dark:to-gray-900">
+                        <CardHeader className="flex flex-row items-center justify-between pb-2">
+                            <CardTitle className="text-xs font-medium text-orange-600 dark:text-orange-400">
+                                Véhicules en maintenance
+                            </CardTitle>
+
+                    
+                            <AlertTriangle className="h-8 w-8 text-orange-500" />
+                        </CardHeader>
+                        <CardContent>
+                            <div className="text-xl font-bold text-gray-900 dark:text-white">{stats.maintenanceVehicles}</div>
+                            <p className="text-xs text-gray-600 dark:text-gray-400">
+                                Véhicules en réparation
+                            </p>
+                        </CardContent>
+                    </Card>
+                    <Card className="border-red-200 bg-gradient-to-br from-red-50 to-white dark:border-red-800 dark:from-red-900/20 dark:to-gray-900">
+                        <CardHeader className="flex flex-row items-center justify-between pb-2">
+                            <CardTitle className="text-xs font-medium text-red-600 dark:text-red-400">
+                                Non actualisés (+7j)
+                            </CardTitle>
+                            <Clock className="h-8 w-8 text-red-500" />
+                        </CardHeader>
+                        <CardContent>
+                            <div className="text-xl font-bold text-gray-900 dark:text-white">{stats.outdatedVehicles}</div>
+                            <p className="text-xs text-gray-600 dark:text-gray-400">
+                                Dernière actualisation &gt; 7 jours
+                            </p>
+                        </CardContent>
+                    </Card>
+                    
                 </div>
 
                 {/* Suivi des contrats de leasing */}
-                <Card className="border-purple-200">
+                {/* <Card className="border-purple-200">
                     <CardHeader>
                         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                             <div>
@@ -417,10 +538,10 @@ export default function LeasingDashboard({ eco_data, event_data }: Props) {
                             </div>
                         </div>
                     </CardContent>
-                </Card>
+                </Card> */}
 
                 {/* Coûts et facturation */}
-                <Card>
+                {/* <Card>
                     <CardHeader>
                         <CardTitle className="flex items-center gap-2">
                             <DollarSign className="h-5 w-5" />
@@ -501,6 +622,406 @@ export default function LeasingDashboard({ eco_data, event_data }: Props) {
                                     </div>
                                 </CardContent>
                             </Card>
+                        </div>
+                    </CardContent>
+                </Card> */}
+
+                {/* Liste complète des véhicules en tableau */}
+                <Card>
+                    <CardHeader>
+                        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                            <div>
+                                <CardTitle className="flex items-center gap-2">
+                                    <Car className="h-5 w-5 text-purple-600" />
+                                    Liste des véhicules
+                                </CardTitle>
+                                <CardDescription>
+                                    {vehicles.length} véhicule{vehicles.length > 1 ? 's' : ''} au total
+                                </CardDescription>
+                            </div>
+                            <div className="flex flex-wrap items-center gap-2">
+                                {/* Barre de recherche */}
+                                <div className="relative flex-1 min-w-[200px]">
+                                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                                    <Input
+                                        type="text"
+                                        placeholder="Rechercher..."
+                                        value={searchQuery}
+                                        onChange={(e) => setSearchQuery(e.target.value)}
+                                        className="pl-9 h-9 border-purple-200 focus:border-purple-500 focus:ring-purple-500"
+                                    />
+                                </div>
+                                {/* Sélecteur de colonnes */}
+                                <DropdownMenu>
+                                    <DropdownMenuTrigger asChild>
+                                        <Button variant="outline" size="sm" className="h-9 border-purple-200 hover:bg-purple-50">
+                                            <Columns2 className="h-4 w-4 mr-2" />
+                                            Colonnes
+                                        </Button>
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent align="end" className="w-56">
+                                        <DropdownMenuLabel>Colonnes visibles</DropdownMenuLabel>
+                                        <DropdownMenuSeparator />
+                                        <DropdownMenuCheckboxItem
+                                            checked={visibleColumns.plate}
+                                            onCheckedChange={(checked) => 
+                                                setVisibleColumns(prev => ({ ...prev, plate: checked }))
+                                            }
+                                        >
+                                            Immatriculation
+                                        </DropdownMenuCheckboxItem>
+                                        <DropdownMenuCheckboxItem
+                                            checked={visibleColumns.brand}
+                                            onCheckedChange={(checked) => 
+                                                setVisibleColumns(prev => ({ ...prev, brand: checked }))
+                                            }
+                                        >
+                                            Marque
+                                        </DropdownMenuCheckboxItem>
+                                        <DropdownMenuCheckboxItem
+                                            checked={visibleColumns.model}
+                                            onCheckedChange={(checked) => 
+                                                setVisibleColumns(prev => ({ ...prev, model: checked }))
+                                            }
+                                        >
+                                            Modèle
+                                        </DropdownMenuCheckboxItem>
+                                        <DropdownMenuCheckboxItem
+                                            checked={visibleColumns.distance}
+                                            onCheckedChange={(checked) => 
+                                                setVisibleColumns(prev => ({ ...prev, distance: checked }))
+                                            }
+                                        >
+                                            Distance
+                                        </DropdownMenuCheckboxItem>
+                                        <DropdownMenuCheckboxItem
+                                            checked={visibleColumns.position}
+                                            onCheckedChange={(checked) => 
+                                                setVisibleColumns(prev => ({ ...prev, position: checked }))
+                                            }
+                                        >
+                                            Dernière position
+                                        </DropdownMenuCheckboxItem>
+                                        <DropdownMenuCheckboxItem
+                                            checked={visibleColumns.lastUpdate}
+                                            onCheckedChange={(checked) => 
+                                                setVisibleColumns(prev => ({ ...prev, lastUpdate: checked }))
+                                            }
+                                        >
+                                            Dernière actualisation
+                                        </DropdownMenuCheckboxItem>
+                                        <DropdownMenuCheckboxItem
+                                            checked={visibleColumns.status}
+                                            onCheckedChange={(checked) => 
+                                                setVisibleColumns(prev => ({ ...prev, status: checked }))
+                                            }
+                                        >
+                                            Statut
+                                        </DropdownMenuCheckboxItem>
+                                    </DropdownMenuContent>
+                                </DropdownMenu>
+                            </div>
+                        </div>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="rounded-lg border border-purple-100 overflow-hidden shadow-sm">
+                            <div className="overflow-x-auto">
+                                <table className="w-full min-w-full divide-y divide-purple-100">
+                                    <thead className="bg-gradient-to-r from-purple-50 via-blue-50 to-purple-50 dark:from-purple-900/20 dark:via-blue-900/20 dark:to-purple-900/20">
+                                        <tr>
+                                            {visibleColumns.plate && (
+                                                <th className="px-6 py-2 text-left text-xs font-semibold text-purple-900 dark:text-purple-300 uppercase tracking-wider">
+                                                    Immatriculation
+                                                </th>
+                                            )}
+                                            {visibleColumns.brand && (
+                                                <th className="px-6 py-2 text-left text-xs font-semibold text-purple-900 dark:text-purple-300 uppercase tracking-wider">
+                                                    Marque
+                                                </th>
+                                            )}
+                                            {visibleColumns.model && (
+                                                <th className="px-6 py-2 text-left text-xs font-semibold text-purple-900 dark:text-purple-300 uppercase tracking-wider">
+                                                    Modèle
+                                                </th>
+                                            )}
+                                            {visibleColumns.distance && (
+                                                <th className="px-6 py-2 text-left text-xs font-semibold text-purple-900 dark:text-purple-300 uppercase tracking-wider">
+                                                    Distance
+                                                </th>
+                                            )}
+                                            {visibleColumns.position && (
+                                                <th className="px-6 py-2 text-left text-xs font-semibold text-purple-900 dark:text-purple-300 uppercase tracking-wider">
+                                                    Dernière position
+                                                </th>
+                                            )}
+                                            {visibleColumns.lastUpdate && (
+                                                <th className="px-6 py-2 text-left text-xs font-semibold text-purple-900 dark:text-purple-300 uppercase tracking-wider">
+                                                    Dernière actualisation
+                                                </th>
+                                            )}
+                                            {visibleColumns.status && (
+                                                <th className="px-6 py-2 text-left text-xs font-semibold text-purple-900 dark:text-purple-300 uppercase tracking-wider">
+                                                    Statut
+                                                </th>
+                                            )}
+                                        </tr>
+                                    </thead>
+                                    <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-100 dark:divide-gray-700">
+                                        {(() => {
+                                            // Filtrer les véhicules selon la recherche
+                                            const filteredVehicles = vehicles.filter(vehicle => {
+                                                if (!searchQuery.trim()) return true;
+                                                const query = searchQuery.toLowerCase();
+                                                return (
+                                                    vehicle.plate?.toLowerCase().includes(query) ||
+                                                    vehicle.name?.toLowerCase().includes(query) ||
+                                                    vehicle.address?.toLowerCase().includes(query)
+                                                );
+                                            });
+
+                                            // Calculer la pagination
+                                            const totalPages = Math.ceil(filteredVehicles.length / itemsPerPage);
+                                            const startIndex = (currentPage - 1) * itemsPerPage;
+                                            const endIndex = startIndex + itemsPerPage;
+                                            const paginatedVehicles = filteredVehicles.slice(startIndex, endIndex);
+
+                                            if (filteredVehicles.length === 0) {
+                                                return (
+                                                    <tr>
+                                                        <td colSpan={7} className="px-6 py-12 text-center">
+                                                            <div className="flex flex-col items-center gap-3 text-gray-500 dark:text-gray-400">
+                                                                <Car className="h-16 w-16 opacity-30" />
+                                                                <p className="text-sm font-medium">
+                                                                    {searchQuery ? 'Aucun véhicule trouvé' : 'Aucun véhicule disponible'}
+                                                                </p>
+                                                                {searchQuery && (
+                                                                    <Button 
+                                                                        variant="outline" 
+                                                                        size="sm"
+                                                                        onClick={() => setSearchQuery('')}
+                                                                        className="mt-2"
+                                                                    >
+                                                                        Réinitialiser la recherche
+                                                                    </Button>
+                                                                )}
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                );
+                                            }
+
+                                            return paginatedVehicles.map((vehicle, index) => {
+                                                // Extraire marque et modèle du nom du véhicule
+                                                const nameParts = vehicle.name.split(' ');
+                                                const marque = nameParts[0] || '-';
+                                                const modele = nameParts.slice(1).join(' ') || '-';
+                                                
+                                                // Récupérer l'adresse
+                                                const position = vehicle.address || 'Adresse inconnue';
+                                                
+                                                // Formater la date
+                                                const lastUpdate = new Date(vehicle.lastUpdate);
+                                                const formattedDate = lastUpdate.toLocaleDateString('fr-FR', {
+                                                    day: '2-digit',
+                                                    month: '2-digit',
+                                                    year: 'numeric'
+                                                });
+                                                const formattedTime = lastUpdate.toLocaleTimeString('fr-FR', {
+                                                    hour: '2-digit',
+                                                    minute: '2-digit'
+                                                });
+                                                
+                                                return (
+                                                    <tr 
+                                                        key={vehicle.id}
+                                                        className="group hover:bg-purple-50/50 dark:hover:bg-purple-900/10 transition-all duration-200"
+                                                    >
+                                                        {visibleColumns.plate && (
+                                                            <td className="px-6 py-2 whitespace-nowrap">
+                                                                <div className="flex items-center gap-2">
+                                                                    <div className="flex-shrink-0 h-8 w-8 rounded-lg bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center">
+                                                                        <Car className="h-4 w-4 text-purple-600 dark:text-purple-400" />
+                                                                    </div>
+                                                                    <span className="text-sm font-semibold text-gray-900 dark:text-white">
+                                                                        {vehicle.plate}
+                                                                    </span>
+                                                                </div>
+                                                            </td>
+                                                        )}
+                                                        {visibleColumns.brand && (
+                                                            <td className="px-6 py-2 whitespace-nowrap">
+                                                                <span className="text-sm text-gray-700 dark:text-gray-300 font-medium">
+                                                                    {marque}
+                                                                </span>
+                                                            </td>
+                                                        )}
+                                                        {visibleColumns.model && (
+                                                            <td className="px-6 py-2 whitespace-nowrap">
+                                                                <span className="text-sm text-gray-700 dark:text-gray-300">
+                                                                    {modele}
+                                                                </span>
+                                                            </td>
+                                                        )}
+                                                        {visibleColumns.distance && (
+                                                            <td className="px-6 py-2 whitespace-nowrap">
+                                                                <div className="flex items-center gap-2">
+                                                                    <div className="text-sm font-bold text-purple-700 dark:text-purple-400">
+                                                                        {vehicle.distance.toLocaleString()}
+                                                                    </div>
+                                                                    <span className="text-xs text-gray-500">km</span>
+                                                                </div>
+                                                            </td>
+                                                        )}
+                                                        {visibleColumns.position && (
+                                                            <td className="px-6 py-2">
+                                                                <div className="flex items-start gap-2 max-w-xs">
+                                                                    <MapPin className="h-4 w-4 text-gray-400 mt-0.5 flex-shrink-0" />
+                                                                    <span className="text-xs text-gray-600 dark:text-gray-400 line-clamp-2">
+                                                                        {position}
+                                                                    </span>
+                                                                </div>
+                                                            </td>
+                                                        )}
+                                                        {visibleColumns.lastUpdate && (
+                                                            <td className="px-6 py-2 whitespace-nowrap">
+                                                                <div className="flex items-center gap-2">
+                                                                    <Clock className="h-4 w-4 text-gray-400" />
+                                                                    <div className="text-xs text-gray-600 dark:text-gray-400">
+                                                                        <div className="font-medium">{formattedDate}</div>
+                                                                        <div className="text-[10px] text-gray-500">{formattedTime}</div>
+                                                                    </div>
+                                                                </div>
+                                                            </td>
+                                                        )}
+                                                        {visibleColumns.status && (
+                                                            <td className="px-6 py-2 whitespace-nowrap">
+                                                                <Badge 
+                                                                    variant="outline"
+                                                                    className={`text-xs font-medium ${
+                                                                        vehicle.status === 'active'
+                                                                            ? 'border-green-500 text-green-700 bg-green-50 dark:bg-green-900/20 dark:text-green-400'
+                                                                            : vehicle.status === 'maintenance'
+                                                                            ? 'border-orange-500 text-orange-700 bg-orange-50 dark:bg-orange-900/20 dark:text-orange-400'
+                                                                            : 'border-gray-500 text-gray-700 bg-gray-50 dark:bg-gray-900/20 dark:text-gray-400'
+                                                                    }`}
+                                                                >
+                                                                    {vehicle.status === 'active' ? '● Actif' :
+                                                                     vehicle.status === 'maintenance' ? '● Maintenance' : '● À l\'arrêt'}
+                                                                </Badge>
+                                                            </td>
+                                                        )}
+                                                    </tr>
+                                                );
+                                            });
+                                        })()}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        {/* Résumé et pagination */}
+                        <div className="mt-4 space-y-4">
+                            {/* Résumé du tableau */}
+                            <div className="flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-gray-600 dark:text-gray-400">
+                                <div>
+                                    {(() => {
+                                        const filteredVehicles = vehicles.filter(v => {
+                                            if (!searchQuery.trim()) return true;
+                                            const query = searchQuery.toLowerCase();
+                                            return v.plate?.toLowerCase().includes(query) ||
+                                                   v.name?.toLowerCase().includes(query) ||
+                                                   v.address?.toLowerCase().includes(query);
+                                        });
+                                        const totalFiltered = filteredVehicles.length;
+                                        const startIndex = (currentPage - 1) * itemsPerPage + 1;
+                                        const endIndex = Math.min(currentPage * itemsPerPage, totalFiltered);
+                                        
+                                        if (totalFiltered === 0) {
+                                            return <span>Aucun résultat</span>;
+                                        }
+                                        
+                                        return (
+                                            <span>
+                                                Affichage de {startIndex} à {endIndex} sur {totalFiltered} véhicule{totalFiltered > 1 ? 's' : ''}
+                                                {searchQuery && ' (filtré)'}
+                                            </span>
+                                        );
+                                    })()}
+                                </div>
+                                <div className="text-xs">
+                                    {Object.values(visibleColumns).filter(Boolean).length} / 7 colonnes affichées
+                                </div>
+                            </div>
+
+                            {/* Contrôles de pagination */}
+                            {(() => {
+                                const filteredVehicles = vehicles.filter(v => {
+                                    if (!searchQuery.trim()) return true;
+                                    const query = searchQuery.toLowerCase();
+                                    return v.plate?.toLowerCase().includes(query) ||
+                                           v.name?.toLowerCase().includes(query) ||
+                                           v.address?.toLowerCase().includes(query);
+                                });
+                                const totalPages = Math.ceil(filteredVehicles.length / itemsPerPage);
+                                
+                                if (totalPages <= 1) return null;
+
+                                return (
+                                    <div className="flex items-center justify-center gap-2">
+                                        <Button
+                                            variant="outline"
+                                            size="sm"
+                                            onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                                            disabled={currentPage === 1}
+                                            className="h-9 w-9 p-0"
+                                        >
+                                            <ChevronLeft className="h-4 w-4" />
+                                        </Button>
+                                        
+                                        <div className="flex items-center gap-1">
+                                            {Array.from({ length: totalPages }, (_, i) => i + 1).map(pageNum => {
+                                                // Afficher seulement quelques pages autour de la page courante
+                                                if (
+                                                    pageNum === 1 ||
+                                                    pageNum === totalPages ||
+                                                    (pageNum >= currentPage - 1 && pageNum <= currentPage + 1)
+                                                ) {
+                                                    return (
+                                                        <Button
+                                                            key={pageNum}
+                                                            variant={currentPage === pageNum ? "default" : "outline"}
+                                                            size="sm"
+                                                            onClick={() => setCurrentPage(pageNum)}
+                                                            className={`h-9 w-9 p-0 ${
+                                                                currentPage === pageNum 
+                                                                    ? 'bg-purple-600 hover:bg-purple-700 text-white border-purple-600' 
+                                                                    : ''
+                                                            }`}
+                                                        >
+                                                            {pageNum}
+                                                        </Button>
+                                                    );
+                                                } else if (
+                                                    pageNum === currentPage - 2 ||
+                                                    pageNum === currentPage + 2
+                                                ) {
+                                                    return <span key={pageNum} className="px-1">...</span>;
+                                                }
+                                                return null;
+                                            })}
+                                        </div>
+
+                                        <Button
+                                            variant="outline"
+                                            size="sm"
+                                            onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                                            disabled={currentPage === totalPages}
+                                            className="h-9 w-9 p-0"
+                                        >
+                                            <ChevronRight className="h-4 w-4" />
+                                        </Button>
+                                    </div>
+                                );
+                            })()}
                         </div>
                     </CardContent>
                 </Card>
