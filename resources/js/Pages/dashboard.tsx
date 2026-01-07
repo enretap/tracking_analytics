@@ -24,7 +24,10 @@ import {
   PauseCircle,
   Globe,
   User,
-  Building2
+  Building2,
+  Search,
+  ChevronLeft,
+  ChevronRight
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -32,6 +35,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { DateRangePicker } from '@/components/ui/date-range-picker';
+import { Input } from '@/components/ui/input';
 import { useVehicles } from '@/hooks/useVehicles';
 
 // Lazy load de la carte pour améliorer le temps de chargement initial
@@ -321,6 +325,11 @@ export default function Dashboard({ eco_data: initialEcoData, event_data: initia
     // États pour les données actualisables
     const [ecoData, setEcoData] = useState<EcoDrivingData>(initialEcoData);
     const [eventData, setEventData] = useState<VehicleEventData | undefined>(initialEventData);
+    
+    // États pour le tableau d'événements
+    const [eventsSearchQuery, setEventsSearchQuery] = useState('');
+    const [eventsCurrentPage, setEventsCurrentPage] = useState(1);
+    const eventsItemsPerPage = 10;
 
     // Récupérer les véhicules depuis l'API
     const { vehicles: apiVehicles, loading: vehiclesLoading, refetch: refetchVehicles } = useVehicles();
@@ -1190,11 +1199,6 @@ export default function Dashboard({ eco_data: initialEcoData, event_data: initia
                         {/* Graphiques */}
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
 
-                           
-
-                            {/* Tableau des données par chauffeur */}
-                            
-
                             {/* Nombre de véhicules par Type d'événement */}
                             <Card className="border-0 shadow-md hover:shadow-lg transition-shadow duration-300 bg-white">
                                 <CardHeader className="pb-3 bg-gradient-to-r from-red-50 to-yellow-50 border-b border-gray-200">
@@ -1304,6 +1308,218 @@ export default function Dashboard({ eco_data: initialEcoData, event_data: initia
                                                         );
                                                     })}
                                                 </div>
+                                            </div>
+                                        );
+                                    })()}
+                                </CardContent>
+                            </Card>
+
+                            {/* Tableau de détail des évènements */}
+                            <Card className="border-0 shadow-md hover:shadow-lg transition-shadow duration-300 bg-white md:col-span-2">
+                                <CardHeader className="pb-3 bg-gradient-to-r from-blue-50 to-purple-50 border-b border-gray-200">
+                                    <div className="flex items-center justify-between">
+                                        <CardTitle className="text-base">Tableau de détail des évènements</CardTitle>
+                                        <Badge variant="outline" className="text-xs">
+                                            {eventData?.stats?.total_events || 0} événements
+                                        </Badge>
+                                    </div>
+                                </CardHeader>
+                                <CardContent className="bg-white p-4">
+                                    {(() => {
+                                        // Safety check for event_data
+                                        if (!eventData?.events || eventData.events.length === 0) {
+                                            return <div className="text-center text-gray-500 py-8">Aucun événement disponible</div>;
+                                        }
+                                        
+                                        // Filtrer les événements selon la recherche
+                                        const filteredEvents = eventData.events.filter(event => {
+                                            if (!eventsSearchQuery.trim()) return true;
+                                            const query = eventsSearchQuery.toLowerCase();
+                                            return (
+                                                event.vehicle?.toLowerCase().includes(query) ||
+                                                event.driver?.toLowerCase().includes(query) ||
+                                                event.event_type?.toLowerCase().includes(query) ||
+                                                event.address?.toLowerCase().includes(query)
+                                            );
+                                        });
+                                        
+                                        // Calculer la pagination
+                                        const totalPages = Math.ceil(filteredEvents.length / eventsItemsPerPage);
+                                        const startIndex = (eventsCurrentPage - 1) * eventsItemsPerPage;
+                                        const endIndex = startIndex + eventsItemsPerPage;
+                                        const paginatedEvents = filteredEvents.slice(startIndex, endIndex);
+                                        
+                                        return (
+                                            <div className="space-y-4">
+                                                {/* Barre de recherche */}
+                                                <div className="relative">
+                                                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                                                    <Input
+                                                        type="text"
+                                                        placeholder="Rechercher par véhicule, conducteur, type ou adresse..."
+                                                        value={eventsSearchQuery}
+                                                        onChange={(e) => {
+                                                            setEventsSearchQuery(e.target.value);
+                                                            setEventsCurrentPage(1);
+                                                        }}
+                                                        className="pl-9 h-9 border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                                                    />
+                                                </div>
+                                                
+                                                {/* Tableau */}
+                                                <div className="rounded-lg border border-gray-200 overflow-hidden">
+                                                    <div className="overflow-x-auto">
+                                                        <table className="w-full min-w-full divide-y divide-gray-200">
+                                                            <thead className="bg-gray-50">
+                                                                <tr>
+                                                                    <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                                                                        Véhicule
+                                                                    </th>
+                                                                    <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                                                                        Conducteur
+                                                                    </th>
+                                                                    <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                                                                        Type d'événement
+                                                                    </th>
+                                                                    <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                                                                        Vitesse
+                                                                    </th>
+                                                                    <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                                                                        Adresse
+                                                                    </th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody className="bg-white divide-y divide-gray-200">
+                                                                {paginatedEvents.length > 0 ? (
+                                                                    paginatedEvents.map((event, idx) => (
+                                                                        <tr key={event.id || idx} className="hover:bg-gray-50 transition-colors">
+                                                                            <td className="px-4 py-3 whitespace-nowrap">
+                                                                                <div className="flex items-center gap-2">
+                                                                                    <Car className="h-4 w-4 text-gray-400" />
+                                                                                    <div>
+                                                                                        <div className="text-sm font-medium text-gray-900">
+                                                                                            {event.vehicle || 'N/A'}
+                                                                                        </div>
+                                                                                        <div className="text-xs text-gray-500">
+                                                                                            {event.plate_number || ''}
+                                                                                        </div>
+                                                                                    </div>
+                                                                                </div>
+                                                                            </td>
+                                                                            <td className="px-4 py-3 whitespace-nowrap">
+                                                                                <div className="flex items-center gap-2">
+                                                                                    <User className="h-4 w-4 text-gray-400" />
+                                                                                    <span className="text-sm text-gray-900">
+                                                                                        {event.driver || 'N/A'}
+                                                                                    </span>
+                                                                                </div>
+                                                                            </td>
+                                                                            <td className="px-4 py-3 whitespace-nowrap">
+                                                                                <Badge 
+                                                                                    variant="outline"
+                                                                                    className={`text-xs ${
+                                                                                        event.event_type === 'SPEED' || event.event_name === 'SPEED'
+                                                                                            ? 'border-red-500 text-red-700 bg-red-50'
+                                                                                            : event.event_type?.includes('BRAKE') || event.event_name?.includes('BRAKE')
+                                                                                            ? 'border-orange-500 text-orange-700 bg-orange-50'
+                                                                                            : 'border-blue-500 text-blue-700 bg-blue-50'
+                                                                                    }`}
+                                                                                >
+                                                                                    {event.event_type || event.event_name || 'N/A'}
+                                                                                </Badge>
+                                                                            </td>
+                                                                            <td className="px-4 py-3 whitespace-nowrap">
+                                                                                <div className="flex items-center gap-2">
+                                                                                    <Gauge className="h-4 w-4 text-gray-400" />
+                                                                                    <span className="text-sm font-semibold text-gray-900">
+                                                                                        {event.speed || 0}
+                                                                                    </span>
+                                                                                    <span className="text-xs text-gray-500">km/h</span>
+                                                                                </div>
+                                                                            </td>
+                                                                            <td className="px-4 py-3">
+                                                                                <div className="flex items-start gap-2 max-w-xs">
+                                                                                    <MapPin className="h-4 w-4 text-gray-400 mt-0.5 flex-shrink-0" />
+                                                                                    <span className="text-xs text-gray-600 line-clamp-2">
+                                                                                        {event.address || 'Adresse inconnue'}
+                                                                                    </span>
+                                                                                </div>
+                                                                            </td>
+                                                                        </tr>
+                                                                    ))
+                                                                ) : (
+                                                                    <tr>
+                                                                        <td colSpan={5} className="px-4 py-8 text-center text-gray-500">
+                                                                            Aucun événement trouvé
+                                                                        </td>
+                                                                    </tr>
+                                                                )}
+                                                            </tbody>
+                                                        </table>
+                                                    </div>
+                                                </div>
+                                                
+                                                {/* Pagination */}
+                                                {totalPages > 1 && (
+                                                    <div className="flex items-center justify-between">
+                                                        <div className="text-sm text-gray-600">
+                                                            Affichage de {startIndex + 1} à {Math.min(endIndex, filteredEvents.length)} sur {filteredEvents.length} événements
+                                                        </div>
+                                                        <div className="flex items-center gap-2">
+                                                            <Button
+                                                                variant="outline"
+                                                                size="sm"
+                                                                onClick={() => setEventsCurrentPage(prev => Math.max(1, prev - 1))}
+                                                                disabled={eventsCurrentPage === 1}
+                                                                className="h-9 w-9 p-0"
+                                                            >
+                                                                <ChevronLeft className="h-4 w-4" />
+                                                            </Button>
+                                                            
+                                                            <div className="flex items-center gap-1">
+                                                                {Array.from({ length: totalPages }, (_, i) => i + 1).map(pageNum => {
+                                                                    if (
+                                                                        pageNum === 1 ||
+                                                                        pageNum === totalPages ||
+                                                                        (pageNum >= eventsCurrentPage - 1 && pageNum <= eventsCurrentPage + 1)
+                                                                    ) {
+                                                                        return (
+                                                                            <Button
+                                                                                key={pageNum}
+                                                                                variant={eventsCurrentPage === pageNum ? "default" : "outline"}
+                                                                                size="sm"
+                                                                                onClick={() => setEventsCurrentPage(pageNum)}
+                                                                                className={`h-9 w-9 p-0 ${
+                                                                                    eventsCurrentPage === pageNum 
+                                                                                        ? 'bg-blue-600 hover:bg-blue-700 text-white border-blue-600' 
+                                                                                        : ''
+                                                                                }`}
+                                                                            >
+                                                                                {pageNum}
+                                                                            </Button>
+                                                                        );
+                                                                    } else if (
+                                                                        pageNum === eventsCurrentPage - 2 ||
+                                                                        pageNum === eventsCurrentPage + 2
+                                                                    ) {
+                                                                        return <span key={pageNum} className="px-1">...</span>;
+                                                                    }
+                                                                    return null;
+                                                                })}
+                                                            </div>
+
+                                                            <Button
+                                                                variant="outline"
+                                                                size="sm"
+                                                                onClick={() => setEventsCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                                                                disabled={eventsCurrentPage === totalPages}
+                                                                className="h-9 w-9 p-0"
+                                                            >
+                                                                <ChevronRight className="h-4 w-4" />
+                                                            </Button>
+                                                        </div>
+                                                    </div>
+                                                )}
                                             </div>
                                         );
                                     })()}
