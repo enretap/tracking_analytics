@@ -1004,29 +1004,29 @@ export default function Dashboard({ eco_data: initialEcoData, event_data: initia
                     <CardContent className="space-y-4">
                         {/* Graphiques */}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            {/* Répartition des violations de vitesse par véhicule (%) */}
+                            {/* Répartition des freinages brusques par véhicule (%) */}
                             <Card className="border-0 shadow-md hover:shadow-lg transition-shadow duration-300 bg-white">
                                 <CardHeader className="pb-3 bg-gradient-to-r from-red-50 to-yellow-50 border-b border-gray-200">
-                                    <CardTitle className="text-base">Répartition des violations de vitesse (%)</CardTitle>
+                                    <CardTitle className="text-base">Répartition des freinages brusques par véhicule (%)</CardTitle>
                                 </CardHeader>
                                 <CardContent className="bg-white p-4">
                                     {(() => {
                                         // Safety check for vehicle_details
                                         if (!ecoData?.vehicle_details || ecoData.vehicle_details.length === 0) {
-                                            return <div className="text-center text-gray-500 py-8">Aucune violation</div>;
+                                            return <div className="text-center text-gray-500 py-8">Aucun freinage brusque</div>;
                                         }
                                         
-                                        // Calculer le total des violations de vitesse
-                                        const totalViolations = ecoData.vehicle_details.reduce((sum, v) => sum + (v.speed_violations || 0), 0);
+                                        // Calculer le total des freinages brusques
+                                        const totalHarshBraking = ecoData.vehicle_details.reduce((sum, v) => sum + (v.harsh_braking || 0), 0);
                                         
-                                        // Récupérer les 5 véhicules avec le plus de violations de vitesse
+                                        // Récupérer les 5 véhicules avec le plus de freinages brusques
                                         const topVehicles = ecoData.vehicle_details
-                                            .filter(v => (v.speed_violations || 0) > 0)
-                                            .sort((a, b) => (b.speed_violations || 0) - (a.speed_violations || 0))
+                                            .filter(v => (v.harsh_braking || 0) > 0)
+                                            .sort((a, b) => (b.harsh_braking || 0) - (a.harsh_braking || 0))
                                             .slice(0, 5);
                                         
-                                        if (totalViolations === 0) {
-                                            return <div className="text-center text-gray-500 py-8">Aucune violation de vitesse</div>;
+                                        if (totalHarshBraking === 0) {
+                                            return <div className="text-center text-gray-500 py-8">Aucun freinage brusque</div>;
                                         }
 
                                         // Couleurs distinctes pour chaque véhicule
@@ -1040,8 +1040,8 @@ export default function Dashboard({ eco_data: initialEcoData, event_data: initia
                                                         {(() => {
                                                             let currentAngle = 0;
                                                             return topVehicles.map((vehicle, idx) => {
-                                                                const violations = vehicle.speed_violations || 0;
-                                                                const percentage = violations / totalViolations;
+                                                                const harshBraking = vehicle.harsh_braking || 0;
+                                                                const percentage = harshBraking / totalHarshBraking;
                                                                 const angle = percentage * 360;
                                                                 const startAngle = currentAngle;
                                                                 const endAngle = currentAngle + angle;
@@ -1062,7 +1062,7 @@ export default function Dashboard({ eco_data: initialEcoData, event_data: initia
                                                                 
                                                                 return (
                                                                     <g key={idx}>
-                                                                        <title>{`${vehicle.immatriculation}: ${violations} violations (${percentDisplay}%)`}</title>
+                                                                        <title>{`${vehicle.immatriculation}: ${harshBraking} freinages brusques (${percentDisplay}%)`}</title>
                                                                         <path
                                                                             d={`M 100 100 L ${x1} ${y1} A 80 80 0 ${largeArc} 1 ${x2} ${y2} Z`}
                                                                             fill={colors[idx]}
@@ -1077,16 +1077,16 @@ export default function Dashboard({ eco_data: initialEcoData, event_data: initia
                                                     </svg>
                                                     {/* Centre avec total */}
                                                     <div className="absolute inset-0 flex flex-col items-center justify-center">
-                                                        <div className="text-2xl font-bold text-gray-800">{totalViolations}</div>
-                                                        <div className="text-xs text-gray-500">Violations</div>
+                                                        <div className="text-2xl font-bold text-gray-800">{totalHarshBraking}</div>
+                                                        <div className="text-xs text-gray-500">Total</div>
                                                     </div>
                                                 </div>
                                                 
                                                 {/* Légende améliorée */}
                                                 <div className="grid grid-cols-1 gap-2 w-full text-xs">
                                                     {topVehicles.map((vehicle, idx) => {
-                                                        const violations = vehicle.speed_violations || 0;
-                                                        const percentage = ((violations / totalViolations) * 100).toFixed(1);
+                                                        const harshBraking = vehicle.harsh_braking || 0;
+                                                        const percentage = ((harshBraking / totalHarshBraking) * 100).toFixed(1);
                                                         return (
                                                             <div key={idx} className="flex items-center justify-between gap-2 p-1.5 rounded hover:bg-gray-50 transition-colors">
                                                                 <div className="flex items-center gap-2 min-w-0 flex-1">
@@ -1097,7 +1097,7 @@ export default function Dashboard({ eco_data: initialEcoData, event_data: initia
                                                                 </div>
                                                                 <div className="flex items-center gap-2 flex-shrink-0">
                                                                     <span className="font-bold text-gray-800">{percentage}%</span>
-                                                                    <span className="text-gray-500">({violations})</span>
+                                                                    <span className="text-gray-500">({harshBraking})</span>
                                                                 </div>
                                                             </div>
                                                         );
