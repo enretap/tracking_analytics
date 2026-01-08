@@ -769,11 +769,11 @@ export default function Dashboard({ eco_data: initialEcoData, event_data: initia
                         {/* Graphiques */}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             {/* Répartition des infractions par véhicule (%) */}
-                            <Card className="border-0 shadow-md hover:shadow-lg transition-shadow duration-300 bg-white">
+                            <Card className="border-0 shadow-md hover:shadow-lg transition-shadow duration-300">
                                 <CardHeader className="pb-3 bg-gradient-to-r from-red-50 to-yellow-50 border-b border-gray-200">
                                     <CardTitle className="text-base">Répartition des infractions par véhicule (%)</CardTitle>
                                 </CardHeader>
-                                <CardContent className="bg-white p-4">
+                                <CardContent className="p-4">
                                     {(() => {
                                         // Safety check for vehicle_details
                                         if (!ecoData?.vehicle_details || ecoData.vehicle_details.length === 0) {
@@ -861,11 +861,11 @@ export default function Dashboard({ eco_data: initialEcoData, event_data: initia
                             </Card>
 
                             {/* Nombre d'infractions par véhicules */}
-                            <Card className="border-0 shadow-md hover:shadow-lg transition-shadow duration-300 bg-white">
+                            <Card className="border-0 shadow-md hover:shadow-lg transition-shadow duration-300">
                                 <CardHeader className="pb-3 bg-gradient-to-r from-red-50 to-yellow-50 border-b border-gray-200">
                                     <CardTitle className="text-base">Nombre d'infractions par véhicules</CardTitle>
                                 </CardHeader>
-                                <CardContent className="bg-white p-4">
+                                <CardContent className="p-4">
                                     {(() => {
                                         // Safety check for vehicle_details
                                         if (!ecoData?.vehicle_details || ecoData.vehicle_details.length === 0) {
@@ -1014,11 +1014,11 @@ export default function Dashboard({ eco_data: initialEcoData, event_data: initia
                         {/* Graphiques */}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             {/* Répartition des freinages brusques par véhicule (%) */}
-                            <Card className="border-0 shadow-md hover:shadow-lg transition-shadow duration-300 bg-white">
+                            <Card className="border-0 shadow-md hover:shadow-lg transition-shadow duration-300">
                                 <CardHeader className="pb-3 bg-gradient-to-r from-red-50 to-yellow-50 border-b border-gray-200">
                                     <CardTitle className="text-base">Répartition des freinages brusques par véhicule (%)</CardTitle>
                                 </CardHeader>
-                                <CardContent className="bg-white p-4">
+                                <CardContent className="p-4">
                                     {(() => {
                                         // Safety check for vehicle_details
                                         if (!ecoData?.vehicle_details || ecoData.vehicle_details.length === 0) {
@@ -1119,11 +1119,11 @@ export default function Dashboard({ eco_data: initialEcoData, event_data: initia
                             </Card>
 
                             {/* Véhicules avec les vitesses maximales */}
-                            <Card className="border-0 shadow-md hover:shadow-lg transition-shadow duration-300 bg-white">
+                            <Card className="border-0 shadow-md hover:shadow-lg transition-shadow duration-300">
                                 <CardHeader className="pb-3 bg-gradient-to-r from-red-50 to-yellow-50 border-b border-gray-200">
                                     <CardTitle className="text-base">Véhicules avec les vitesses maximales (Km/h)</CardTitle>
                                 </CardHeader>
-                                <CardContent className="bg-white">
+                                <CardContent className="p-4">
                                     {(() => {
                                         // Safety check for vehicle_details
                                         if (!ecoData?.vehicle_details || ecoData.vehicle_details.length === 0) {
@@ -1200,11 +1200,11 @@ export default function Dashboard({ eco_data: initialEcoData, event_data: initia
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
 
                             {/* Nombre de véhicules par Type d'événement */}
-                            <Card className="border-0 shadow-md hover:shadow-lg transition-shadow duration-300 bg-white">
+                            <Card className="border-0 shadow-md hover:shadow-lg transition-shadow duration-300">
                                 <CardHeader className="pb-3 bg-gradient-to-r from-red-50 to-yellow-50 border-b border-gray-200">
                                     <CardTitle className="text-base">Alertes par Type d'événement</CardTitle>
                                 </CardHeader>
-                                <CardContent className="bg-white">
+                                <CardContent className="p-4">
                                     {(() => {
                                         // Safety check for event_data
                                         if (!eventData?.events_by_name || !eventData?.stats?.events_by_name) {
@@ -1315,7 +1315,7 @@ export default function Dashboard({ eco_data: initialEcoData, event_data: initia
                             </Card>
 
                             {/* Tableau de détail des évènements */}
-                            <Card className="border-0 shadow-md hover:shadow-lg transition-shadow duration-300 bg-white md:col-span-2">
+                            <Card className="border-0 shadow-md hover:shadow-lg transition-shadow duration-300 md:col-span-2">
                                 <CardHeader className="pb-3 bg-gradient-to-r from-red-50 to-yellow-50 border-b border-gray-200">
                                     <div className="flex items-center justify-between">
                                         <CardTitle className="text-base">Tableau de détail des évènements</CardTitle>
@@ -1324,7 +1324,7 @@ export default function Dashboard({ eco_data: initialEcoData, event_data: initia
                                         </Badge>
                                     </div>
                                 </CardHeader>
-                                <CardContent className="bg-white p-4">
+                                <CardContent className="p-4">
                                     {(() => {
                                         // Safety check for event_data
                                         if (!eventData?.events || eventData.events.length === 0) {

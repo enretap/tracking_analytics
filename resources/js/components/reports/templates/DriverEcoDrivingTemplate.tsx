@@ -187,7 +187,7 @@ export function DriverEcoDrivingTemplate({ data }: Props) {
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     {/* Répartition des infractions par véhicule (%) */}
                                     <Card className="border-0 shadow-md hover:shadow-lg transition-shadow duration-300 bg-white">
-                                        <CardHeader className="pb-3 bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-gray-200">
+                                        <CardHeader className="pb-3 bg-gradient-to-r from-red-50 to-yellow-50 border-b border-gray-200">
                                             <CardTitle className="text-base">Répartition des infractions par véhicule (%)</CardTitle>
                                         </CardHeader>
                                         <CardContent className="bg-white p-4">
@@ -274,7 +274,7 @@ export function DriverEcoDrivingTemplate({ data }: Props) {
 
                                     {/* Nombre d'infractions par véhicules */}
                                     <Card className="border-0 shadow-md hover:shadow-lg transition-shadow duration-300 bg-white">
-                                        <CardHeader className="pb-3 bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-gray-200">
+                                        <CardHeader className="pb-3 bg-gradient-to-r from-red-50 to-yellow-50 border-b border-gray-200">
                                             <CardTitle className="text-base">Nombre d'infractions par véhicules</CardTitle>
                                         </CardHeader>
                                         <CardContent className="bg-white p-4">
@@ -365,7 +365,7 @@ export function DriverEcoDrivingTemplate({ data }: Props) {
 
                                     {/* Score de risque par véhicule */}
                                     <Card className="border-0 shadow-md hover:shadow-lg transition-shadow duration-300 bg-white">
-                                        <CardHeader className="pb-3 bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-gray-200">
+                                        <CardHeader className="pb-3 bg-gradient-to-r from-red-50 to-yellow-50 border-b border-gray-200">
                                             <CardTitle className="text-base">Score de risque par véhicule</CardTitle>
                                         </CardHeader>
                                         <CardContent className="bg-white">
@@ -409,7 +409,7 @@ export function DriverEcoDrivingTemplate({ data }: Props) {
 
                                     {/* Distribution des distances parcourues par véhicule */}
                                     <Card className="border-0 shadow-md hover:shadow-lg transition-shadow duration-300 bg-white">
-                                        <CardHeader className="pb-3 bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-gray-200">
+                                        <CardHeader className="pb-3 bg-gradient-to-r from-red-50 to-yellow-50 border-b border-gray-200">
                                             <CardTitle className="text-base">Distribution des distances parcourues par véhicule (km)</CardTitle>
                                         </CardHeader>
                                         <CardContent className="bg-white p-4">
@@ -452,7 +452,7 @@ export function DriverEcoDrivingTemplate({ data }: Props) {
 
                                     {/* Taux d'utilisation des véhicules */}
                                     <Card className="border-0 shadow-md hover:shadow-lg transition-shadow duration-300 bg-white md:col-span-2">
-                                        <CardHeader className="pb-3 bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-gray-200">
+                                        <CardHeader className="pb-3 bg-gradient-to-r from-red-50 to-yellow-50 border-b border-gray-200">
                                             <CardTitle className="text-base">Taux d'utilisation des véhicules (Durée de conduite VS Temps au ralenti)</CardTitle>
                                         </CardHeader>
                                         <CardContent className="bg-white p-4">

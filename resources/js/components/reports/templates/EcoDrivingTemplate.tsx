@@ -191,7 +191,7 @@ export function EcoDrivingTemplate({ data }: Props) {
                                     
                                     {/* Répartition des violations par niveau de risque */}
                                     <Card className="border-0 shadow-md hover:shadow-lg transition-shadow duration-300 bg-white">
-                                        <CardHeader className="pb-3 bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-gray-200">
+                                        <CardHeader className="pb-3 bg-gradient-to-r from-red-50 to-yellow-50 border-b border-gray-200">
                                             <CardTitle className="text-base">Répartition des violations par niveau de risque</CardTitle>
                                         </CardHeader>
                                         <CardContent className="bg-white p-4">
@@ -293,8 +293,8 @@ export function EcoDrivingTemplate({ data }: Props) {
 
                                     {/* Véhicules par niveau de risque */}
                                     <Card className="border-0 shadow-md hover:shadow-lg transition-shadow duration-300 bg-white">
-                                        <CardHeader className="pb-3 bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-gray-200">
-                                            <CardTitle className="text-base">Véhicules par niveau de risque</CardTitle>
+                                        <CardHeader className="pb-3 bg-gradient-to-r from-red-50 to-yellow-50 border-b border-gray-200">
+                                            <CardTitle className="text-base">Classification des véhicules par niveau de risque</CardTitle>
                                         </CardHeader>
                                         <CardContent className="bg-white p-4">
                                             {(() => {
@@ -405,7 +405,7 @@ export function EcoDrivingTemplate({ data }: Props) {
 
                                     {/* Distribution des distances parcourues */}
                                     <Card className="border-0 shadow-md hover:shadow-lg transition-shadow duration-300 bg-white">
-                                        <CardHeader className="pb-3 bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-gray-200">
+                                        <CardHeader className="pb-3 bg-gradient-to-r from-red-50 to-yellow-50 border-b border-gray-200">
                                             <CardTitle className="text-base">Distribution des distances parcourues par véhicule (km)</CardTitle>
                                         </CardHeader>
                                         <CardContent className="bg-white p-4">
@@ -455,7 +455,7 @@ export function EcoDrivingTemplate({ data }: Props) {
 
                                     {/* Accélérations par véhicule */}
                                     <Card className="border-0 shadow-md hover:shadow-lg transition-shadow duration-300 bg-white">
-                                        <CardHeader className="pb-3 bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-gray-200">
+                                        <CardHeader className="pb-3 bg-gradient-to-r from-red-50 to-yellow-50 border-b border-gray-200">
                                             <CardTitle className="text-base">Accélérations par véhicule</CardTitle>
                                         </CardHeader>
                                         <CardContent className="bg-white">
@@ -490,7 +490,7 @@ export function EcoDrivingTemplate({ data }: Props) {
 
                                     {/* Tendance des vitesses maximales */}
                                     <Card className="border-0 shadow-md hover:shadow-lg transition-shadow duration-300 bg-white md:col-span-2">
-                                        <CardHeader className="pb-3 bg-gradient-to-r from-blue-50 to-indigo-50">
+                                        <CardHeader className="pb-3 bg-gradient-to-r from-red-50 to-yellow-50">
                                             <CardTitle className="text-base text-gray-800">Tendance des vitesses maximales atteintes (Km/h)</CardTitle>
                                         </CardHeader>
                                         <CardContent className="bg-white p-4">

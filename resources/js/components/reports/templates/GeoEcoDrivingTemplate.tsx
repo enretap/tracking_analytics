@@ -148,7 +148,7 @@ export function GeoEcoDrivingTemplate({ data }: Props) {
                             
                             {/* Nombre de véhicules par Type d'événement */}
                             <Card className="border-0 shadow-md hover:shadow-lg transition-shadow duration-300 bg-white">
-                                <CardHeader className="pb-3 bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-gray-200">
+                                <CardHeader className="pb-3 bg-gradient-to-r from-red-50 to-yellow-50 border-b border-gray-200">
                                     <CardTitle className="text-base">Nombre de véhicules par Type d'événement</CardTitle>
                                 </CardHeader>
                                 <CardContent className="bg-white">
