@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\EventController;
+use App\Http\Controllers\Api\VehicleDebugController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -22,6 +23,12 @@ Route::middleware(['web', 'api.auth'])->group(function () {
         Route::get('/stats', [EventController::class, 'stats'])->name('api.events.stats');
         Route::get('/type/{eventType}', [EventController::class, 'byType'])->name('api.events.by-type');
         Route::get('/vehicle/{vehicleReference}', [EventController::class, 'byVehicle'])->name('api.events.by-vehicle');
+    });
+    
+    // Vehicle Debug API endpoints
+    Route::prefix('vehicles')->group(function () {
+        Route::get('/debug', [VehicleDebugController::class, 'index'])->name('api.vehicles.debug');
+        Route::get('/test-ctrack', [VehicleDebugController::class, 'testCtrack'])->name('api.vehicles.test-ctrack');
     });
     
 });

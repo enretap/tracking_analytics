@@ -255,7 +255,7 @@ export default function LeasingDashboard({ eco_data, event_data }: Props) {
     
     const stats = useMemo(() => {
         const now = new Date();
-        const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+        const threeDaysAgo = new Date(now.getTime() - 3 * 24 * 60 * 60 * 1000);
         
         return {
             totalVehicles: vehicles.length,
@@ -264,7 +264,7 @@ export default function LeasingDashboard({ eco_data, event_data }: Props) {
             maintenanceVehicles: vehicles.filter(v => v.status === 'maintenance').length,
             outdatedVehicles: vehicles.filter(v => {
                 const lastUpdate = new Date(v.lastUpdate);
-                return lastUpdate < sevenDaysAgo;
+                return lastUpdate < threeDaysAgo;
             }).length,
         };
     }, [vehicles]);
@@ -322,21 +322,23 @@ export default function LeasingDashboard({ eco_data, event_data }: Props) {
                     <div>
                         <h1 className="flex items-center gap-3 text-2xl font-bold tracking-tight text-gray-900 dark:text-white">
                             <FileKey className="h-8 w-8 text-purple-600" />
-                            <span>Tableau de bord Leasing - </span>
-                            {auth.user.account_logo ? (
-                                <img 
-                                    src={`/storage/${auth.user.account_logo}`} 
-                                    alt={auth.user.account_name || auth.user.name}
-                                    className="h-8 w-8 rounded object-cover"
-                                />
-                            ) : (
-                                <Building2 className="h-8 w-8 text-gray-400" />
-                            )}
-                            <span>{auth.user.account_name || auth.user.name}</span>
+                            <span>Tableau de bord Leasing - {auth.user.account_name || auth.user.name}</span>
                         </h1>
                         <p className="text-gray-600 dark:text-gray-400">
                             Gestion et suivi de votre flotte
                         </p>
+                    </div>
+                    
+                    <div className="flex items-center">
+                        {auth.user.account_logo ? (
+                            <img 
+                                src={`/storage/${auth.user.account_logo}`} 
+                                alt={auth.user.account_name || auth.user.name}
+                                className="h-16 w-16 rounded-lg object-cover shadow-md"
+                            />
+                        ) : (
+                            <Building2 className="h-16 w-16 text-gray-400" />
+                        )}
                     </div>
                 </div>
 
@@ -455,8 +457,6 @@ export default function LeasingDashboard({ eco_data, event_data }: Props) {
                             <CardTitle className="text-xs font-medium text-orange-600 dark:text-orange-400">
                                 Véhicules en maintenance
                             </CardTitle>
-
-                    
                             <AlertTriangle className="h-8 w-8 text-orange-500" />
                         </CardHeader>
                         <CardContent>
@@ -466,17 +466,18 @@ export default function LeasingDashboard({ eco_data, event_data }: Props) {
                             </p>
                         </CardContent>
                     </Card>
+
                     <Card className="border-red-200 bg-gradient-to-br from-red-50 to-white dark:border-red-800 dark:from-red-900/20 dark:to-gray-900">
                         <CardHeader className="flex flex-row items-center justify-between pb-2">
                             <CardTitle className="text-xs font-medium text-red-600 dark:text-red-400">
-                                Non actualisés (+7j)
+                                Non actualisés (+3j)
                             </CardTitle>
                             <Clock className="h-8 w-8 text-red-500" />
                         </CardHeader>
                         <CardContent>
                             <div className="text-xl font-bold text-gray-900 dark:text-white">{stats.outdatedVehicles}</div>
                             <p className="text-xs text-gray-600 dark:text-gray-400">
-                                Dernière actualisation &gt; 7 jours
+                                Dernière actualisation &gt; 3 jours
                             </p>
                         </CardContent>
                     </Card>

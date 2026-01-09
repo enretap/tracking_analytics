@@ -34,6 +34,12 @@ class VehiclePlatformSeeder extends Seeder
                 'provider' => 'Track Pro Systems',
                 'is_active' => true,
             ],
+            [
+                'name' => 'CTRACK',
+                'slug' => 'ctrack',
+                'provider' => 'CTRACK Systems',
+                'is_active' => true,
+            ],
         ];
 
         foreach ($platforms as $platformData) {

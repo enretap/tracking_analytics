@@ -548,11 +548,17 @@ export default function Dashboard({ eco_data: initialEcoData, event_data: initia
     // console.log(ecoData.total_vehicles);
     
     // Vérifier si eventData existe avant d'accéder à ses propriétés
-    if (eventData && eventData.events) {
+    /* if (eventData && eventData.events) {
         console.log('Events:', eventData.events);
         console.log('Total événements:', eventData.stats.total_events);
     } else {
         console.log('Aucune donnée d\'événements disponible');
+    } */
+
+    if (vehicles.length) {
+        console.log('Vehicles:', vehicles);
+    } else {
+        console.log('Aucune donnée de véhicules disponible');
     }
 
     return (
@@ -563,22 +569,24 @@ export default function Dashboard({ eco_data: initialEcoData, event_data: initia
                 {/* En-tête du Dashboard */}
                 <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
                     <div>
-                        <h1 className="flex items-center gap-3 text-2xl font-bold tracking-tight text-gray-900 dark:text-white">
-                            <span>Tableau de bord - </span>
-                            {auth.user.account_logo ? (
-                                <img 
-                                    src={`/storage/${auth.user.account_logo}`} 
-                                    alt={auth.user.account_name || auth.user.name}
-                                    className="h-8 w-8 rounded object-cover"
-                                />
-                            ) : (
-                                <Building2 className="h-8 w-8 text-gray-400" />
-                            )}
-                            <span>{auth.user.account_name || auth.user.name}</span>
+                        <h1 className="text-2xl font-bold tracking-tight text-gray-900 dark:text-white">
+                            Tableau de bord - {auth.user.account_name || auth.user.name}
                         </h1>
                         <p className="text-gray-600 dark:text-gray-400">
                             Vue d'ensemble des activités de votre flotte
                         </p>
+                    </div>
+                    
+                    <div className="flex items-center">
+                        {auth.user.account_logo ? (
+                            <img 
+                                src={`/storage/${auth.user.account_logo}`} 
+                                alt={auth.user.account_name || auth.user.name}
+                                className="h-16 w-16 rounded-lg object-cover shadow-md"
+                            />
+                        ) : (
+                            <Building2 className="h-16 w-16 text-gray-400" />
+                        )}
                     </div>
                     
                     {/* <div className="flex flex-wrap items-center gap-3">
