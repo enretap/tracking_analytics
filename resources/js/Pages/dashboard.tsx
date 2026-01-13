@@ -555,11 +555,11 @@ export default function Dashboard({ eco_data: initialEcoData, event_data: initia
         console.log('Aucune donnée d\'événements disponible');
     } */
 
-    if (vehicles.length) {
+    /* if (vehicles.length) {
         console.log('Vehicles:', vehicles);
     } else {
         console.log('Aucune donnée de véhicules disponible');
-    }
+    } */
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>

@@ -41,7 +41,10 @@ class VehicleDebugController extends Controller
         ];
 
         // Get platforms information
-        $platforms = $account->platforms()->where('is_active', true)->get();
+        $platforms = $account->platforms()
+            ->wherePivot('account_platform.is_active', true)
+            ->where('platforms.is_active', true)
+            ->get();
         $platformsInfo = $platforms->map(function ($platform) {
             return [
                 'id' => $platform->id,
@@ -163,8 +166,9 @@ class VehicleDebugController extends Controller
         }
 
         $ctrackPlatform = $account->platforms()
-            ->where('slug', 'ctrack')
-            ->where('is_active', true)
+            ->where('platforms.slug', 'ctrack')
+            ->wherePivot('account_platform.is_active', true)
+            ->where('platforms.is_active', true)
             ->first();
 
         if (!$ctrackPlatform) {

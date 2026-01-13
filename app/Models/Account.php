@@ -30,7 +30,7 @@ class Account extends Model
     public function platforms()
     {
         return $this->belongsToMany(Platform::class, 'account_platform')
-            ->withPivot(['api_url', 'api_token', 'http_method', 'token_type', 'token_key', 'additional_params'])
+            ->withPivot(['api_url', 'api_token', 'http_method', 'token_type', 'token_key', 'additional_params', 'is_active'])
             ->withTimestamps();
     }
 

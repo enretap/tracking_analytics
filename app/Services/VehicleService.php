@@ -26,7 +26,10 @@ class VehicleService
             return $vehicles;
         }
 
-        $platforms = $account->platforms()->where('is_active', true)->get();
+        $platforms = $account->platforms()
+            ->wherePivot('account_platform.is_active', true)
+            ->where('platforms.is_active', true)
+            ->get();
 
         foreach ($platforms as $platform) {
             $apiUrl = $platform->pivot->api_url;
@@ -48,9 +51,8 @@ class VehicleService
                 $apiUrl = rtrim($apiUrl, '/') . '/json/getVehicles';
             }
             
-            // Add specific endpoint for CTRACK vehicles
+            // Log CTRACK platform detection (use configured URL from database)
             if ($platform->slug === 'ctrack') {
-                $apiUrl = 'https://comafrique-ctrack.online/api/units/list';
                 Log::info("CTRACK Platform detected", [
                     'platform_name' => $platform->name,
                     'api_url' => $apiUrl,
@@ -107,10 +109,27 @@ class VehicleService
                     
                     // Log CTRACK raw response for debugging
                     if ($platform->slug === 'ctrack') {
-                        Log::info("CTRACK Raw Response", [
-                            'total_vehicles' => is_array($data) ? count($data['data'] ?? $data) : 0,
+                        $isDirectArray = isset($data[0]) && is_array($data[0]);
+                        $firstVehicle = null;
+                        
+                        if ($isDirectArray) {
+                            $firstVehicle = $data[0];
+                        } elseif (isset($data['data']) && is_array($data['data']) && isset($data['data'][0])) {
+                            $firstVehicle = $data['data'][0];
+                        }
+                        
+                        Log::info("CTRACK Raw Response Analysis", [
+                            'total_count' => count($data),
+                            'is_direct_array' => $isDirectArray,
                             'has_data_key' => isset($data['data']),
-                            'sample_vehicle' => isset($data['data'][0]) ? $data['data'][0] : (isset($data[0]) ? $data[0] : null),
+                            'first_vehicle_sample' => $firstVehicle ? [
+                                'id' => $firstVehicle['id'] ?? 'N/A',
+                                'name' => $firstVehicle['name'] ?? 'N/A',
+                                'company_id' => $firstVehicle['company_id'] ?? 'N/A',
+                                'distance' => $firstVehicle['distance'] ?? 'N/A',
+                                'latitude' => $firstVehicle['latitude'] ?? 'N/A',
+                            ] : 'NO VEHICLE FOUND',
+                            'all_company_ids' => $isDirectArray ? array_unique(array_map(fn($v) => $v['company_id'] ?? 'N/A', array_slice($data, 0, 20))) : 'NOT DIRECT ARRAY',
                         ]);
                     }
                     
@@ -120,7 +139,7 @@ class VehicleService
                         
                         Log::info("CTRACK Filtered Response", [
                             'reference_ctrack' => $account->reference_ctrack,
-                            'filtered_count' => is_array($data) ? count($data['data'] ?? $data) : 0,
+                            'filtered_count' => count($data),
                         ]);
                     }
                     
@@ -174,12 +193,35 @@ class VehicleService
     {
         // Different platforms might return data in different structures
         // Adjust these based on your actual API responses
+        if ($slug === 'ctrack') {
+            // CTRACK can return multiple formats:
+            // 1. Direct array: [{...}, {...}]
+            // 2. Nested in data: {"data": [{...}, {...}]}
+            // 3. Nested in data.units: {"data": {"units": [{...}, {...}]}}
+            
+            // Check for data.units first (most common format)
+            if (isset($data['data']['units']) && is_array($data['data']['units'])) {
+                return $data['data']['units'];
+            }
+            
+            // Then check for direct array
+            if (isset($data[0]) && is_array($data[0])) {
+                return $data;
+            }
+            
+            // Then check for data array
+            if (isset($data['data']) && is_array($data['data'])) {
+                return $data['data'];
+            }
+            
+            return $data;
+        }
+        
         return match ($slug) {
             'gps-tracker' => $data['vehicles'] ?? $data['data'] ?? $data,
             'fleet-manager' => $data['fleet'] ?? $data['vehicles'] ?? $data,
             'track-pro' => $data['units'] ?? $data['devices'] ?? $data,
             'targa-telematics' => $data['vehicles'] ?? $data['data'] ?? $data,
-            'ctrack' => $data['data']['units'] ?? $data['units'] ?? $data['data'] ?? $data,
             default => $data['vehicles'] ?? $data['data'] ?? $data,
         };
     }
@@ -271,42 +313,48 @@ class VehicleService
      */
     private function filterCtrackVehicles(array $data, string $referenceCtrack): array
     {
-        // Extract units from the CTRACK response structure: {"data": {"units": [...]}}
-        $units = $data['data']['units'] ?? $data['units'] ?? $data['data'] ?? $data;
-        
-        if (!is_array($units)) {
-            Log::warning('CTRACK filterCtrackVehicles: units is not an array', [
-                'data_type' => gettype($units),
-                'reference_ctrack' => $referenceCtrack,
-            ]);
-            return ['data' => ['units' => []]];
+        // Extract vehicles - support both direct array and nested formats
+        $vehicles = $data;
+        if (isset($data['data']) && is_array($data['data'])) {
+            $vehicles = $data['data'];
         }
         
-        // Filter by company_id matching reference_ctrack
-        $filteredUnits = array_filter($units, function ($unit) use ($referenceCtrack) {
-            $companyId = (string)($unit['company_id'] ?? '');
-            $matches = $companyId === (string)$referenceCtrack;
-            
-            if (!$matches) {
-                Log::debug('CTRACK vehicle filtered out', [
-                    'vehicle_name' => $unit['name'] ?? 'N/A',
-                    'vehicle_company_id' => $companyId,
-                    'expected_reference_ctrack' => $referenceCtrack,
-                ]);
-            }
-            
-            return $matches;
-        });
+        if (!is_array($vehicles) || empty($vehicles)) {
+            Log::warning('CTRACK filterCtrackVehicles: no vehicles to filter', [
+                'data_type' => gettype($vehicles),
+                'reference_ctrack' => $referenceCtrack,
+            ]);
+            return [];
+        }
         
-        $filteredCount = count($filteredUnits);
-        Log::info("CTRACK vehicles filtered", [
-            'total_units' => count($units),
-            'filtered_units' => $filteredCount,
+        // Log all unique company_ids for debugging
+        $allCompanyIds = array_unique(array_map(fn($v) => $v['company_id'] ?? 'N/A', $vehicles));
+        
+        Log::info("CTRACK filtering starting", [
+            'total_vehicles' => count($vehicles),
             'reference_ctrack' => $referenceCtrack,
+            'all_company_ids_found' => array_values($allCompanyIds),
         ]);
         
-        // Return in the expected structure
-        return ['data' => ['units' => array_values($filteredUnits)]];
+        // Filter by company_id matching reference_ctrack
+        $filteredVehicles = array_filter($vehicles, function ($vehicle) use ($referenceCtrack) {
+            $companyId = (string)($vehicle['company_id'] ?? '');
+            return $companyId === (string)$referenceCtrack;
+        });
+        
+        $filteredCount = count($filteredVehicles);
+        Log::info("CTRACK filtering complete", [
+            'total_vehicles' => count($vehicles),
+            'filtered_vehicles' => $filteredCount,
+            'reference_ctrack' => $referenceCtrack,
+            'sample_filtered' => $filteredCount > 0 ? [
+                'name' => $filteredVehicles[array_key_first($filteredVehicles)]['name'] ?? 'N/A',
+                'company_id' => $filteredVehicles[array_key_first($filteredVehicles)]['company_id'] ?? 'N/A',
+            ] : null,
+        ]);
+        
+        // Return filtered array directly
+        return array_values($filteredVehicles);
     }
 
     /**
@@ -314,59 +362,32 @@ class VehicleService
      */
     private function ctrackMapper(array $vehicle, int $platformId, string $slug): array
     {
-        // Parse additional_info to get vehicle details
-        $additionalInfo = [];
-        if (isset($vehicle['additional_info'])) {
-            $additionalInfo = is_string($vehicle['additional_info']) 
-                ? json_decode($vehicle['additional_info'], true) ?? []
-                : $vehicle['additional_info'];
-        }
-        
-        // Extract vehicle plate from additional_info.vehicle_info.vehicle_plate
-        $vehiclePlate = $additionalInfo['vehicle_info']['vehicle_plate'] ?? $vehicle['name'] ?? 'N/A';
-        
-        // Extract mileage from efficiency_mileage (primary) or counter_parameters (fallback)
-        $mileage = (int) ($vehicle['efficiency_mileage'] ?? 0);
-        if ($mileage === 0 && isset($additionalInfo['efficiency_parameters']['efficiency_mileage'])) {
-            $mileage = (int) $additionalInfo['efficiency_parameters']['efficiency_mileage'];
-        }
-        
-        // Get vehicle brand and model
-        $brand = $additionalInfo['vehicle_info']['vehicle_brand'] ?? '';
-        $model = $additionalInfo['vehicle_info']['vehicle_model'] ?? '';
-        $vehicleName = trim(($brand ? ucfirst($brand) . ' ' : '') . ($model ? ucfirst($model) : ''));
-        if (empty($vehicleName)) {
-            $vehicleName = $vehicle['name'] ?? 'N/A';
-        }
-        
-        // Determine status: 1 = active, 0 or other = inactive
-        $status = $this->normalizeStatus($vehicle['status'] ?? '0');
-        
-        // Get company name
-        $companyName = $vehicle['company_name'] ?? ($vehicle['users_general']['company_name'] ?? 'N/A');
-        
-        // Get last active timestamp
-        $lastActive = $vehicle['last_active'] ?? 'Unknown';
-        
+        // CTRACK API now returns pre-formatted data with all necessary fields
+        // No need to parse additional_info or device_info anymore
+        Log::debug('CTRACK vehicle data', [
+            'vehicle_id' => $vehicle['id'] ?? 'N/A',
+            'distance' => $vehicle['distance'] ?? 'N/A',
+            'latitude' => $vehicle['latitude'] ?? 'N/A',
+        ]); 
         return [
             'id' => 'ctrack-' . ($vehicle['id'] ?? uniqid()),
             'platform_id' => $platformId,
             'platform_slug' => $slug,
-            'name' => $vehicleName,
-            'plate' => $vehiclePlate,
-            'status' => $status,
-            'distance' => $mileage,
-            'latitude' => 0, // CTRACK doesn't include position in units list
-            'longitude' => 0,
-            'address' => '',
-            'speed' => 0,
-            'lastUpdate' => $this->normalizeDate($vehicle['updated_at'] ?? now()),
-            'last_active' => $lastActive,
-            'active' => $status === 'active',
+            'name' => $vehicle['name'] ?? 'N/A',
+            'plate' => $vehicle['plate'] ?? $vehicle['name'] ?? 'N/A',
+            'status' => $this->normalizeStatus($vehicle['status'] ?? 'unknown'),
+            'distance' => (float) ($vehicle['distance'] ?? 0),
+            'latitude' => (float) ($vehicle['latitude'] ?? 0),
+            'longitude' => (float) ($vehicle['longitude'] ?? 0),
+            'address' => $vehicle['address'] ?? '',
+            'speed' => (int) ($vehicle['speed'] ?? 0),
+            'lastUpdate' => $this->normalizeDate($vehicle['lastUpdate'] ?? now()),
+            'last_active' => $vehicle['last_active'] ?? 'Unknown',
+            'active' => $vehicle['active'] ?? ($this->normalizeStatus($vehicle['status'] ?? 'unknown') === 'active'),
             'device_id' => $vehicle['device_id'] ?? null,
             'uid' => $vehicle['uid'] ?? null,
             'company_id' => $vehicle['company_id'] ?? null,
-            'company_name' => $companyName,
+            'company_name' => $vehicle['company_name'] ?? 'N/A',
             'unit_group_name' => $vehicle['unit_group_name'] ?? null,
             'device' => $vehicle['device'] ?? null,
             'type' => $vehicle['type'] ?? 'vehicle',
