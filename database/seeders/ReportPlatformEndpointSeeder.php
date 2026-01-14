@@ -36,16 +36,30 @@ class ReportPlatformEndpointSeeder extends Seeder
             ]
         );
 
+        // Chercher ou créer la plateforme CTRACK
+        $ctrack = Platform::firstOrCreate(
+            ['slug' => 'ctrack'],
+            [
+                'name' => 'CTRACK',
+                'provider' => 'CTRACK',
+                'is_active' => true,
+            ]
+        );
+
         // Supprimer les endpoints existants pour éviter les doublons
         ReportPlatformEndpoint::where('report_id', $summaryReport->id)
             ->where('platform_id', $targeTelematics->id)
+            ->delete();
+        
+        ReportPlatformEndpoint::where('report_id', $summaryReport->id)
+            ->where('platform_id', $ctrack->id)
             ->delete();
 
         // Configuration des endpoints pour TARGE TELEMATICS
         // Note: Le base URL (https://fleet.securysat.com) sera configuré dans account_platform
         // Note: Les paramètres sessionId, startDate, endDate sont ajoutés automatiquement par ReportDataService
         
-        $endpoints = [
+        $endpointsTarge = [
             [
                 'endpoint_path' => '/json/getEventHistoryReport',
                 'http_method' => 'POST',
@@ -82,7 +96,7 @@ class ReportPlatformEndpointSeeder extends Seeder
             ],
         ];
 
-        foreach ($endpoints as $endpointData) {
+        foreach ($endpointsTarge as $endpointData) {
             ReportPlatformEndpoint::create([
                 'report_id' => $summaryReport->id,
                 'platform_id' => $targeTelematics->id,
@@ -96,13 +110,50 @@ class ReportPlatformEndpointSeeder extends Seeder
             ]);
         }
 
-        $this->command->info('✅ Endpoints configurés pour le Rapport de Synthèse sur TARGE TELEMATICS');
+        // Configuration des endpoints pour CTRACK
+        // Note: Le base URL (https://comafrique-ctrack.online) sera configuré dans account_platform
+        // Note: Les paramètres begin, end sont envoyés en query string (format: d/m/Y)
+        
+        $endpointsCtrack = [
+            [
+                'endpoint_path' => '/api/units/ecoDriving',
+                'http_method' => 'GET',
+                'data_key' => 'eco_driving',
+                'description' => 'Données d\'éco-conduite CTRACK avec violations et métriques de conduite',
+                'order' => 1,
+                'is_required' => true,
+                'additional_params' => json_encode([
+                    // begin et end sont ajoutés en query parameters (format: dd/mm/yyyy)
+                ]),
+            ],
+        ];
+
+        foreach ($endpointsCtrack as $endpointData) {
+            ReportPlatformEndpoint::create([
+                'report_id' => $summaryReport->id,
+                'platform_id' => $ctrack->id,
+                'endpoint_path' => $endpointData['endpoint_path'],
+                'http_method' => $endpointData['http_method'],
+                'data_key' => $endpointData['data_key'],
+                'description' => $endpointData['description'],
+                'order' => $endpointData['order'],
+                'is_required' => $endpointData['is_required'],
+                'additional_params' => $endpointData['additional_params'],
+            ]);
+        }
+
+        $this->command->info('✅ Endpoints configurés pour le Rapport de Synthèse');
+        $this->command->newLine();
+        $this->command->info('📊 TARGE TELEMATICS:');
         $this->command->info('   - getEventHistoryReport (événements)');
         $this->command->info('   - getDailyVehicleEcoSummary (éco-conduite)');
         $this->command->info('   - getStopReport (arrêts)');
         $this->command->newLine();
-        $this->command->warn('⚠️  N\'oubliez pas de configurer l\'URL de base et le token dans account_platform:');
-        $this->command->info('   Base URL: https://fleet.securysat.com');
-        $this->command->info('   Compte: APM (ou autre)');
+        $this->command->info('📊 CTRACK:');
+        $this->command->info('   - /api/units/ecoDriving (éco-conduite)');
+        $this->command->newLine();
+        $this->command->warn('⚠️  N\'oubliez pas de configurer les URLs et tokens dans account_platform:');
+        $this->command->info('   TARGE: https://fleet.securysat.com');
+        $this->command->info('   CTRACK: https://comafrique-ctrack.online');
     }
 }
