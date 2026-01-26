@@ -573,7 +573,7 @@ export default function Dashboard({ eco_data: initialEcoData, event_data: initia
                             Tableau de bord - {auth.user.account_name || auth.user.name}
                         </h1>
                         <p className="text-gray-600 dark:text-gray-400">
-                            Vue d'ensemble des activités de votre flotte
+                            Vue d'ensemble des activités de votre flotte.
                         </p>
                     </div>
                     
