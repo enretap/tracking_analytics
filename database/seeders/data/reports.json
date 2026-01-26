@@ -1,0 +1,128 @@
+[
+    {
+        "id": 1,
+        "name": "Analyse des comportements \u00e0 risques par conducteur",
+        "description": "Rapport d'analyse des comportements \u00e0 risques par conducteur",
+        "type": "driver_eco_driving",
+        "schedule": null,
+        "params": {
+            "date_range": {
+                "from": "2025-12-01",
+                "to": "2025-12-31"
+            },
+            "metrics": [
+                "revenue",
+                "orders"
+            ],
+            "group_by": "day",
+            "filters": {
+                "country": "FR",
+                "status": [
+                    "completed"
+                ]
+            },
+            "format": "csv",
+            "recipients": [
+                "ops@example.com"
+            ]
+        },
+        "created_by": 1,
+        "is_enabled": true,
+        "created_at": "2025-12-17T11:08:17.000000Z",
+        "updated_at": "2025-12-29T17:03:25.000000Z",
+        "platform_endpoints": []
+    },
+    {
+        "id": 5,
+        "name": "Analyse des comportements \u00e0 risques",
+        "description": "Rapport  d'analyse des comportements \u00e0 risques",
+        "type": "eco_driving",
+        "schedule": null,
+        "params": [],
+        "created_by": 1,
+        "is_enabled": true,
+        "created_at": "2025-12-21T11:17:25.000000Z",
+        "updated_at": "2025-12-29T16:12:50.000000Z",
+        "platform_endpoints": []
+    },
+    {
+        "id": 7,
+        "name": "V\u00e9hicules suivis & indicateurs cl\u00e9s",
+        "description": "Rapport de Synth\u00e8se",
+        "type": "summary",
+        "schedule": null,
+        "params": [],
+        "created_by": 1,
+        "is_enabled": true,
+        "created_at": "2025-12-22T11:21:47.000000Z",
+        "updated_at": "2025-12-29T21:54:29.000000Z",
+        "platform_endpoints": []
+    },
+    {
+        "id": 8,
+        "name": "Analyse g\u00e9ospatiale des comportements \u00e0 risques",
+        "description": "Rapport d'analyse g\u00e9ospatiale des comportements \u00e0 risques",
+        "type": "geo_eco_driving",
+        "schedule": null,
+        "params": null,
+        "created_by": 1,
+        "is_enabled": true,
+        "created_at": "2025-12-29T16:14:12.000000Z",
+        "updated_at": "2025-12-29T16:14:12.000000Z",
+        "platform_endpoints": []
+    },
+    {
+        "id": 9,
+        "name": "Rapport de Synth\u00e8se",
+        "description": "Rapport synth\u00e9tique regroupant les \u00e9v\u00e9nements, l'\u00e9co-conduite et les arr\u00eats",
+        "type": "summary",
+        "schedule": null,
+        "params": null,
+        "created_by": null,
+        "is_enabled": true,
+        "created_at": "2026-01-02T09:49:29.000000Z",
+        "updated_at": "2026-01-02T09:49:29.000000Z",
+        "platform_endpoints": [
+            {
+                "platform_id": 1,
+                "endpoint_path": "/api/units/ecoDriving",
+                "http_method": "GET",
+                "data_key": "eco_driving",
+                "additional_params": "[]",
+                "order": 1,
+                "is_required": true,
+                "description": "Donn\u00e9es d'\u00e9co-conduite CTRACK avec violations et m\u00e9triques de conduite"
+            },
+            {
+                "platform_id": 8,
+                "endpoint_path": "/json/getEventHistoryReport",
+                "http_method": "POST",
+                "data_key": "events",
+                "additional_params": "[]",
+                "order": 1,
+                "is_required": true,
+                "description": "Historique des \u00e9v\u00e9nements du v\u00e9hicule (alertes, violations, etc.)"
+            },
+            {
+                "platform_id": 8,
+                "endpoint_path": "/json/getDailyVehicleEcoSummary",
+                "http_method": "POST",
+                "data_key": "eco_summary",
+                "additional_params": "[]",
+                "order": 2,
+                "is_required": true,
+                "description": "R\u00e9sum\u00e9 quotidien de l'\u00e9co-conduite par v\u00e9hicule"
+            },
+            {
+                "platform_id": 8,
+                "endpoint_path": "/json/getStopReport",
+                "http_method": "POST",
+                "data_key": "stops",
+                "additional_params": "{\"min_duration\":300}",
+                "order": 3,
+                "is_required": false,
+                "description": "Rapport des arr\u00eats du v\u00e9hicule avec dur\u00e9e et localisation"
+            }
+        ]
+    }
+]

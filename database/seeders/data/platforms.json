@@ -1,0 +1,32 @@
+[
+    {
+        "id": 1,
+        "name": "CTRACK",
+        "slug": "ctrack",
+        "provider": "Plutus",
+        "config": [],
+        "is_active": true,
+        "created_at": "2025-12-17T13:15:57.000000Z",
+        "updated_at": "2025-12-17T13:15:57.000000Z"
+    },
+    {
+        "id": 2,
+        "name": "TARGA TELEMATICS",
+        "slug": "targa-telematics",
+        "provider": "Targa Telematics",
+        "config": [],
+        "is_active": true,
+        "created_at": "2025-12-17T13:19:42.000000Z",
+        "updated_at": "2025-12-19T14:14:29.000000Z"
+    },
+    {
+        "id": 8,
+        "name": "TARGE TELEMATICS",
+        "slug": "targe-telematics",
+        "provider": "Securysat",
+        "config": null,
+        "is_active": true,
+        "created_at": "2026-01-14T15:57:09.000000Z",
+        "updated_at": "2026-01-14T15:57:09.000000Z"
+    }
+]

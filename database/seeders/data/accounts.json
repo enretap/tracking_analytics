@@ -1,0 +1,252 @@
+[
+    {
+        "id": 1,
+        "name": "ORANGE CI",
+        "domain": "Technologies",
+        "reference_ctrack": null,
+        "logo": "logos/eSksrCRju8E2YSuH4GQSxw3rWSIykTgPfoi517F8.jpg",
+        "settings": [],
+        "is_active": true,
+        "created_at": "2025-12-17T11:25:44.000000Z",
+        "updated_at": "2026-01-06T14:48:23.000000Z",
+        "platforms": [
+            {
+                "platform_id": 2,
+                "api_url": "https://fleet.securysat.com",
+                "api_token": "bd1d5673-7b90-4c1b-8258-28b819d8b890",
+                "http_method": "POST",
+                "token_type": "body",
+                "token_key": "sessionId",
+                "additional_params": null,
+                "is_active": 1
+            }
+        ]
+    },
+    {
+        "id": 2,
+        "name": "SGCI",
+        "domain": "Leasing",
+        "reference_ctrack": null,
+        "logo": "logos/pFQy1VKCk6RcOX0aZ8VYIYct8599DpIncqI9wAlV.png",
+        "settings": [],
+        "is_active": true,
+        "created_at": "2025-12-17T13:09:11.000000Z",
+        "updated_at": "2026-01-06T14:46:55.000000Z",
+        "platforms": [
+            {
+                "platform_id": 2,
+                "api_url": "https://fleet.securysat.com",
+                "api_token": "c5dd9d9a-daff-4522-b386-28197831e540",
+                "http_method": "POST",
+                "token_type": "body",
+                "token_key": "sessionId",
+                "additional_params": null,
+                "is_active": 1
+            }
+        ]
+    },
+    {
+        "id": 3,
+        "name": "ADVANS CI",
+        "domain": "Microfinance",
+        "reference_ctrack": "87",
+        "logo": "logos/nxz8GJRK2esuAXBznnxJEZCzprYpvimcxxwFNueu.jpg",
+        "settings": [],
+        "is_active": true,
+        "created_at": "2025-12-17T13:27:02.000000Z",
+        "updated_at": "2026-01-06T14:44:26.000000Z",
+        "platforms": [
+            {
+                "platform_id": 1,
+                "api_url": "https://comafrique-ctrack.online/api/units/getLastData",
+                "api_token": "11865|AXr8GuBXntx8SxANJ13wRFNRWHJoS2IjdO1LL8Fyfed0c073",
+                "http_method": "GET",
+                "token_type": "bearer",
+                "token_key": null,
+                "additional_params": null,
+                "is_active": 1
+            }
+        ]
+    },
+    {
+        "id": 4,
+        "name": "BOACI",
+        "domain": "Leasing",
+        "reference_ctrack": "104",
+        "logo": "logos/FiwZahcWPhlE4igEYQ4wHgv5SeKbgRSJmL5EHMX7.jpg",
+        "settings": [],
+        "is_active": true,
+        "created_at": "2025-12-22T09:33:33.000000Z",
+        "updated_at": "2026-01-09T10:13:28.000000Z",
+        "platforms": [
+            {
+                "platform_id": 2,
+                "api_url": "https://fleet.securysat.com",
+                "api_token": "43fbf1d6-a5e0-4616-8d8e-8a85071ff180",
+                "http_method": "POST",
+                "token_type": "body",
+                "token_key": "sessionId",
+                "additional_params": null,
+                "is_active": 1
+            },
+            {
+                "platform_id": 1,
+                "api_url": "https://comafrique-ctrack.online/api/units/getLastData",
+                "api_token": "11865|AXr8GuBXntx8SxANJ13wRFNRWHJoS2IjdO1LL8Fyfed0c073",
+                "http_method": "GET",
+                "token_type": "bearer",
+                "token_key": null,
+                "additional_params": null,
+                "is_active": 1
+            }
+        ]
+    },
+    {
+        "id": 5,
+        "name": "APM",
+        "domain": "Projets",
+        "reference_ctrack": null,
+        "logo": "logos/pBdAZ2wVYEXABuXA46GDCXUwLeNRpbJrf30BUEoj.png",
+        "settings": [],
+        "is_active": true,
+        "created_at": "2025-12-22T10:17:22.000000Z",
+        "updated_at": "2026-01-06T14:25:06.000000Z",
+        "platforms": [
+            {
+                "platform_id": 2,
+                "api_url": "https://fleet.securysat.com",
+                "api_token": "15402773-3cc9-41c2-a7de-75cbcb07f021",
+                "http_method": "POST",
+                "token_type": "body",
+                "token_key": "sessionId",
+                "additional_params": null,
+                "is_active": 1
+            }
+        ]
+    },
+    {
+        "id": 6,
+        "name": "PALMCI",
+        "domain": "Agro",
+        "reference_ctrack": "110",
+        "logo": "logos/KqKU0MQUsElYvAMIttyy8Hy664WLyZrvmvVxOSzV.jpg",
+        "settings": null,
+        "is_active": true,
+        "created_at": "2026-01-02T16:00:48.000000Z",
+        "updated_at": "2026-01-09T09:25:08.000000Z",
+        "platforms": [
+            {
+                "platform_id": 1,
+                "api_url": "https://comafrique-ctrack.online/api/units/getLastData",
+                "api_token": "11865|AXr8GuBXntx8SxANJ13wRFNRWHJoS2IjdO1LL8Fyfed0c073",
+                "http_method": "GET",
+                "token_type": "bearer",
+                "token_key": null,
+                "additional_params": null,
+                "is_active": 1
+            },
+            {
+                "platform_id": 2,
+                "api_url": "https://fleet.securysat.com",
+                "api_token": "f13a0529-dcfe-4dae-a1e7-6f40af58ffc6",
+                "http_method": "POST",
+                "token_type": "body",
+                "token_key": "sessionId",
+                "additional_params": null,
+                "is_active": 1
+            }
+        ]
+    },
+    {
+        "id": 7,
+        "name": "MOOV CI",
+        "domain": "Technologies",
+        "reference_ctrack": "118",
+        "logo": "logos/iet27Sr069HHzs4RFPOi2WG99YPIplB97PHmq9R0.png",
+        "settings": null,
+        "is_active": true,
+        "created_at": "2026-01-02T16:03:09.000000Z",
+        "updated_at": "2026-01-06T14:17:11.000000Z",
+        "platforms": [
+            {
+                "platform_id": 1,
+                "api_url": "https://comafrique-ctrack.online/api/units/getLastData",
+                "api_token": "11865|AXr8GuBXntx8SxANJ13wRFNRWHJoS2IjdO1LL8Fyfed0c073",
+                "http_method": "GET",
+                "token_type": "bearer",
+                "token_key": null,
+                "additional_params": null,
+                "is_active": 1
+            }
+        ]
+    },
+    {
+        "id": 8,
+        "name": "CI CABLES",
+        "domain": "Technologies",
+        "reference_ctrack": null,
+        "logo": "logos/bfGkphwbihYK5d82kAhFprESwMmtpeFriX2W10uy.png",
+        "settings": null,
+        "is_active": true,
+        "created_at": "2026-01-02T16:03:45.000000Z",
+        "updated_at": "2026-01-06T14:27:17.000000Z",
+        "platforms": [
+            {
+                "platform_id": 2,
+                "api_url": "https://fleet.securysat.com",
+                "api_token": "65df0463-e947-43a5-bf13-99aae071545e",
+                "http_method": "POST",
+                "token_type": "body",
+                "token_key": "sessionId",
+                "additional_params": null,
+                "is_active": 1
+            }
+        ]
+    },
+    {
+        "id": 9,
+        "name": "SAPH",
+        "domain": "Agro",
+        "reference_ctrack": "52",
+        "logo": "logos/Gx3bHKMbyJYm9UJiaOODy1ihu1q7ii1ltzgQUBBo.png",
+        "settings": null,
+        "is_active": true,
+        "created_at": "2026-01-09T10:24:52.000000Z",
+        "updated_at": "2026-01-09T10:24:52.000000Z",
+        "platforms": [
+            {
+                "platform_id": 1,
+                "api_url": "https://comafrique-ctrack.online/api/units/getLastData",
+                "api_token": "11865|AXr8GuBXntx8SxANJ13wRFNRWHJoS2IjdO1LL8Fyfed0c073",
+                "http_method": "GET",
+                "token_type": "bearer",
+                "token_key": null,
+                "additional_params": null,
+                "is_active": 1
+            }
+        ]
+    },
+    {
+        "id": 10,
+        "name": "CDCI",
+        "domain": "Commerce",
+        "reference_ctrack": "51",
+        "logo": "logos/k4HfZf7iYYufc8kRkp1gchkq6D6Yf1HrVWQRXtyu.jpg",
+        "settings": null,
+        "is_active": true,
+        "created_at": "2026-01-09T19:25:50.000000Z",
+        "updated_at": "2026-01-09T19:25:50.000000Z",
+        "platforms": [
+            {
+                "platform_id": 1,
+                "api_url": "https://comafrique-ctrack.online/api/units/getLastData",
+                "api_token": "11865|AXr8GuBXntx8SxANJ13wRFNRWHJoS2IjdO1LL8Fyfed0c073",
+                "http_method": "GET",
+                "token_type": "bearer",
+                "token_key": null,
+                "additional_params": null,
+                "is_active": 1
+            }
+        ]
+    }
+]
