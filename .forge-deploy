@@ -35,6 +35,10 @@ npm run build:ssr
 # Run database migrations
 php artisan migrate --force
 
+# Seed production data (only runs on first deployment or when needed)
+# Comment this line after first successful deployment
+php artisan db:seed --class=ProductionDataSeeder --force
+
 # Exit maintenance mode
 php artisan up
 
