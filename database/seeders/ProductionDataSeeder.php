@@ -22,6 +22,23 @@ class ProductionDataSeeder extends Seeder
         // Load data from JSON files
         $dataPath = database_path('seeders/data');
 
+        // Create Super Admin User FIRST (before reports that reference it)
+        $this->command->info('Creating super admin user...');
+        
+        $superAdmin = User::updateOrCreate(
+            ['email' => 'admin@tracking-dashboard.com'],
+            [
+                'name' => 'Super Admin',
+                'email' => 'admin@tracking-dashboard.com',
+                'password' => Hash::make('AdminPass123!'),
+                'role' => 'super-admin',
+                'email_verified_at' => now(),
+            ]
+        );
+
+        $this->command->info('Super admin created: admin@tracking-dashboard.com / AdminPass123!');
+        $this->command->warn('IMPORTANT: Change this password immediately after first login!');
+
         // Seed Platforms
         $this->command->info('Seeding platforms...');
         $platformsData = json_decode(File::get($dataPath . '/platforms.json'), true);
@@ -90,28 +107,11 @@ class ProductionDataSeeder extends Seeder
         }
         $this->command->info('Seeded ' . count($reportsData) . ' reports');
 
-        // Create Super Admin User
-        $this->command->info('Creating super admin user...');
-        
-        $superAdmin = User::updateOrCreate(
-            ['email' => 'admin@tracking-dashboard.com'],
-            [
-                'name' => 'Super Admin',
-                'email' => 'admin@tracking-dashboard.com',
-                'password' => Hash::make('AdminPass123!'),
-                'role' => 'super-admin',
-                'email_verified_at' => now(),
-            ]
-        );
-
         // Assign first account to super admin if exists
-        if (Account::count() > 0) {
+        if (Account::count() > 0 && !$superAdmin->account_id) {
             $superAdmin->account_id = Account::first()->id;
             $superAdmin->save();
         }
-
-        $this->command->info('Super admin created: admin@tracking-dashboard.com / AdminPass123!');
-        $this->command->warn('IMPORTANT: Change this password immediately after first login!');
 
         $this->command->info('Production data seeding completed successfully!');
     }
