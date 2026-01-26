@@ -10,52 +10,6 @@ Route::get('/', function () {
     return redirect()->route('login');
 })->name('home');
 
-// Temporary routes for database setup - REMOVE AFTER USE
-Route::get('/setup/check-database', function () {
-    $stats = [
-        'platforms' => \App\Models\Platform::count(),
-        'accounts' => \App\Models\Account::count(),
-        'reports' => \App\Models\Report::count(),
-        'users' => \App\Models\User::count(),
-    ];
-    
-    return response()->json([
-        'message' => 'Database Statistics',
-        'stats' => $stats,
-        'database' => config('database.default'),
-    ]);
-});
-
-Route::get('/setup/run-seeder', function () {
-    try {
-        \Illuminate\Support\Facades\Artisan::call('db:seed', [
-            '--class' => 'ProductionDataSeeder',
-            '--force' => true,
-        ]);
-        
-        $output = \Illuminate\Support\Facades\Artisan::output();
-        
-        return response()->json([
-            'success' => true,
-            'message' => 'Seeder executed successfully',
-            'output' => $output,
-            'stats' => [
-                'platforms' => \App\Models\Platform::count(),
-                'accounts' => \App\Models\Account::count(),
-                'reports' => \App\Models\Report::count(),
-                'users' => \App\Models\User::count(),
-            ],
-        ]);
-    } catch (\Exception $e) {
-        return response()->json([
-            'success' => false,
-            'message' => 'Seeder failed',
-            'error' => $e->getMessage(),
-            'trace' => $e->getTraceAsString(),
-        ], 500);
-    }
-});
-
 // Public invitation routes
 Route::get('/invitation/accept/{token}', [\App\Http\Controllers\Auth\InvitationController::class, 'show'])->name('invitation.show');
 Route::post('/invitation/accept/{token}', [\App\Http\Controllers\Auth\InvitationController::class, 'accept'])->name('invitation.accept');
