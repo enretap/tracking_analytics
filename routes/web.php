@@ -10,6 +10,15 @@ Route::get('/', function () {
     return redirect()->route('login');
 })->name('home');
 
+// Temporary route to clear cache - remove after deployment
+Route::get('/clear-all-cache', function () {
+    \Illuminate\Support\Facades\Artisan::call('view:clear');
+    \Illuminate\Support\Facades\Artisan::call('cache:clear');
+    \Illuminate\Support\Facades\Artisan::call('config:clear');
+    \Illuminate\Support\Facades\Artisan::call('route:clear');
+    return 'All caches cleared successfully!';
+});
+
 // Public invitation routes
 Route::get('/invitation/accept/{token}', [\App\Http\Controllers\Auth\InvitationController::class, 'show'])->name('invitation.show');
 Route::post('/invitation/accept/{token}', [\App\Http\Controllers\Auth\InvitationController::class, 'accept'])->name('invitation.accept');
