@@ -3,18 +3,24 @@
 namespace App\Notifications;
 
 use App\Models\UserInvitation;
+use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
-class UserInvitationNotification extends Notification
+class UserInvitationNotification extends Notification implements ShouldQueue
 {
+    use Queueable;
 
     /**
      * Create a new notification instance.
      */
     public function __construct(
         public UserInvitation $invitation
-    ) {}
+    ) {
+        // Send immediately instead of queuing for now
+        $this->connection = 'sync';
+    }
 
     /**
      * Get the notification's delivery channels.
