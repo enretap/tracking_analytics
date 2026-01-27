@@ -1,10 +1,10 @@
 import { Head, useForm } from '@inertiajs/react';
 import { FormEventHandler } from 'react';
-import AuthLayout from '@/Layouts/AuthLayout';
-import { Button } from '@/Components/ui/button';
-import { Input } from '@/Components/ui/input';
-import { Label } from '@/Components/ui/label';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/Components/ui/card';
+import AuthLayout from '@/layouts/auth-layout';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
 interface AcceptInvitationProps {
     token: string;
@@ -24,17 +24,11 @@ export default function AcceptInvitation({ token, name, email }: AcceptInvitatio
     };
 
     return (
-        <AuthLayout>
+        <AuthLayout title="Bienvenue !" description="Vous avez été invité à rejoindre le Tracking Dashboard">
             <Head title="Accepter l'invitation" />
 
             <Card className="w-full max-w-md">
-                <CardHeader>
-                    <CardTitle>Bienvenue !</CardTitle>
-                    <CardDescription>
-                        Vous avez été invité à rejoindre le Tracking Dashboard
-                    </CardDescription>
-                </CardHeader>
-                <CardContent>
+                <CardContent className="pt-6">
                     <form onSubmit={submit} className="space-y-6">
                         <div className="space-y-2">
                             <Label htmlFor="name">Nom</Label>

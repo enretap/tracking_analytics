@@ -14,7 +14,7 @@ try {
         'email' => 'test@example.com',
         'name' => 'Test User',
         'account_id' => 1, // Utiliser un account_id existant
-        'role' => 'user',
+        'role' => 'agent',
         'token' => Str::random(64),
         'expires_at' => now()->addDays(7),
     ]);
