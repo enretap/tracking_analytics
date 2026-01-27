@@ -19,12 +19,12 @@ class InvitationController extends Controller
             ->firstOrFail();
 
         if ($invitation->isExpired()) {
-            return inertia('auth/invitation-expired', [
+            return inertia('Auth/InvitationExpired', [
                 'email' => $invitation->email,
             ]);
         }
 
-        return inertia('auth/accept-invitation', [
+        return inertia('Auth/AcceptInvitation', [
             'token' => $token,
             'name' => $invitation->name,
             'email' => $invitation->email,
