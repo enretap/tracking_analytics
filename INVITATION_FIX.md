@@ -6,69 +6,92 @@ L'URL `https://tracking-dashboard.on-forge.com/invitation/accept/{token}` affich
 
 ## Causes identifiées
 
-1. **Pages Inertia manquantes** ❌
-   - `Auth/AcceptInvitation.tsx` n'existait pas
-   - `Auth/InvitationExpired.tsx` n'existait pas
-   - `AuthLayout.tsx` n'existait pas
+### 1ère tentative - Pages manquantes ❌
+- `Auth/AcceptInvitation.tsx` n'existait pas
+- `Auth/InvitationExpired.tsx` n'existait pas  
+- `AuthLayout.tsx` n'existait pas
 
-2. **Chemins Inertia incorrects** ❌
-   - Le contrôleur utilisait `'auth/accept-invitation'` au lieu de `'Auth/AcceptInvitation'`
-   - Le contrôleur utilisait `'auth/invitation-expired'` au lieu de `'Auth/InvitationExpired'`
+### 2ème tentative - Problème de casse ✅
+**Erreur Vite** : `Unable to locate file in Vite manifest: resources/js/Pages/auth/accept-invitation.tsx`
 
-3. **Bug potentiel dans UserInvitation** ❌
-   - La méthode `isExpired()` appelait `$this->expires_at->isPast()` sans vérifier si `expires_at` est null
-   - Cela causait une erreur si le champ était null
+Le projet utilise la convention **kebab-case** (`login.tsx`, `forgot-password.tsx`) pour les pages, mais j'avais créé les fichiers en **PascalCase** (`AcceptInvitation.tsx`, `InvitationExpired.tsx`).
+
+### Bug potentiel ✅
+- La méthode `isExpired()` appelait `$this->expires_at->isPast()` sans vérifier si `expires_at` est null
 
 ## Solutions appliquées
 
-### 1. Création des pages Inertia ✅
+### 1. Noms de fichiers corrigés ✅
 
-#### [AcceptInvitation.tsx](resources/js/Pages/auth/AcceptInvitation.tsx)
-- Formulaire d'acceptation d'invitation
-- Champs : nom (désactivé), email (désactivé), mot de passe, confirmation
-- Validation côté client et serveur
-- Design cohérent avec le reste de l'application
+```
+resources/js/Pages/auth/
+├── accept-invitation.tsx  ✅ (était AcceptInvitation.tsx)
+└── invitation-expired.tsx ✅ (était InvitationExpired.tsx)
+```
 
-#### [InvitationExpired.tsx](resources/js/Pages/auth/InvitationExpired.tsx)
-- Page d'information pour les invitations expirées
-- Affiche l'email concerné
-- Lien de retour vers la page de connexion
-- Message explicatif pour l'utilisateur
+### 2. Imports corrigés ✅
 
-#### [AuthLayout.tsx](resources/js/layouts/AuthLayout.tsx)
-- Layout simple pour les pages d'authentification
-- Logo et titre de l'application
-- Design centré et responsive
+```tsx
+// Avant
+import AuthLayout from '@/Layouts/AuthLayout';
+import { Button } from '@/Components/ui/button';
 
-### 2. Correction du contrôleur ✅
+// Après
+import AuthLayout from '@/layouts/auth-layout';
+import { Button } from '@/components/ui/button';
+```
+
+### 3. Layout unifié ✅
+
+Utilisation du `auth-layout.tsx` existant avec les props `title` et `description` :
+
+```tsx
+<AuthLayout 
+    title="Bienvenue !" 
+    description="Vous avez été invité à rejoindre le Tracking Dashboard"
+>
+    {/* contenu */}
+</AuthLayout>
+```
+
+### 4. Contrôleur corrigé ✅
 
 [InvitationController.php](app/Http/Controllers/Auth/InvitationController.php) :
 ```php
-// Avant
+// Chemins Inertia en kebab-case
 return inertia('auth/accept-invitation', [...]);
 return inertia('auth/invitation-expired', [...]);
-
-// Après
-return inertia('Auth/AcceptInvitation', [...]);
-return inertia('Auth/InvitationExpired', [...]);
 ```
 
-### 3. Correction du modèle ✅
+### 5. Bug null corrigé ✅
 
 [UserInvitation.php](app/Models/UserInvitation.php) :
 ```php
-// Avant
-public function isExpired(): bool
-{
-    return $this->expires_at->isPast();
-}
-
-// Après
 public function isExpired(): bool
 {
     return $this->expires_at !== null && $this->expires_at->isPast();
 }
 ```
+
+## Déploiement
+
+✅ **1er commit** : `45f66cb - Fix: Add missing invitation pages and fix 500 error on accept invitation`  
+✅ **2ème commit** : `124d186 - Fix: Use kebab-case for invitation page filenames to match project convention`  
+✅ Push vers GitHub : branche `master`  
+⏳ Déploiement automatique en cours sur Forge
+
+## Convention de nommage du projet
+
+Le projet utilise des conventions de nommage strictes :
+
+| Type | Convention | Exemples |
+|------|-----------|----------|
+| Pages Inertia | kebab-case | `login.tsx`, `forgot-password.tsx`, `accept-invitation.tsx` |
+| Composants React | PascalCase | `Button.tsx`, `Card.tsx`, `AuthLayout.tsx` |
+| Layouts | kebab-case | `app-layout.tsx`, `auth-layout.tsx` |
+| Dossiers | kebab-case/lowercase | `auth/`, `components/`, `layouts/` |
+| Imports components | @/components | `@/components/ui/button` |
+| Imports layouts | @/layouts | `@/layouts/auth-layout` |
 
 ## Déploiement
 
