@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { accept } from '@/routes/invitation';
 
 interface AcceptInvitationProps {
     token: string;
@@ -20,7 +21,7 @@ export default function AcceptInvitation({ token, name, email }: AcceptInvitatio
 
     const submit: FormEventHandler = (e) => {
         e.preventDefault();
-        post(route('invitation.accept', { token }));
+        post(accept.url(token));
     };
 
     return (

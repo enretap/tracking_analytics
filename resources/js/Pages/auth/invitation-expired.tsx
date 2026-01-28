@@ -35,7 +35,7 @@ export default function InvitationExpired({ email }: InvitationExpiredProps) {
                     </div>
 
                     <Button asChild className="w-full">
-                        <Link href={route('login')}>
+                        <Link href="/login">
                             Retour à la connexion
                         </Link>
                     </Button>
