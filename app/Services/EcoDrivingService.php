@@ -24,7 +24,6 @@ class EcoDrivingService
             // Get TARGA TELEMATICS platform configuration
             $platform = $account->platforms()
                 ->where('name', 'TARGA TELEMATICS')
-                ->orWhere('base_api_url', 'LIKE', '%fleet.securysat.com%')
                 ->first();
 
             if (!$platform) {
