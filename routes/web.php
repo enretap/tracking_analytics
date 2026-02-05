@@ -287,9 +287,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
                 // Utiliser le vrai service EcoDrivingService au lieu de données factices
                 $ecoDrivingService = app(\App\Services\EcoDrivingService::class);
                 
-                // Récupérer les dates depuis la requête ou utiliser les valeurs par défaut
-                $startDate = request('start_date', '2025-12-01');
-                $endDate = request('end_date', '2025-12-31');
+                // Récupérer les dates depuis la requête ou utiliser les valeurs par défaut (30 derniers jours)
+                $defaultEndDate = now()->format('Y-m-d');
+                $defaultStartDate = now()->subDays(30)->format('Y-m-d');
+                $startDate = request('start_date', $defaultStartDate);
+                $endDate = request('end_date', $defaultEndDate);
                 $forceRefresh = request('force_refresh', false);
                 
                 // Vider le cache si demandé
@@ -308,9 +310,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
                 $ecoDrivingService = app(\App\Services\EcoDrivingService::class);
                 $eventHistoryService = app(\App\Services\EventHistoryService::class);
                 
-                // Récupérer les dates depuis la requête ou utiliser les valeurs par défaut
-                $startDate = request('start_date', '2025-12-01');
-                $endDate = request('end_date', '2025-12-31');
+                // Récupérer les dates depuis la requête ou utiliser les valeurs par défaut (30 derniers jours)
+                $defaultEndDate = now()->format('Y-m-d');
+                $defaultStartDate = now()->subDays(30)->format('Y-m-d');
+                $startDate = request('start_date', $defaultStartDate);
+                $endDate = request('end_date', $defaultEndDate);
                 $forceRefresh = request('force_refresh', false);
                 
                 // Vider le cache si demandé
