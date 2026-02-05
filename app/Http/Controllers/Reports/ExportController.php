@@ -142,12 +142,15 @@ class ExportController extends Controller
             return response()->json(['error' => 'Report not found'], 404);
         }
 
+        // Récupérer les données du rapport comme dans la route detail
+        $reportData = $this->getReportData($report, $user);
+
         // Générer le HTML du rapport pour le PDF
-        $html = $this->generateReportHtml($report);
+        $html = $this->generateReportHtml($report, $reportData);
 
         $dompdf = new Dompdf();
         $dompdf->loadHtml($html);
-        $dompdf->setPaper('A4', 'portrait');
+        $dompdf->setPaper('A4', 'landscape');
         $dompdf->render();
         $output = $dompdf->output();
         
@@ -180,12 +183,15 @@ class ExportController extends Controller
         }
 
         try {
+            // Récupérer les données du rapport
+            $reportData = $this->getReportData($report, $user);
+            
             // Générer le PDF du rapport
-            $html = $this->generateReportHtml($report);
+            $html = $this->generateReportHtml($report, $reportData);
             
             $dompdf = new Dompdf();
             $dompdf->loadHtml($html);
-            $dompdf->setPaper('A4', 'portrait');
+            $dompdf->setPaper('A4', 'landscape');
             $dompdf->render();
             $pdfContent = base64_encode($dompdf->output());
             
@@ -213,46 +219,248 @@ class ExportController extends Controller
     }
 
     /**
+     * Get report data based on report type
+     */
+    private function getReportData($report, $user)
+    {
+        $defaultEndDate = now()->format('Y-m-d');
+        $defaultStartDate = now()->subDays(30)->format('Y-m-d');
+        $startDate = request('start_date', $defaultStartDate);
+        $endDate = request('end_date', $defaultEndDate);
+        
+        $data = [];
+        
+        switch ($report->type) {
+            case 'eco_driving':
+            case 'driver_eco_driving':
+            case 'summary':
+                $ecoDrivingService = app(\App\Services\EcoDrivingService::class);
+                $data = $ecoDrivingService->fetchEcoDrivingData($user->account, $startDate, $endDate);
+                $data['period_start'] = $data['period_start'] ?? $startDate;
+                $data['period_end'] = $data['period_end'] ?? $endDate;
+                break;
+            
+            case 'geo_eco_driving':
+                $ecoDrivingService = app(\App\Services\EcoDrivingService::class);
+                $eventHistoryService = app(\App\Services\EventHistoryService::class);
+                $ecoData = $ecoDrivingService->fetchEcoDrivingData($user->account, $startDate, $endDate);
+                $eventData = $eventHistoryService->fetchEventHistoryData($user->account, $startDate, $endDate);
+                $data = $eventData;
+                $data['eco_data'] = $ecoData;
+                $data['period_start'] = $startDate;
+                $data['period_end'] = $endDate;
+                break;
+                
+            default:
+                $data['period_start'] = $startDate;
+                $data['period_end'] = $endDate;
+        }
+        
+        return $data;
+    }
+
+    /**
      * Generate HTML for a report
      */
-    private function generateReportHtml($report)
+    private function generateReportHtml($report, $data)
     {
         $html = '<!DOCTYPE html>';
         $html .= '<html><head>';
         $html .= '<meta charset="UTF-8">';
         $html .= '<style>';
-        $html .= 'body { font-family: Arial, sans-serif; padding: 20px; }';
-        $html .= 'h1 { color: #1e3a5f; border-bottom: 3px solid #1e3a5f; padding-bottom: 10px; }';
-        $html .= 'h2 { color: #3b5998; margin-top: 20px; }';
-        $html .= 'table { width: 100%; border-collapse: collapse; margin: 20px 0; }';
-        $html .= 'th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }';
-        $html .= 'th { background-color: #1e3a5f; color: white; }';
-        $html .= 'tr:nth-child(even) { background-color: #f2f2f2; }';
-        $html .= '.header { text-align: center; margin-bottom: 30px; }';
-        $html .= '.footer { text-align: center; margin-top: 30px; font-size: 12px; color: #666; }';
+        $html .= 'body { font-family: Arial, sans-serif; padding: 15px; font-size: 11px; }';
+        $html .= 'h1 { color: #1e3a5f; border-bottom: 3px solid #1e3a5f; padding-bottom: 10px; font-size: 20px; margin: 0 0 15px 0; }';
+        $html .= 'h2 { color: #3b5998; margin-top: 20px; font-size: 16px; margin-bottom: 10px; border-bottom: 2px solid #3b5998; padding-bottom: 5px; }';
+        $html .= 'h3 { color: #1e3a5f; font-size: 13px; margin: 15px 0 8px 0; }';
+        $html .= 'table { width: 100%; border-collapse: collapse; margin: 10px 0; font-size: 10px; }';
+        $html .= 'th, td { border: 1px solid #ddd; padding: 6px; text-align: left; }';
+        $html .= 'th { background-color: #1e3a5f; color: white; font-weight: bold; }';
+        $html .= 'tr:nth-child(even) { background-color: #f9f9f9; }';
+        $html .= '.header { text-align: center; margin-bottom: 20px; border-bottom: 3px solid #1e3a5f; padding-bottom: 15px; }';
+        $html .= '.footer { text-align: center; margin-top: 20px; font-size: 9px; color: #666; border-top: 1px solid #ddd; padding-top: 10px; }';
+        $html .= '.card { background: #f8f9fa; border: 1px solid #ddd; border-radius: 4px; padding: 12px; margin: 10px 0; page-break-inside: avoid; }';
+        $html .= '.card-title { font-size: 13px; font-weight: bold; color: #1e3a5f; margin-bottom: 8px; }';
+        $html .= '.metrics-grid { display: table; width: 100%; margin: 10px 0; }';
+        $html .= '.metric-row { display: table-row; }';
+        $html .= '.metric-cell { display: table-cell; width: 25%; padding: 8px; background: white; border: 1px solid #e0e0e0; margin: 2px; }';
+        $html .= '.metric-label { font-size: 9px; color: #666; text-transform: uppercase; }';
+        $html .= '.metric-value { font-size: 18px; font-weight: bold; color: #1e3a5f; }';
+        $html .= '.metric-unit { font-size: 10px; color: #888; }';
         $html .= '</style>';
         $html .= '</head><body>';
         
+        // En-tête
         $html .= '<div class="header">';
         $html .= '<h1>' . htmlspecialchars($report->name) . '</h1>';
         if ($report->description) {
-            $html .= '<p>' . htmlspecialchars($report->description) . '</p>';
+            $html .= '<p style="margin: 5px 0;">' . htmlspecialchars($report->description) . '</p>';
         }
-        $html .= '<p>Généré le ' . now()->format('d/m/Y à H:i') . '</p>';
+        if (isset($data['period_start']) && isset($data['period_end'])) {
+            $html .= '<p style="margin: 5px 0;"><strong>Période:</strong> ' . 
+                     date('d/m/Y', strtotime($data['period_start'])) . ' - ' . 
+                     date('d/m/Y', strtotime($data['period_end'])) . '</p>';
+        }
+        $html .= '<p style="margin: 5px 0; font-size: 10px;">Généré le ' . now()->format('d/m/Y à H:i') . '</p>';
         $html .= '</div>';
         
-        $html .= '<h2>Informations du rapport</h2>';
-        $html .= '<table>';
-        $html .= '<tr><th>Type</th><td>' . htmlspecialchars($report->type ?? 'N/A') . '</td></tr>';
-        $html .= '<tr><th>Date de création</th><td>' . $report->created_at->format('d/m/Y') . '</td></tr>';
-        $html .= '</table>';
+        // Contenu selon le type de rapport
+        $html .= $this->generateReportContent($report->type, $data);
         
+        // Pied de page
         $html .= '<div class="footer">';
-        $html .= '<p>Document confidentiel - ' . config('app.name') . '</p>';
+        $html .= '<p>Document confidentiel - ' . config('app.name') . ' - © ' . date('Y') . '</p>';
         $html .= '</div>';
         
         $html .= '</body></html>';
         
+        return $html;
+    }
+    
+    /**
+     * Generate report content based on type
+     */
+    private function generateReportContent($type, $data)
+    {
+        $html = '';
+        
+        switch ($type) {
+            case 'eco_driving':
+            case 'driver_eco_driving':
+                $html .= $this->generateEcoDrivingContent($data);
+                break;
+            case 'geo_eco_driving':
+                $html .= $this->generateGeoEcoDrivingContent($data);
+                break;
+            default:
+                $html .= $this->generateDefaultContent($data);
+        }
+        
+        return $html;
+    }
+    
+    /**
+     * Generate eco driving content
+     */
+    private function generateEcoDrivingContent($data)
+    {
+        $html = '<h2>Analyse Éco-conduite</h2>';
+        
+        // Métriques clés
+        $html .= '<div class="metrics-grid">';
+        $html .= '<div class="metric-row">';
+        
+        if (isset($data['vehicle_details'])) {
+            $totalDistance = array_sum(array_column($data['vehicle_details'], 'distance'));
+            $html .= '<div class="metric-cell">';
+            $html .= '<div class="metric-label">Distance totale</div>';
+            $html .= '<div class="metric-value">' . number_format($totalDistance, 0) . '</div>';
+            $html .= '<div class="metric-unit">km parcourus</div>';
+            $html .= '</div>';
+            
+            $totalViolations = array_sum(array_column($data['vehicle_details'], 'total_violations'));
+            $html .= '<div class="metric-cell">';
+            $html .= '<div class="metric-label">Évènements totaux</div>';
+            $html .= '<div class="metric-value">' . number_format($totalViolations, 0) . '</div>';
+            $html .= '<div class="metric-unit">Infractions détectées</div>';
+            $html .= '</div>';
+        }
+        
+        $html .= '</div></div>';
+        
+        // Tableau des détails par véhicule
+        if (isset($data['vehicle_details']) && count($data['vehicle_details']) > 0) {
+            $html .= '<h3>Détails par véhicule et conducteur</h3>';
+            $html .= '<table>';
+            $html .= '<thead><tr>';
+            $html .= '<th>Immatriculation</th>';
+            $html .= '<th>Conducteur</th>';
+            $html .= '<th>Distance (km)</th>';
+            $html .= '<th>Temps conduite</th>';
+            $html .= '<th>Freinages brusques</th>';
+            $html .= '<th>Accélérations brusques</th>';
+            $html .= '<th>Virages dangereux</th>';
+            $html .= '<th>Violations vitesse</th>';
+            $html .= '<th>Total violations</th>';
+            $html .= '</tr></thead><tbody>';
+            
+            foreach ($data['vehicle_details'] as $vehicle) {
+                $html .= '<tr>';
+                $html .= '<td>' . htmlspecialchars($vehicle['immatriculation'] ?? 'N/A') . '</td>';
+                $html .= '<td>' . htmlspecialchars($vehicle['driver'] ?? 'N/A') . '</td>';
+                $html .= '<td>' . number_format($vehicle['distance'] ?? 0, 2) . '</td>';
+                $html .= '<td>' . htmlspecialchars($vehicle['driving_time'] ?? 'N/A') . '</td>';
+                $html .= '<td>' . ($vehicle['harsh_braking'] ?? 0) . '</td>';
+                $html .= '<td>' . ($vehicle['harsh_acceleration'] ?? 0) . '</td>';
+                $html .= '<td>' . ($vehicle['dangerous_turns'] ?? 0) . '</td>';
+                $html .= '<td>' . ($vehicle['speed_violations'] ?? 0) . '</td>';
+                $html .= '<td><strong>' . ($vehicle['total_violations'] ?? 0) . '</strong></td>';
+                $html .= '</tr>';
+            }
+            
+            $html .= '</tbody></table>';
+        }
+        
+        return $html;
+    }
+    
+    /**
+     * Generate geo eco driving content
+     */
+    private function generateGeoEcoDrivingContent($data)
+    {
+        $html = '<h2>Analyse Géospatiale des Comportements</h2>';
+        
+        if (isset($data['stats'])) {
+            $html .= '<div class="card">';
+            $html .= '<div class="card-title">Statistiques des Événements</div>';
+            $html .= '<table>';
+            $html .= '<tr><th>Total événements</th><td>' . ($data['stats']['total_events'] ?? 0) . '</td></tr>';
+            $html .= '<tr><th>Véhicules uniques</th><td>' . ($data['stats']['unique_vehicles'] ?? 0) . '</td></tr>';
+            $html .= '</table>';
+            $html .= '</div>';
+        }
+        
+        if (isset($data['events']) && count($data['events']) > 0) {
+            $html .= '<h3>Liste des Événements</h3>';
+            $html .= '<table>';
+            $html .= '<thead><tr>';
+            $html .= '<th>Date/Heure</th>';
+            $html .= '<th>Véhicule</th>';
+            $html .= '<th>Conducteur</th>';
+            $html .= '<th>Type d\'événement</th>';
+            $html .= '<th>Vitesse</th>';
+            $html .= '<th>Adresse</th>';
+            $html .= '</tr></thead><tbody>';
+            
+            foreach (array_slice($data['events'], 0, 50) as $event) {
+                $html .= '<tr>';
+                $html .= '<td>' . date('d/m/Y H:i', strtotime($event['event_time'] ?? now())) . '</td>';
+                $html .= '<td>' . htmlspecialchars($event['plate_number'] ?? 'N/A') . '</td>';
+                $html .= '<td>' . htmlspecialchars($event['driver'] ?? 'N/A') . '</td>';
+                $html .= '<td>' . htmlspecialchars($event['event_name'] ?? 'N/A') . '</td>';
+                $html .= '<td>' . ($event['speed'] ?? 0) . ' km/h</td>';
+                $html .= '<td>' . htmlspecialchars($event['address'] ?? 'N/A') . '</td>';
+                $html .= '</tr>';
+            }
+            
+            $html .= '</tbody></table>';
+            if (count($data['events']) > 50) {
+                $html .= '<p style="font-style: italic; color: #666;">Affichage limité aux 50 premiers événements sur ' . count($data['events']) . ' au total.</p>';
+            }
+        }
+        
+        return $html;
+    }
+    
+    /**
+     * Generate default content
+     */
+    private function generateDefaultContent($data)
+    {
+        $html = '<h2>Données du rapport</h2>';
+        $html .= '<div class="card">';
+        $html .= '<p>Type de rapport : ' . htmlspecialchars($data['type'] ?? 'Non spécifié') . '</p>';
+        $html .= '</div>';
         return $html;
     }
 }
