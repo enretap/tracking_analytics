@@ -241,51 +241,97 @@ class ExportController extends Controller
         $html .= '<meta name="viewport" content="width=device-width, initial-scale=1.0">';
         $html .= '<style>';
         
-        // Styles de base
+        // Reset et base
         $html .= '* { margin: 0; padding: 0; box-sizing: border-box; }';
-        $html .= 'body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; font-size: 11px; line-height: 1.5; color: #1f2937; background: #f9fafb; padding: 15px; }';
+        $html .= 'body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; font-size: 10px; line-height: 1.4; color: #1f2937; background: #ffffff; padding: 10px; }';
         
-        // Layout
+        // Spacing utilities
+        $html .= '.space-y-1 > * + * { margin-top: 0.25rem; }';
+        $html .= '.space-y-2 > * + * { margin-top: 0.5rem; }';
+        $html .= '.space-y-3 > * + * { margin-top: 0.75rem; }';
+        $html .= '.space-y-4 > * + * { margin-top: 1rem; }';
         $html .= '.space-y-5 > * + * { margin-top: 1.25rem; }';
         $html .= '.space-y-6 > * + * { margin-top: 1.5rem; }';
-        $html .= '.space-y-4 > * + * { margin-top: 1rem; }';
-        $html .= '.space-y-3 > * + * { margin-top: 0.75rem; }';
-        $html .= '.space-y-2 > * + * { margin-top: 0.5rem; }';
+        $html .= '.gap-1 { gap: 0.25rem; }';
+        $html .= '.gap-2 { gap: 0.5rem; }';
+        $html .= '.gap-3 { gap: 0.75rem; }';
         $html .= '.gap-4 { gap: 1rem; }';
         $html .= '.gap-6 { gap: 1.5rem; }';
+        
+        // Padding
+        $html .= '.p-1 { padding: 0.25rem; }';
+        $html .= '.p-2 { padding: 0.5rem; }';
         $html .= '.p-3 { padding: 0.75rem; }';
         $html .= '.p-4 { padding: 1rem; }';
         $html .= '.p-6 { padding: 1.5rem; }';
+        $html .= '.p-8 { padding: 2rem; }';
+        $html .= '.px-2 { padding-left: 0.5rem; padding-right: 0.5rem; }';
+        $html .= '.px-4 { padding-left: 1rem; padding-right: 1rem; }';
+        $html .= '.py-2 { padding-top: 0.5rem; padding-bottom: 0.5rem; }';
+        $html .= '.py-4 { padding-top: 1rem; padding-bottom: 1rem; }';
+        $html .= '.py-8 { padding-top: 2rem; padding-bottom: 2rem; }';
         $html .= '.pb-3 { padding-bottom: 0.75rem; }';
+        $html .= '.pt-4 { padding-top: 1rem; }';
         
-        // Grid
+        // Margin
+        $html .= '.m-0 { margin: 0; }';
+        $html .= '.mb-1 { margin-bottom: 0.25rem; }';
+        $html .= '.mb-2 { margin-bottom: 0.5rem; }';
+        $html .= '.mb-6 { margin-bottom: 1.5rem; }';
+        $html .= '.mt-1 { margin-top: 0.25rem; }';
+        $html .= '.mt-2 { margin-top: 0.5rem; }';
+        
+        // Grid system
         $html .= '.grid { display: grid; }';
         $html .= '.grid-cols-1 { grid-template-columns: repeat(1, minmax(0, 1fr)); }';
         $html .= '.grid-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }';
         $html .= '.grid-cols-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }';
-        $html .= '@media (min-width: 768px) { .md\\:grid-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); } }';
-        $html .= '@media (min-width: 768px) { .md\\:grid-cols-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); } }';
-        $html .= '@media (min-width: 768px) { .md\\:col-span-2 { grid-column: span 2 / span 2; } }';
+        $html .= '.md\\:grid-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }';
+        $html .= '.md\\:grid-cols-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }';
+        $html .= '.md\\:col-span-2 { grid-column: span 2 / span 2; }';
         
-        // Card styles
-        $html .= '.shadow-lg { box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05); }';
-        $html .= '.shadow-md { box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); }';
-        $html .= '.rounded-xl { border-radius: 0.75rem; }';
-        $html .= '.rounded-lg { border-radius: 0.5rem; }';
-        $html .= '.rounded { border-radius: 0.25rem; }';
-        $html .= '.border-0 { border-width: 0; }';
-        $html .= '.overflow-hidden { overflow: hidden; }';
+        // Flex
+        $html .= '.flex { display: flex; }';
+        $html .= '.flex-1 { flex: 1 1 0%; }';
+        $html .= '.flex-col { flex-direction: column; }';
+        $html .= '.flex-shrink-0 { flex-shrink: 0; }';
+        $html .= '.items-center { align-items: center; }';
+        $html .= '.items-start { align-items: flex-start; }';
+        $html .= '.items-end { align-items: flex-end; }';
+        $html .= '.justify-between { justify-content: space-between; }';
+        $html .= '.justify-center { justify-content: center; }';
+        $html .= '.justify-around { justify-content: space-around; }';
         
         // Backgrounds
         $html .= '.bg-white { background-color: #ffffff; }';
         $html .= '.bg-gray-50 { background-color: #f9fafb; }';
         $html .= '.bg-gray-100 { background-color: #f3f4f6; }';
         $html .= '.bg-gray-200 { background-color: #e5e7eb; }';
-        $html .= '.bg-gradient-to-br { background-image: linear-gradient(to bottom right, var(--tw-gradient-stops)); }';
-        $html .= '.from-gray-50 { --tw-gradient-from: #f9fafb; --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to, rgba(249, 250, 251, 0)); }';
-        $html .= '.to-gray-100 { --tw-gradient-to: #f3f4f6; }';
+        $html .= '.bg-gray-500 { background-color: #6b7280; }';
+        $html .= '.bg-gray-800 { background-color: #1f2937; }';
         
-        // Text
+        // Borders
+        $html .= '.border { border-width: 1px; }';
+        $html .= '.border-0 { border-width: 0; }';
+        $html .= '.border-b { border-bottom-width: 1px; }';
+        $html .= '.border-gray-200 { border-color: #e5e7eb; }';
+        $html .= '.border-dashed { border-style: dashed; }';
+        
+        // Border radius
+        $html .= '.rounded { border-radius: 0.25rem; }';
+        $html .= '.rounded-sm { border-radius: 0.125rem; }';
+        $html .= '.rounded-lg { border-radius: 0.5rem; }';
+        $html .= '.rounded-xl { border-radius: 0.75rem; }';
+        $html .= '.rounded-t { border-top-left-radius: 0.25rem; border-top-right-radius: 0.25rem; }';
+        $html .= '.rounded-full { border-radius: 9999px; }';
+        
+        // Shadows
+        $html .= '.shadow-sm { box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); }';
+        $html .= '.shadow { box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06); }';
+        $html .= '.shadow-md { box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); }';
+        $html .= '.shadow-lg { box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05); }';
+        
+        // Text sizes
         $html .= '.text-xs { font-size: 0.75rem; line-height: 1rem; }';
         $html .= '.text-sm { font-size: 0.875rem; line-height: 1.25rem; }';
         $html .= '.text-base { font-size: 1rem; line-height: 1.5rem; }';
@@ -293,58 +339,89 @@ class ExportController extends Controller
         $html .= '.text-xl { font-size: 1.25rem; line-height: 1.75rem; }';
         $html .= '.text-2xl { font-size: 1.5rem; line-height: 2rem; }';
         $html .= '.text-3xl { font-size: 1.875rem; line-height: 2.25rem; }';
+        
+        // Font weights
+        $html .= '.font-normal { font-weight: 400; }';
         $html .= '.font-medium { font-weight: 500; }';
         $html .= '.font-semibold { font-weight: 600; }';
         $html .= '.font-bold { font-weight: 700; }';
+        
+        // Text colors
+        $html .= '.text-white { color: #ffffff; }';
         $html .= '.text-gray-500 { color: #6b7280; }';
         $html .= '.text-gray-600 { color: #4b5563; }';
         $html .= '.text-gray-700 { color: #374151; }';
         $html .= '.text-gray-800 { color: #1f2937; }';
-        $html .= '.text-white { color: #ffffff; }';
-        $html .= '.uppercase { text-transform: uppercase; }';
-        $html .= '.text-center { text-align: center; }';
+        $html .= '.text-gray-900 { color: #111827; }';
+        $html .= '.text-red-500 { color: #ef4444; }';
+        $html .= '.text-blue-600 { color: #2563eb; }';
         
-        // Flex
-        $html .= '.flex { display: flex; }';
-        $html .= '.flex-col { flex-direction: column; }';
-        $html .= '.items-center { align-items: center; }';
-        $html .= '.items-start { align-items: flex-start; }';
-        $html .= '.justify-between { justify-content: space-between; }';
-        $html .= '.justify-center { justify-content: center; }';
-        $html .= '.justify-around { justify-content: space-around; }';
+        // Text utilities
+        $html .= '.text-center { text-align: center; }';
+        $html .= '.text-right { text-align: right; }';
+        $html .= '.uppercase { text-transform: uppercase; }';
+        $html .= '.tracking-wide { letter-spacing: 0.025em; }';
+        $html .= '.truncate { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }';
+        
+        // Width & Height
+        $html .= '.w-full { width: 100%; }';
+        $html .= '.w-3 { width: 0.75rem; }';
+        $html .= '.w-8 { width: 2rem; }';
+        $html .= '.w-64 { width: 16rem; }';
+        $html .= '.h-3 { height: 0.75rem; }';
+        $html .= '.h-5 { height: 1.25rem; }';
+        $html .= '.h-56 { height: 14rem; }';
+        $html .= '.h-64 { height: 16rem; }';
+        $html .= '.min-h-\\[4px\\] { min-height: 4px; }';
+        $html .= '.min-h-\\[6px\\] { min-height: 6px; }';
         
         // Position
         $html .= '.relative { position: relative; }';
         $html .= '.absolute { position: absolute; }';
+        $html .= '.inset-0 { top: 0; right: 0; bottom: 0; left: 0; }';
+        
+        // Display
+        $html .= '.block { display: block; }';
+        $html .= '.inline-block { display: inline-block; }';
+        $html .= '.hidden { display: none; }';
+        
+        // Overflow
+        $html .= '.overflow-hidden { overflow: hidden; }';
+        
+        // Opacity
+        $html .= '.opacity-90 { opacity: 0.9; }';
         
         // Images
         $html .= 'img { max-width: 100%; height: auto; display: block; }';
         
-        // Width & Height
-        $html .= '.w-full { width: 100%; }';
-        $html .= '.h-full { height: 100%; }';
-        $html .= '.min-h-screen { min-height: 100vh; }';
+        // Custom card styles pour les rapports
+        $html .= '.group { position: relative; }';
+        $html .= 'table { border-collapse: collapse; width: 100%; }';
+        $html .= 'th, td { padding: 0.5rem; text-align: left; border: 1px solid #e5e7eb; }';
+        $html .= 'th { background-color: #f9fafb; font-weight: 600; }';
         
         $html .= '</style>';
-        $html .= '</head><body>';
+        $html .= '</head><body style="background: #f9fafb; padding: 10px;">';
         
         // En-tête du document
-        $html .= '<div style="text-align: center; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 3px solid #1e3a5f;">';
-        $html .= '<h1 style="color: #1e3a5f; font-size: 24px; font-weight: bold; margin-bottom: 10px;">' . htmlspecialchars($reportName) . '</h1>';
+        $html .= '<div style="text-align: center; margin-bottom: 15px; padding: 12px; background: white; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">';
+        $html .= '<h1 style="color: #1e3a5f; font-size: 18px; font-weight: bold; margin: 0 0 8px 0;">' . htmlspecialchars($reportName) . '</h1>';
         if ($periodStart && $periodEnd) {
-            $html .= '<p style="color: #6b7280; font-size: 12px;">Période: ' . 
+            $html .= '<p style="color: #6b7280; font-size: 11px; margin: 4px 0;">Période: ' . 
                      date('d/m/Y', strtotime($periodStart)) . ' - ' . 
                      date('d/m/Y', strtotime($periodEnd)) . '</p>';
         }
-        $html .= '<p style="color: #9ca3af; font-size: 10px; margin-top: 5px;">Généré le ' . now()->format('d/m/Y à H:i') . '</p>';
+        $html .= '<p style="color: #9ca3af; font-size: 9px; margin: 4px 0;">Généré le ' . now()->format('d/m/Y à H:i') . '</p>';
         $html .= '</div>';
         
         // Contenu du rapport
+        $html .= '<div style="background: #f9fafb;">';
         $html .= $htmlContent;
+        $html .= '</div>';
         
         // Pied de page
-        $html .= '<div style="text-align: center; margin-top: 20px; padding-top: 10px; border-top: 1px solid #e5e7eb; font-size: 9px; color: #9ca3af;">';
-        $html .= '<p>Document confidentiel - ' . config('app.name') . ' - © ' . date('Y') . '</p>';
+        $html .= '<div style="text-align: center; margin-top: 15px; padding: 8px; border-top: 1px solid #e5e7eb; font-size: 8px; color: #9ca3af; background: white;">';
+        $html .= '<p style="margin: 0;">Document confidentiel - ' . config('app.name') . ' - © ' . date('Y') . '</p>';
         $html .= '</div>';
         
         $html .= '</body></html>';
