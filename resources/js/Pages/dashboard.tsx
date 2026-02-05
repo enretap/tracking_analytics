@@ -799,6 +799,11 @@ export default function Dashboard({ eco_data: initialEcoData, event_data: initia
                                         }
 
                                         const colors = ['#1e3a5f', '#8B4513', '#d946ef', '#f59e0b', '#10b981', '#ef4444'];
+                                        
+                                        // Calculer le total des 6 premiers
+                                        const topViolationsSum = topViolators.reduce((sum, v) => sum + (v.total_violations || 0), 0);
+                                        const othersViolations = totalViolations - topViolationsSum;
+                                        const othersPercentage = (othersViolations / totalViolations) * 100;
         
                                         return (
                                             <div className="flex flex-col items-center gap-1">
@@ -807,7 +812,10 @@ export default function Dashboard({ eco_data: initialEcoData, event_data: initia
                                                     <svg viewBox="0 0 200 200" className="transform -rotate-90">
                                                         {(() => {
                                                             let currentAngle = 0;
-                                                            return topViolators.map((vehicle, idx) => {
+                                                            const segments = [];
+                                                            
+                                                            // Ajouter les 6 premiers véhicules
+                                                            topViolators.forEach((vehicle, idx) => {
                                                                 const percentage = (vehicle.total_violations || 0) / totalViolations;
                                                                 const angle = percentage * 360;
                                                                 const startAngle = currentAngle;
@@ -823,7 +831,7 @@ export default function Dashboard({ eco_data: initialEcoData, event_data: initia
                                                                 
                                                                 const largeArc = angle > 180 ? 1 : 0;
                                                                 
-                                                                return (
+                                                                segments.push(
                                                                     <path
                                                                         key={idx}
                                                                         d={`M 100 100 L ${x1} ${y1} A 75 75 0 ${largeArc} 1 ${x2} ${y2} Z`}
@@ -834,6 +842,37 @@ export default function Dashboard({ eco_data: initialEcoData, event_data: initia
                                                                     />
                                                                 );
                                                             });
+                                                            
+                                                            // Ajouter la portion "Autres" en gris si nécessaire
+                                                            if (othersViolations > 0) {
+                                                                const percentage = othersViolations / totalViolations;
+                                                                const angle = percentage * 360;
+                                                                const startAngle = currentAngle;
+                                                                currentAngle += angle;
+                                                                
+                                                                const startRad = (startAngle * Math.PI) / 180;
+                                                                const endRad = (currentAngle * Math.PI) / 180;
+                                                                
+                                                                const x1 = 100 + 75 * Math.cos(startRad);
+                                                                const y1 = 100 + 75 * Math.sin(startRad);
+                                                                const x2 = 100 + 75 * Math.cos(endRad);
+                                                                const y2 = 100 + 75 * Math.sin(endRad);
+                                                                
+                                                                const largeArc = angle > 180 ? 1 : 0;
+                                                                
+                                                                segments.push(
+                                                                    <path
+                                                                        key="others"
+                                                                        d={`M 100 100 L ${x1} ${y1} A 75 75 0 ${largeArc} 1 ${x2} ${y2} Z`}
+                                                                        fill="#9ca3af"
+                                                                        stroke="white"
+                                                                        strokeWidth="2"
+                                                                        className="hover:opacity-80 transition-opacity cursor-pointer"
+                                                                    />
+                                                                );
+                                                            }
+                                                            
+                                                            return segments;
                                                         })()}
                                                         <circle cx="100" cy="100" r="50" fill="white" />
                                                     </svg>
@@ -861,6 +900,18 @@ export default function Dashboard({ eco_data: initialEcoData, event_data: initia
                                                             </div>
                                                         );
                                                     })}
+                                                    {othersViolations > 0 && (
+                                                        <div className="flex items-center justify-between gap-2 p-1.5 rounded hover:bg-gray-50">
+                                                            <div className="flex items-center gap-2 min-w-0">
+                                                                <div className="w-3 h-3 rounded-sm flex-shrink-0" style={{ backgroundColor: '#9ca3af' }}></div>
+                                                                <span className="font-medium truncate">Autres</span>
+                                                            </div>
+                                                            <div className="flex flex-col items-end text-right flex-shrink-0">
+                                                                <span className="font-bold text-gray-800">{othersPercentage.toFixed(1)}%</span>
+                                                                <span className="text-gray-500 text-[10px]">({othersViolations})</span>
+                                                            </div>
+                                                        </div>
+                                                    )}
                                                 </div>
                                             </div>
                                         );
