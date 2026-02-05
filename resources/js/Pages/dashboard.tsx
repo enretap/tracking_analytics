@@ -1097,8 +1097,12 @@ export default function Dashboard({ eco_data: initialEcoData, event_data: initia
                                             return <div className="text-center text-gray-500 py-8">Aucun freinage brusque</div>;
                                         }
 
-                                        // Couleurs distinctes pour chaque véhicule
-                                        const colors = ['#1e3a5f', '#8B4513', '#d946ef', '#f59e0b', '#10b981'];
+                                        // Calculer le total des 5 premiers et les "Autres"
+                                        const topHarshBraking = topVehicles.reduce((sum, v) => sum + (v.harsh_braking || 0), 0);
+                                        const othersHarshBraking = totalHarshBraking - topHarshBraking;
+
+                                        // Couleurs distinctes pour chaque véhicule + gris pour "Autres"
+                                        const colors = ['#1e3a5f', '#8B4513', '#d946ef', '#f59e0b', '#10b981', '#9ca3af'];
                                         
                                         return (
                                             <div className="flex flex-col items-center gap-4">
@@ -1107,7 +1111,10 @@ export default function Dashboard({ eco_data: initialEcoData, event_data: initia
                                                     <svg viewBox="0 0 200 200" className="transform -rotate-90">
                                                         {(() => {
                                                             let currentAngle = 0;
-                                                            return topVehicles.map((vehicle, idx) => {
+                                                            const segments = [];
+                                                            
+                                                            // Ajouter les segments pour les 5 premiers véhicules
+                                                            topVehicles.forEach((vehicle, idx) => {
                                                                 const harshBraking = vehicle.harsh_braking || 0;
                                                                 const percentage = harshBraking / totalHarshBraking;
                                                                 const angle = percentage * 360;
@@ -1128,7 +1135,7 @@ export default function Dashboard({ eco_data: initialEcoData, event_data: initia
                                                                 const largeArc = angle > 180 ? 1 : 0;
                                                                 const percentDisplay = (percentage * 100).toFixed(1);
                                                                 
-                                                                return (
+                                                                segments.push(
                                                                     <g key={idx}>
                                                                         <title>{`${vehicle.immatriculation}: ${harshBraking} freinages brusques (${percentDisplay}%)`}</title>
                                                                         <path
@@ -1141,6 +1148,40 @@ export default function Dashboard({ eco_data: initialEcoData, event_data: initia
                                                                     </g>
                                                                 );
                                                             });
+                                                            
+                                                            // Ajouter le segment "Autres" si nécessaire
+                                                            if (othersHarshBraking > 0) {
+                                                                const percentage = othersHarshBraking / totalHarshBraking;
+                                                                const angle = percentage * 360;
+                                                                const startAngle = currentAngle;
+                                                                const endAngle = 360;
+                                                                
+                                                                const startRad = (startAngle * Math.PI) / 180;
+                                                                const endRad = (endAngle * Math.PI) / 180;
+                                                                
+                                                                const x1 = 100 + 80 * Math.cos(startRad);
+                                                                const y1 = 100 + 80 * Math.sin(startRad);
+                                                                const x2 = 100 + 80 * Math.cos(endRad);
+                                                                const y2 = 100 + 80 * Math.sin(endRad);
+                                                                
+                                                                const largeArc = angle > 180 ? 1 : 0;
+                                                                const percentDisplay = (percentage * 100).toFixed(1);
+                                                                
+                                                                segments.push(
+                                                                    <g key="others">
+                                                                        <title>{`Autres: ${othersHarshBraking} freinages brusques (${percentDisplay}%)`}</title>
+                                                                        <path
+                                                                            d={`M 100 100 L ${x1} ${y1} A 80 80 0 ${largeArc} 1 ${x2} ${y2} Z`}
+                                                                            fill={colors[5]}
+                                                                            stroke="white"
+                                                                            strokeWidth="2"
+                                                                            className="hover:opacity-80 transition-opacity cursor-pointer"
+                                                                        />
+                                                                    </g>
+                                                                );
+                                                            }
+                                                            
+                                                            return segments;
                                                         })()}
                                                     </svg>
                                                     {/* Centre avec total */}
@@ -1170,6 +1211,18 @@ export default function Dashboard({ eco_data: initialEcoData, event_data: initia
                                                             </div>
                                                         );
                                                     })}
+                                                    {othersHarshBraking > 0 && (
+                                                        <div className="flex items-center justify-between gap-2 p-1.5 rounded hover:bg-gray-50 transition-colors">
+                                                            <div className="flex items-center gap-2 min-w-0 flex-1">
+                                                                <div className="w-3 h-3 rounded-sm flex-shrink-0" style={{ backgroundColor: colors[5] }}></div>
+                                                                <span className="font-medium truncate">Autres</span>
+                                                            </div>
+                                                            <div className="flex items-center gap-2 flex-shrink-0">
+                                                                <span className="font-bold text-gray-800">{((othersHarshBraking / totalHarshBraking) * 100).toFixed(1)}%</span>
+                                                                <span className="text-gray-500">({othersHarshBraking})</span>
+                                                            </div>
+                                                        </div>
+                                                    )}
                                                 </div>
                                             </div>
                                         );
