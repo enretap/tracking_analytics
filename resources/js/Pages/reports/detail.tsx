@@ -30,23 +30,67 @@ export default function ReportDetail({ report }: Props) {
     const [isSharing, setIsSharing] = useState(false);
     const contentRef = useRef<HTMLDivElement>(null);
 
-    const captureReportContent = () => {
+    const captureReportContent = async () => {
         if (!contentRef.current) return null;
         
         // Clone le contenu pour ne pas affecter l'affichage
         const clone = contentRef.current.cloneNode(true) as HTMLElement;
         
-        // Récupérer les styles inline des SVG et canvas
+        // Convertir tous les SVG en images PNG base64
         const svgs = clone.querySelectorAll('svg');
-        svgs.forEach((svg, index) => {
-            const originalSvg = contentRef.current!.querySelectorAll('svg')[index];
-            if (originalSvg) {
-                svg.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
-                // Copier tous les attributs de style
-                const computedStyle = window.getComputedStyle(originalSvg);
-                svg.setAttribute('style', computedStyle.cssText);
+        const originalSvgs = contentRef.current.querySelectorAll('svg');
+        
+        for (let i = 0; i < svgs.length; i++) {
+            const svg = svgs[i];
+            const originalSvg = originalSvgs[i];
+            
+            try {
+                // Créer un canvas pour convertir le SVG en image
+                const canvas = document.createElement('canvas');
+                const bbox = originalSvg.getBoundingClientRect();
+                const scale = 2; // Pour une meilleure qualité
+                canvas.width = bbox.width * scale;
+                canvas.height = bbox.height * scale;
+                
+                const ctx = canvas.getContext('2d');
+                if (!ctx) continue;
+                
+                ctx.scale(scale, scale);
+                
+                // Sérialiser le SVG
+                const svgData = new XMLSerializer().serializeToString(originalSvg);
+                const svgBlob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
+                const url = URL.createObjectURL(svgBlob);
+                
+                // Créer une image à partir du SVG
+                const img = new Image();
+                await new Promise((resolve, reject) => {
+                    img.onload = () => {
+                        ctx.fillStyle = 'white';
+                        ctx.fillRect(0, 0, canvas.width, canvas.height);
+                        ctx.drawImage(img, 0, 0, bbox.width, bbox.height);
+                        URL.revokeObjectURL(url);
+                        resolve(true);
+                    };
+                    img.onerror = reject;
+                    img.src = url;
+                });
+                
+                // Convertir le canvas en image base64
+                const imgData = canvas.toDataURL('image/png');
+                
+                // Remplacer le SVG par une image
+                const imgElement = document.createElement('img');
+                imgElement.src = imgData;
+                imgElement.style.width = bbox.width + 'px';
+                imgElement.style.height = bbox.height + 'px';
+                imgElement.style.display = 'block';
+                
+                svg.parentNode?.replaceChild(imgElement, svg);
+            } catch (error) {
+                console.error('Erreur lors de la conversion du SVG:', error);
             }
-        });
+        }
         
         return clone.innerHTML;
     };
@@ -54,7 +98,7 @@ export default function ReportDetail({ report }: Props) {
     const handleExportPDF = async () => {
         setIsExporting(true);
         try {
-            const htmlContent = captureReportContent();
+            const htmlContent = await captureReportContent();
             if (!htmlContent) {
                 console.error('Impossible de capturer le contenu');
                 return;
@@ -99,7 +143,7 @@ export default function ReportDetail({ report }: Props) {
     const handleShareEmail = async () => {
         setIsSharing(true);
         try {
-            const htmlContent = captureReportContent();
+            const htmlContent = await captureReportContent();
             if (!htmlContent) {
                 console.error('Impossible de capturer le contenu');
                 return;

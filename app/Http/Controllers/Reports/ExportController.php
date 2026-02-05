@@ -317,8 +317,13 @@ class ExportController extends Controller
         $html .= '.relative { position: relative; }';
         $html .= '.absolute { position: absolute; }';
         
-        // SVG support
-        $html .= 'svg { max-width: 100%; height: auto; }';
+        // Images
+        $html .= 'img { max-width: 100%; height: auto; display: block; }';
+        
+        // Width & Height
+        $html .= '.w-full { width: 100%; }';
+        $html .= '.h-full { height: 100%; }';
+        $html .= '.min-h-screen { min-height: 100vh; }';
         
         $html .= '</style>';
         $html .= '</head><body>';
