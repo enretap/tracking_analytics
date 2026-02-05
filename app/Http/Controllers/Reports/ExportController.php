@@ -142,19 +142,25 @@ class ExportController extends Controller
             return response()->json(['error' => 'Report not found'], 404);
         }
 
-        // Récupérer les données du rapport comme dans la route detail
-        $reportData = $this->getReportData($report, $user);
+        // Récupérer le contenu HTML envoyé depuis le frontend
+        $htmlContent = request('html_content');
+        $reportName = request('report_name', $report->name);
+        $periodStart = request('period_start');
+        $periodEnd = request('period_end');
 
-        // Générer le HTML du rapport pour le PDF
-        $html = $this->generateReportHtml($report, $reportData);
+        // Générer le HTML complet pour le PDF avec les styles
+        $html = $this->generatePdfFromHtml($htmlContent, $reportName, $periodStart, $periodEnd);
 
-        $dompdf = new Dompdf();
+        $dompdf = new Dompdf([
+            'isHtml5ParserEnabled' => true,
+            'isRemoteEnabled' => true,
+        ]);
         $dompdf->loadHtml($html);
         $dompdf->setPaper('A4', 'landscape');
         $dompdf->render();
         $output = $dompdf->output();
         
-        $filename = \Illuminate\Support\Str::slug($report->name) . '_' . now()->format('Y-m-d') . '.pdf';
+        $filename = \Illuminate\Support\Str::slug($reportName) . '_' . now()->format('Y-m-d') . '.pdf';
 
         return Response::make($output, 200, [
             'Content-Type' => 'application/pdf',
@@ -183,19 +189,25 @@ class ExportController extends Controller
         }
 
         try {
-            // Récupérer les données du rapport
-            $reportData = $this->getReportData($report, $user);
+            // Récupérer le contenu HTML envoyé depuis le frontend
+            $htmlContent = request('html_content');
+            $reportName = request('report_name', $report->name);
+            $periodStart = request('period_start');
+            $periodEnd = request('period_end');
+
+            // Générer le HTML complet pour le PDF
+            $html = $this->generatePdfFromHtml($htmlContent, $reportName, $periodStart, $periodEnd);
             
-            // Générer le PDF du rapport
-            $html = $this->generateReportHtml($report, $reportData);
-            
-            $dompdf = new Dompdf();
+            $dompdf = new Dompdf([
+                'isHtml5ParserEnabled' => true,
+                'isRemoteEnabled' => true,
+            ]);
             $dompdf->loadHtml($html);
             $dompdf->setPaper('A4', 'landscape');
             $dompdf->render();
             $pdfContent = base64_encode($dompdf->output());
             
-            $fileName = \Illuminate\Support\Str::slug($report->name) . '_' . date('Y-m-d') . '.pdf';
+            $fileName = \Illuminate\Support\Str::slug($reportName) . '_' . date('Y-m-d') . '.pdf';
             
             // Envoyer l'email à l'utilisateur connecté
             $emails = [$user->email];
@@ -204,7 +216,7 @@ class ExportController extends Controller
             \App\Jobs\SendReportEmail::dispatch(
                 $emails,
                 $pdfContent,
-                $report->name,
+                $reportName,
                 $fileName
             );
             
@@ -216,6 +228,123 @@ class ExportController extends Controller
             \Log::error('Erreur lors du partage du rapport: ' . $e->getMessage());
             return response()->json(['error' => 'Une erreur est survenue lors de l\'envoi du rapport.'], 500);
         }
+    }
+
+    /**
+     * Generate PDF HTML from captured content
+     */
+    private function generatePdfFromHtml($htmlContent, $reportName, $periodStart = null, $periodEnd = null)
+    {
+        $html = '<!DOCTYPE html>';
+        $html .= '<html><head>';
+        $html .= '<meta charset="UTF-8">';
+        $html .= '<meta name="viewport" content="width=device-width, initial-scale=1.0">';
+        $html .= '<style>';
+        
+        // Styles de base
+        $html .= '* { margin: 0; padding: 0; box-sizing: border-box; }';
+        $html .= 'body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; font-size: 11px; line-height: 1.5; color: #1f2937; background: #f9fafb; padding: 15px; }';
+        
+        // Layout
+        $html .= '.space-y-5 > * + * { margin-top: 1.25rem; }';
+        $html .= '.space-y-6 > * + * { margin-top: 1.5rem; }';
+        $html .= '.space-y-4 > * + * { margin-top: 1rem; }';
+        $html .= '.space-y-3 > * + * { margin-top: 0.75rem; }';
+        $html .= '.space-y-2 > * + * { margin-top: 0.5rem; }';
+        $html .= '.gap-4 { gap: 1rem; }';
+        $html .= '.gap-6 { gap: 1.5rem; }';
+        $html .= '.p-3 { padding: 0.75rem; }';
+        $html .= '.p-4 { padding: 1rem; }';
+        $html .= '.p-6 { padding: 1.5rem; }';
+        $html .= '.pb-3 { padding-bottom: 0.75rem; }';
+        
+        // Grid
+        $html .= '.grid { display: grid; }';
+        $html .= '.grid-cols-1 { grid-template-columns: repeat(1, minmax(0, 1fr)); }';
+        $html .= '.grid-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }';
+        $html .= '.grid-cols-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }';
+        $html .= '@media (min-width: 768px) { .md\\:grid-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); } }';
+        $html .= '@media (min-width: 768px) { .md\\:grid-cols-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); } }';
+        $html .= '@media (min-width: 768px) { .md\\:col-span-2 { grid-column: span 2 / span 2; } }';
+        
+        // Card styles
+        $html .= '.shadow-lg { box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05); }';
+        $html .= '.shadow-md { box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); }';
+        $html .= '.rounded-xl { border-radius: 0.75rem; }';
+        $html .= '.rounded-lg { border-radius: 0.5rem; }';
+        $html .= '.rounded { border-radius: 0.25rem; }';
+        $html .= '.border-0 { border-width: 0; }';
+        $html .= '.overflow-hidden { overflow: hidden; }';
+        
+        // Backgrounds
+        $html .= '.bg-white { background-color: #ffffff; }';
+        $html .= '.bg-gray-50 { background-color: #f9fafb; }';
+        $html .= '.bg-gray-100 { background-color: #f3f4f6; }';
+        $html .= '.bg-gray-200 { background-color: #e5e7eb; }';
+        $html .= '.bg-gradient-to-br { background-image: linear-gradient(to bottom right, var(--tw-gradient-stops)); }';
+        $html .= '.from-gray-50 { --tw-gradient-from: #f9fafb; --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to, rgba(249, 250, 251, 0)); }';
+        $html .= '.to-gray-100 { --tw-gradient-to: #f3f4f6; }';
+        
+        // Text
+        $html .= '.text-xs { font-size: 0.75rem; line-height: 1rem; }';
+        $html .= '.text-sm { font-size: 0.875rem; line-height: 1.25rem; }';
+        $html .= '.text-base { font-size: 1rem; line-height: 1.5rem; }';
+        $html .= '.text-lg { font-size: 1.125rem; line-height: 1.75rem; }';
+        $html .= '.text-xl { font-size: 1.25rem; line-height: 1.75rem; }';
+        $html .= '.text-2xl { font-size: 1.5rem; line-height: 2rem; }';
+        $html .= '.text-3xl { font-size: 1.875rem; line-height: 2.25rem; }';
+        $html .= '.font-medium { font-weight: 500; }';
+        $html .= '.font-semibold { font-weight: 600; }';
+        $html .= '.font-bold { font-weight: 700; }';
+        $html .= '.text-gray-500 { color: #6b7280; }';
+        $html .= '.text-gray-600 { color: #4b5563; }';
+        $html .= '.text-gray-700 { color: #374151; }';
+        $html .= '.text-gray-800 { color: #1f2937; }';
+        $html .= '.text-white { color: #ffffff; }';
+        $html .= '.uppercase { text-transform: uppercase; }';
+        $html .= '.text-center { text-align: center; }';
+        
+        // Flex
+        $html .= '.flex { display: flex; }';
+        $html .= '.flex-col { flex-direction: column; }';
+        $html .= '.items-center { align-items: center; }';
+        $html .= '.items-start { align-items: flex-start; }';
+        $html .= '.justify-between { justify-content: space-between; }';
+        $html .= '.justify-center { justify-content: center; }';
+        $html .= '.justify-around { justify-content: space-around; }';
+        
+        // Position
+        $html .= '.relative { position: relative; }';
+        $html .= '.absolute { position: absolute; }';
+        
+        // SVG support
+        $html .= 'svg { max-width: 100%; height: auto; }';
+        
+        $html .= '</style>';
+        $html .= '</head><body>';
+        
+        // En-tête du document
+        $html .= '<div style="text-align: center; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 3px solid #1e3a5f;">';
+        $html .= '<h1 style="color: #1e3a5f; font-size: 24px; font-weight: bold; margin-bottom: 10px;">' . htmlspecialchars($reportName) . '</h1>';
+        if ($periodStart && $periodEnd) {
+            $html .= '<p style="color: #6b7280; font-size: 12px;">Période: ' . 
+                     date('d/m/Y', strtotime($periodStart)) . ' - ' . 
+                     date('d/m/Y', strtotime($periodEnd)) . '</p>';
+        }
+        $html .= '<p style="color: #9ca3af; font-size: 10px; margin-top: 5px;">Généré le ' . now()->format('d/m/Y à H:i') . '</p>';
+        $html .= '</div>';
+        
+        // Contenu du rapport
+        $html .= $htmlContent;
+        
+        // Pied de page
+        $html .= '<div style="text-align: center; margin-top: 20px; padding-top: 10px; border-top: 1px solid #e5e7eb; font-size: 9px; color: #9ca3af;">';
+        $html .= '<p>Document confidentiel - ' . config('app.name') . ' - © ' . date('Y') . '</p>';
+        $html .= '</div>';
+        
+        $html .= '</body></html>';
+        
+        return $html;
     }
 
     /**

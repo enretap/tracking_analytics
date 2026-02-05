@@ -10,7 +10,7 @@ import { DriverEcoDrivingTemplate } from '@/components/reports/templates/DriverE
 import { GeoEcoDrivingTemplate } from '@/components/reports/templates/GeoEcoDrivingTemplate';
 import { Button } from '@/components/ui/button';
 import { Download, Mail, Loader2 } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 
 interface Report {
     id: number;
@@ -28,10 +28,38 @@ interface Props {
 export default function ReportDetail({ report }: Props) {
     const [isExporting, setIsExporting] = useState(false);
     const [isSharing, setIsSharing] = useState(false);
+    const contentRef = useRef<HTMLDivElement>(null);
+
+    const captureReportContent = () => {
+        if (!contentRef.current) return null;
+        
+        // Clone le contenu pour ne pas affecter l'affichage
+        const clone = contentRef.current.cloneNode(true) as HTMLElement;
+        
+        // Récupérer les styles inline des SVG et canvas
+        const svgs = clone.querySelectorAll('svg');
+        svgs.forEach((svg, index) => {
+            const originalSvg = contentRef.current!.querySelectorAll('svg')[index];
+            if (originalSvg) {
+                svg.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+                // Copier tous les attributs de style
+                const computedStyle = window.getComputedStyle(originalSvg);
+                svg.setAttribute('style', computedStyle.cssText);
+            }
+        });
+        
+        return clone.innerHTML;
+    };
 
     const handleExportPDF = async () => {
         setIsExporting(true);
         try {
+            const htmlContent = captureReportContent();
+            if (!htmlContent) {
+                console.error('Impossible de capturer le contenu');
+                return;
+            }
+
             const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
             const response = await fetch(`/api/reports/${report.id}/export/pdf`, {
                 method: 'POST',
@@ -40,6 +68,12 @@ export default function ReportDetail({ report }: Props) {
                     'Accept': 'application/pdf',
                     'X-CSRF-TOKEN': csrfToken || '',
                 },
+                body: JSON.stringify({
+                    html_content: htmlContent,
+                    report_name: report.name,
+                    period_start: report.period_start,
+                    period_end: report.period_end,
+                }),
             });
 
             if (response.ok) {
@@ -65,6 +99,12 @@ export default function ReportDetail({ report }: Props) {
     const handleShareEmail = async () => {
         setIsSharing(true);
         try {
+            const htmlContent = captureReportContent();
+            if (!htmlContent) {
+                console.error('Impossible de capturer le contenu');
+                return;
+            }
+
             const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
             const response = await fetch(`/api/reports/${report.id}/share`, {
                 method: 'POST',
@@ -72,6 +112,12 @@ export default function ReportDetail({ report }: Props) {
                     'Content-Type': 'application/json',
                     'X-CSRF-TOKEN': csrfToken || '',
                 },
+                body: JSON.stringify({
+                    html_content: htmlContent,
+                    report_name: report.name,
+                    period_start: report.period_start,
+                    period_end: report.period_end,
+                }),
             });
 
             if (response.ok) {
@@ -177,7 +223,9 @@ export default function ReportDetail({ report }: Props) {
                     </div>
                 </div>
 
-                {renderTemplate()}
+                <div ref={contentRef}>
+                    {renderTemplate()}
+                </div>
             </div>
         </AppLayout>
     );
