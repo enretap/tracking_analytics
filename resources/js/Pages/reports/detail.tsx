@@ -32,11 +32,13 @@ export default function ReportDetail({ report }: Props) {
     const handleExportPDF = async () => {
         setIsExporting(true);
         try {
+            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
             const response = await fetch(`/api/reports/${report.id}/export/pdf`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     'Accept': 'application/pdf',
+                    'X-CSRF-TOKEN': csrfToken || '',
                 },
             });
 
@@ -63,10 +65,12 @@ export default function ReportDetail({ report }: Props) {
     const handleShareEmail = async () => {
         setIsSharing(true);
         try {
+            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
             const response = await fetch(`/api/reports/${report.id}/share`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken || '',
                 },
             });
 
