@@ -353,6 +353,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
         return Inertia::render('reports/detail', ['report' => $reportData]);
     })->name('reports.detail');
 
+    // Export report as PDF (API route)
+    Route::post('/api/reports/{id}/export/pdf', [\App\Http\Controllers\Reports\ExportController::class, 'exportReportPdf'])->name('api.reports.export.pdf');
+
+    // Share report by email (API route)
+    Route::post('/api/reports/{id}/share', [\App\Http\Controllers\Reports\ExportController::class, 'shareReport'])->name('api.reports.share');
+
     // Send report by email
     Route::post('/reports/{id}/send-email', function ($id) {
         $request = request();
