@@ -217,13 +217,27 @@ class VehicleService
             return $data;
         }
         
-        return match ($slug) {
+        $vehicles = match ($slug) {
             'gps-tracker' => $data['vehicles'] ?? $data['data'] ?? $data,
             'fleet-manager' => $data['fleet'] ?? $data['vehicles'] ?? $data,
             'track-pro' => $data['units'] ?? $data['devices'] ?? $data,
             'targa-telematics' => $data['vehicles'] ?? $data['data'] ?? $data,
             default => $data['vehicles'] ?? $data['data'] ?? $data,
         };
+        
+        // Filter only active vehicles for TARGA TELEMATICS
+        if ($slug === 'targa-telematics' && is_array($vehicles)) {
+            $vehicles = array_filter($vehicles, function ($vehicle) {
+                return isset($vehicle['active']) && $vehicle['active'] === true;
+            });
+            
+            Log::info("TARGA TELEMATICS vehicles filtered", [
+                'total_before_filter' => count($data['vehicles'] ?? $data['data'] ?? $data),
+                'active_vehicles' => count($vehicles),
+            ]);
+        }
+        
+        return $vehicles;
     }
 
     /**
