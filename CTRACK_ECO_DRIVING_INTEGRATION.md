@@ -10,8 +10,8 @@ Ce document décrit l'intégration de l'endpoint **EcoDriving** de CTRACK dans l
 - **Méthode HTTP**: `GET`
 - **Authentification**: Bearer Token
 - **Paramètres**:
-  - `begin`: Date de début (format: `dd/mm/yyyy`, ex: `01/09/2026`)
-  - `end`: Date de fin (format: `dd/mm/yyyy`, ex: `01/09/2026`)
+  - `begin`: Date de début (format: `mm/dd/yyyy`, ex: `02/01/2026`)
+  - `end`: Date de fin (format: `mm/dd/yyyy`, ex: `02/23/2026`)
 
 ## 📊 Structure de la Réponse
 

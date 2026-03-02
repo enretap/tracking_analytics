@@ -171,9 +171,14 @@ class EcoDrivingService
             $totalViolationsVehicle = 0;
             
             $vehicleName = '';
+            $project = null;
             
             foreach ($summaries as $summary) {
                 $vehicleName = $summary['vehicle'] ?? 'N/A';
+                // Essayer d'extraire le project de différents champs possibles
+                if (!$project) {
+                    $project = $summary['project'] ?? $summary['vehicleProjectName'] ?? $summary['projectName'] ?? null;
+                }
                 $totalRealMileage += (float) ($summary['realMileage'] ?? 0);
                 $totalRealDuration += (int) ($summary['realDuration'] ?? 0);
                 $totalIdleTime += (int) ($summary['idleTime'] ?? 0);
@@ -215,7 +220,7 @@ class EcoDrivingService
             $vehicleDetails[] = [
                 'immatriculation' => $vehicleName,
                 'driver' => $driver,
-                'project' => null,
+                'project' => $project,
                 'max_speed' => (int) $maxSpeedOverall,
                 'distance' => round($totalRealMileage, 2),
                 'driving_time' => $drivingTime,
@@ -371,4 +376,160 @@ class EcoDrivingService
         
         Log::info("Cleared eco-driving cache for account {$account->id}");
     }
+
+    /**
+     * Fetch fleet activity data grouped by distributor/project
+     *
+     * @param Account $account
+     * @param string|null $startDate
+     * @param string|null $endDate
+     * @return array
+     */
+    public function fetchFleetActivityData(Account $account, ?string $startDate = null, ?string $endDate = null): array
+    {
+        try {
+            // Get base eco-driving data
+            $ecoData = $this->fetchEcoDrivingData($account, $startDate, $endDate);
+            
+            if (!isset($ecoData['vehicle_details']) || empty($ecoData['vehicle_details'])) {
+                return $this->getEmptyFleetActivityData();
+            }
+            
+            return $this->transformToFleetActivityData($ecoData, $startDate, $endDate);
+        } catch (Exception $e) {
+            Log::error("Error fetching fleet activity data: " . $e->getMessage(), [
+                'account_id' => $account->id,
+                'trace' => $e->getTraceAsString()
+            ]);
+            return $this->getEmptyFleetActivityData();
+        }
+    }
+
+    /**
+     * Transform eco-driving data to fleet activity format with distributor grouping
+     *
+     * @param array $ecoData
+     * @param string|null $startDate
+     * @param string|null $endDate
+     * @return array
+     */
+    protected function transformToFleetActivityData(array $ecoData, ?string $startDate, ?string $endDate): array
+    {
+        $vehicleDetails = $ecoData['vehicle_details'] ?? [];
+        
+        // Group vehicles by project/distributor
+        $distributorGroups = [];
+        foreach ($vehicleDetails as $vehicle) {
+            $project = $vehicle['project'] ?? 'Non assigné';
+            
+            if (!isset($distributorGroups[$project])) {
+                $distributorGroups[$project] = [
+                    'name' => $project,
+                    'vehicles' => [],
+                    'active_vehicles' => 0,
+                    'inactive_vehicles' => 0,
+                    'distance' => 0,
+                    'trips' => 0,
+                ];
+            }
+            
+            $distributorGroups[$project]['vehicles'][] = $vehicle;
+            
+            // Compter les véhicules actifs (ceux qui ont parcouru une distance)
+            if (($vehicle['distance'] ?? 0) > 0) {
+                $distributorGroups[$project]['active_vehicles']++;
+            } else {
+                $distributorGroups[$project]['inactive_vehicles']++;
+            }
+            
+            $distributorGroups[$project]['distance'] += ($vehicle['distance'] ?? 0);
+            // Estimer le nombre de trajets basé sur les données (pour l'instant, on utilise 1 trajet par véhicule actif)
+            // Dans une vraie implémentation, ces données viendraient d'un autre endpoint
+            if (($vehicle['distance'] ?? 0) > 0) {
+                $distributorGroups[$project]['trips']++;
+            }
+        }
+        
+        // Convertir en array de distributeurs
+        $distributors = array_values($distributorGroups);
+        
+        // Calculer les totaux
+        $totalVehicles = count($vehicleDetails);
+        $activeVehicles = array_sum(array_column($distributors, 'active_vehicles'));
+        $inactiveVehicles = $totalVehicles - $activeVehicles;
+        $totalDistance = array_sum(array_column($distributors, 'distance'));
+        $totalTrips = array_sum(array_column($distributors, 'trips'));
+        
+        // Calculer la durée totale depuis les vehicle_details
+        $totalDurationSeconds = 0;
+        foreach ($vehicleDetails as $vehicle) {
+            // Extraire les heures et minutes du format "Xh XXmin"
+            $drivingTime = $vehicle['driving_time'] ?? '0h 00min';
+            if (preg_match('/(\d+)h\s*(\d+)min/', $drivingTime, $matches)) {
+                $hours = (int)$matches[1];
+                $minutes = (int)$matches[2];
+                $totalDurationSeconds += ($hours * 3600) + ($minutes * 60);
+            }
+        }
+        
+        // Convertir en format HH:MM:SS
+        $hours = floor($totalDurationSeconds / 3600);
+        $minutes = floor(($totalDurationSeconds % 3600) / 60);
+        $seconds = $totalDurationSeconds % 60;
+        $totalDuration = sprintf('%d:%02d:%02d', $hours, $minutes, $seconds);
+        
+        // Compter les distributeurs concernés
+        $distributorsCount = count($distributors);
+        
+        // Véhicules avec trajets
+        $vehiclesWithTrips = $activeVehicles;
+        
+        return [
+            // KPIs principaux
+            'total_vehicles' => $totalVehicles,
+            'inactive_vehicles' => $inactiveVehicles,
+            'vehicles_with_trips' => $vehiclesWithTrips,
+            'distributors_count' => $distributorsCount,
+            'total_trips' => $totalTrips,
+            'total_distance' => round($totalDistance, 2),
+            'total_duration' => $totalDuration,
+            
+            // Données par distributeur
+            'distributors' => $distributors,
+            
+            // Données héritées pour compatibilité
+            'active_vehicles' => $activeVehicles,
+            'total_alerts' => $ecoData['total_alerts'] ?? 0,
+            'compliance_rate' => $ecoData['compliance_rate'] ?? 95,
+            'operating_hours' => $hours,
+            'period_start' => $ecoData['period_start'] ?? $startDate,
+            'period_end' => $ecoData['period_end'] ?? $endDate,
+        ];
+    }
+
+    /**
+     * Get empty fleet activity data structure
+     *
+     * @return array
+     */
+    protected function getEmptyFleetActivityData(): array
+    {
+        return [
+            'total_vehicles' => 0,
+            'inactive_vehicles' => 0,
+            'vehicles_with_trips' => 0,
+            'distributors_count' => 0,
+            'total_trips' => 0,
+            'total_distance' => 0,
+            'total_duration' => '0:00:00',
+            'distributors' => [],
+            'active_vehicles' => 0,
+            'total_alerts' => 0,
+            'compliance_rate' => 0,
+            'operating_hours' => 0,
+            'period_start' => null,
+            'period_end' => null,
+        ];
+    }
 }
+

@@ -230,16 +230,39 @@ Route::middleware(['auth', 'verified'])->group(function () {
         // Générer des données KPI spécifiques selon le type
         switch ($report->type) {
             case 'fleet_activity':
-                $reportData['data'] = [
-                    'total_distance' => rand(10000, 50000),
-                    'total_vehicles' => rand(10, 25),
-                    'active_vehicles' => rand(8, 20),
-                    'alerts' => rand(0, 15),
-                    'average_speed' => rand(50, 85),
-                    'fuel_consumption' => rand(65, 110) / 10,
-                    'trip_count' => rand(100, 300),
-                    'operating_time' => rand(200, 600),
-                ];
+                // Détecter quelle plateforme utiliser (TARGA TELEMATICS ou CTRACK)
+                $hasCtrack = $user->account->platforms()
+                    ->where('slug', 'ctrack')
+                    ->orWhere('name', 'LIKE', '%CTRACK%')
+                    ->exists();
+                
+                $hasTarga = $user->account->platforms()
+                    ->where('name', 'TARGA TELEMATICS')
+                    ->exists();
+                
+                // Récupérer les dates depuis la requête ou utiliser les valeurs par défaut (30 derniers jours, se terminant hier)
+                $defaultEndDate = now()->subDay()->format('Y-m-d'); // Hier
+                $defaultStartDate = now()->subDays(31)->format('Y-m-d'); // 31 jours avant aujourd'hui
+                $startDate = request('start_date', $defaultStartDate);
+                $endDate = request('end_date', $defaultEndDate);
+                $forceRefresh = request('force_refresh', false);
+                
+                // Utiliser CTRACK si disponible, sinon TARGA TELEMATICS
+                if ($hasCtrack) {
+                    $ecoDrivingService = app(\App\Services\CtrackEcoDrivingService::class);
+                } else {
+                    $ecoDrivingService = app(\App\Services\EcoDrivingService::class);
+                }
+                
+                // Vider le cache si demandé
+                if ($forceRefresh) {
+                    $ecoDrivingService->clearCache($user->account);
+                }
+                
+                // Récupérer les vraies données de l'API groupées par distributeur
+                $reportData['data'] = $ecoDrivingService->fetchFleetActivityData($user->account, $startDate, $endDate);
+                $reportData['period_start'] = $reportData['data']['period_start'] ?? $startDate;
+                $reportData['period_end'] = $reportData['data']['period_end'] ?? $endDate;
                 break;
 
             case 'driver_behavior':
